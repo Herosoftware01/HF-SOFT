@@ -219,10 +219,16 @@ def report(request):
 
 
 
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import BillAge
+from datetime import datetime, date
+from django.db.models import Q
+from django.utils import timezone
 
 def bill(request):
     # Get all BillAge objects from the mssql database
-    datas = BillAge.objects.using('demo1').all()
+    datas = BillAge.objects.using('mssql').all()
     
     # Get distinct values for module dropdown filter
     module_datas = datas.values_list('module', flat=True).distinct().order_by('module')
@@ -274,8 +280,6 @@ def bill(request):
             pass
     
     # Calculate aging in Python after database query
-    # today = date.today()
-    # today = datas.edate
     data_list = []
     
     for idx, item in enumerate(datas, 1):       
@@ -330,13 +334,7 @@ def bill(request):
             item.no = idx
             data_list.append(item)
     
-    # Apply minimum aging filter (if you want to show only bills older than X days)
-    # if min_aging:
-    #     try:
-    #         min_days = int(min_aging)
-    #         data_list = [item for item in data_list if item.calculated_aging >= min_days]
-    #     except ValueError:
-    #         pass
+    # Apply minimum aging filter
     if min_aging:
         try:
             min_days = int(min_aging)
@@ -344,6 +342,7 @@ def bill(request):
         except ValueError:
             pass
 
+    # Apply hardcoded filter (aging >= 3 days)
     data_list = [item for item in data_list if item.calculated_aging is not None and item.calculated_aging >= 3]
 
     # Apply aging range filter
@@ -366,9 +365,26 @@ def bill(request):
         
         data_list = filtered_data
 
-    
-    # Sort: Module ascending, Aging descending
-    data_list.sort(key=lambda x: (x.module or '', -x.calculated_aging))
+    # Helper function to safely extract edate for sorting
+    def safe_edate(item):
+        """Helper function to safely extract edate for sorting"""
+        if hasattr(item, 'edate') and item.edate:
+            if hasattr(item.edate, 'date'):
+                return item.edate.date()
+            elif isinstance(item.edate, (date, datetime)):
+                return item.edate if isinstance(item.edate, date) else item.edate.date()
+            elif isinstance(item.edate, str) and item.edate.strip():
+                try:
+                    return datetime.strptime(item.edate.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    try:
+                        return datetime.strptime(item.edate.strip(), '%d-%m-%Y').date()
+                    except ValueError:
+                        return date.min  # Default for invalid dates
+        return date.min  # Default for None/missing dates
+
+    # Sort by module (ascending) first, then by edate (ascending)
+    data_list.sort(key=lambda x: (x.module or '', safe_edate(x)))
     
     # Renumber after filtering and sorting
     for idx, item in enumerate(data_list, 1):
@@ -380,7 +396,7 @@ def bill(request):
     # Debug: Print some aging values to console (remove this in production)
     print("=== DEBUG: First 5 aging calculations ===")
     for i, item in enumerate(data_list[:5]):
-        print(f"Item {i+1}: Bill Date: {item.billdate}, Aging: {item.calculated_aging} days")
+        print(f"Item {i+1}: Module: {item.module}, Bill Date: {item.billdate}, edate: {item.edate}, Aging: {item.calculated_aging} days")
     print("==========================================")
     
     return render(request, 'bill.html', {
@@ -395,3 +411,4 @@ def bill(request):
         'selected_aging_range': aging_range,
         'selected_min_aging': min_aging,
     })
+
