@@ -7,11 +7,15 @@
 
     <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-4 text-center font-sans">User List</h1>
-       <!-- <div id="server-options" class="space-x-4 flex flex-row">
+       <div id="server-options" class="space-x-4 flex flex-row">
             <p class="font-bold mr-2">Select Server</p>
             <label class="flex items-center space-x-2">
                 <input type="checkbox" name="server" value="1" class="form-checkbox text-blue-600" onclick="onlyOne(this)">
                 <span>Server 10</span>
+            </label>
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" name="server" value="2" class="form-checkbox text-blue-600" onclick="onlyOne(this)">
+                <span>Server 11</span>
             </label>
 
             <label class="flex items-center space-x-2">
@@ -23,7 +27,7 @@
                 <span>Server 15</span>
             </label>
            
-        </div> -->
+        </div>
 
            
 
@@ -49,6 +53,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">unit 5</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merch 1</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merch 2</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 13</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 10</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 15</th>
                     </tr>
                 </thead>
                 <!-- <tbody class="bg-white divide-y divide-gray-200">
@@ -145,6 +152,21 @@
                 <input type="checkbox" name="merch2_{{ user.id }}"
                        {% if permission.merch2 %}checked{% endif %}>
                 merch2
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="checkbox" name="server13_{{ user.id }}"
+                       {% if permission.server13 %}checked{% endif %}>
+                server13
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="checkbox" name="server10_{{ user.id }}"
+                       {% if permission.server10 %}checked{% endif %}>
+                server10
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="checkbox" name="server15_{{ user.id }}"
+                       {% if permission.server15 %}checked{% endif %}>
+                server15
             </td>
            
         </tr>

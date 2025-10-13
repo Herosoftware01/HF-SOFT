@@ -18,6 +18,9 @@ class UserPermission(models.Model):
     unit5 = models.BooleanField(default=False)
     merch1 = models.BooleanField(default=False)
     merch2 = models.BooleanField(default=False)
+    server13 = models.BooleanField(default=False)
+    server10 = models.BooleanField(default=False)
+    server15 = models.BooleanField(default=False)
 
 
     def __str__(self):

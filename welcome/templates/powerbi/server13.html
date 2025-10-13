@@ -1,0 +1,16 @@
+{% extends 'mains.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat flex items-center justify-center min-h-screen">
+
+   <div class="w-full h-screen">
+        <iframe 
+            src="https://api.herofashion.com/" 
+            frameborder="0"
+            class=" top-0 left-0 w-full h-full"
+        ></iframe>
+    </div>
+
+</div>
+{% endblock %}

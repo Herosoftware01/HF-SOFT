@@ -13,6 +13,8 @@ import numpy as np
 from django.http import HttpResponse
 from django.http import JsonResponse
 
+from django.views.decorators.clickjacking import xframe_options_exempt
+
 @login_required
 def welcome(request):
     return render(request, 'welcome.html')
@@ -35,6 +37,36 @@ def login_view(request):
         else:
             messages.error(request, 'Invalid username or password.')
     return render(request, 'welcome/login.html')
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
+
+@csrf_exempt  # Disable CSRF for API usage – only do this if you're not using session authentication from browsers
+def login_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)  # Parse JSON payload
+            username = data.get('username')
+            password = data.get('password')
+
+            if not username or not password:
+                return JsonResponse({'error': 'Username and password are required.'}, status=400)
+
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid username or password.'}, status=401)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+
+    return JsonResponse({'error': 'Only POST method is allowed.'}, status=405)
 
 def logout_view(request):
     logout(request)
@@ -59,7 +91,6 @@ def user_list(request):
     if request.method == 'POST':
         for user in users:
             perm, created = UserPermission.objects.get_or_create(user=user)
-           
             perm.can_access_admin = bool(request.POST.get(f'admin_{user.id}', False))
             perm.can_access_roll = bool(request.POST.get(f'roll_{user.id}', False))
             perm.can_access_attendance = bool(request.POST.get(f'attendance_{user.id}', False))
@@ -74,6 +105,9 @@ def user_list(request):
             perm.unit5 = bool(request.POST.get(f'unit5_{user.id}', False))
             perm.merch1 = bool(request.POST.get(f'merch1_{user.id}', False))
             perm.merch2 = bool(request.POST.get(f'merch2_{user.id}', False))
+            perm.server13 = bool(request.POST.get(f'server13_{user.id}', False))
+            perm.server10 = bool(request.POST.get(f'server10_{user.id}', False))
+            perm.server15 = bool(request.POST.get(f'server15_{user.id}', False))
             perm.save()
         messages.success(request, "Permissions updated successfully.")
         return redirect('user_list')
@@ -90,6 +124,20 @@ def apk_download(request):
 
 def order(request):
     return render(request, 'powerbi/order.html')
+
+
+
+@xframe_options_exempt
+def server13(request):
+    return render(request, 'powerbi/server13.html')
+
+@xframe_options_exempt
+def server15(request):
+    return render(request, 'powerbi/server13.html')
+
+@xframe_options_exempt
+def server10(request):
+    return render(request, 'powerbi/server13.html')
 
 def fab_table(request):
     return render(request, 'powerbi/fab.html')

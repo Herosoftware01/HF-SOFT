@@ -48,6 +48,10 @@ urlpatterns = [
     path('YarnPovspi1/', views.YarnPovspi1, name='YarnPovspi1'),
     path('PrintRgb/', views.PrintRgb, name='PrintRgb'),
     path('PrintRgb1/', views.PrintRgb1, name='PrintRgb1'),
+    path('server13/', views.server13, name='server13'),
+    path('server15/', views.server15, name='server15'),
+    path('server10/', views.server10, name='server10'),
+    path('api/login/', views.login_api, name='api_login'),
     
 ]
 

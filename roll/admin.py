@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import mastermistakes,master_roll_update
+from .models import mastermistakes,master_roll_update,back_permissions
 
 # Register your models here.
 admin.site.site_header = "Roll Check Admin"
@@ -34,5 +34,6 @@ admin.site.register(mastermistakes, MasterMistakesAdmin)
 
 
 admin.site.register(master_roll_update)
+admin.site.register(back_permissions)
 
 

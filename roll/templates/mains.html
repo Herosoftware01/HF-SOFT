@@ -184,7 +184,6 @@
 
   {% if permission.powerbi_data %}
   <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
-  <!-- Main Button -->
   <button
     @click="isOpen = !isOpen"
     class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/order/' in request.path or '/fab_table/' in request.path %}
@@ -380,6 +379,47 @@
   </a>
 {% endif %}
 
+
+
+  {% if permission.server10 %}
+  <a href="/server10/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/server10/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/business.png' %}" alt="server10" class="w-6 h-6">
+    <span class="font-medium">server 10</span>
+  </a>
+{% endif %}
+
+
+{% if permission.server13 %}
+  <a href="/server13/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/server13/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/business.png' %}" alt="server13" class="w-6 h-6">
+    <span class="font-medium">server13</span>
+  </a>
+{% endif %}
+
+  {% if permission.server15 %}
+  <a href="/server15/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/server15/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/business.png' %}" alt="server15" class="w-6 h-6">
+    <span class="font-medium">server 15</span>
+  </a>
+{% endif %}
 
 
 
