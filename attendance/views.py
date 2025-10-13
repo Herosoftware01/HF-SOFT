@@ -4,8 +4,10 @@ from django.http import HttpResponse, JsonResponse
 from .models import AttUnt
 from django.db.models import Sum
 from datetime import datetime, timedelta
-
-
+from .models import BillAge
+from datetime import datetime, date
+from django.db.models import Q
+from django.utils import timezone
 from .models import VueOverall1
 from django.conf import settings
 import os
@@ -215,3 +217,181 @@ def report(request):
 
 
 
+
+
+
+def bill(request):
+    # Get all BillAge objects from the mssql database
+    datas = BillAge.objects.using('demo1').all()
+    
+    # Get distinct values for module dropdown filter
+    module_datas = datas.values_list('module', flat=True).distinct().order_by('module')
+    
+    # Get all employees for dropdown
+    employees = []
+    employee_names = datas.values_list('employees', flat=True).distinct().order_by('employees')
+    # Filter out None/null values
+    employee_names_filtered = [name for name in employee_names if name is not None and name.strip()]
+    
+    for idx, name in enumerate(employee_names_filtered, 1):
+        employees.append({'id': idx, 'name': name})
+    
+    # Get filter parameters from GET request
+    employee_filter = request.GET.get('employees', '')
+    module = request.GET.get('module', '')
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+    aging_range = request.GET.get('aging_range', '')
+    min_aging = request.GET.get('min_aging', '')  # New parameter for minimum aging
+
+    # Apply employee filter
+    if employee_filter and employee_filter != "ALL":
+        try:
+            employee_id = int(employee_filter)
+            if employee_id <= len(employees):
+                employee_name = employees[employee_id - 1]['name']
+                datas = datas.filter(employees=employee_name)
+        except (ValueError, IndexError):
+            pass
+    
+    # Apply module filter
+    if module and module != "ALL" and module:
+        datas = datas.filter(module=module)
+    
+    # Apply date range filter on billdate
+    if from_date:
+        try:
+            start_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+            datas = datas.filter(billdate__date__gte=start_date)
+        except ValueError:
+            pass
+    
+    if to_date:
+        try:
+            end_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+            datas = datas.filter(billdate__date__lte=end_date)
+        except ValueError:
+            pass
+    
+    # Calculate aging in Python after database query
+    # today = date.today()
+    # today = datas.edate
+    data_list = []
+    
+    for idx, item in enumerate(datas, 1):       
+        try:
+            # Extract and normalize bill_date
+            bill_date = None
+            if hasattr(item.billdate, 'date'):
+                bill_date = item.billdate.date()
+            elif isinstance(item.billdate, (date, datetime)):
+                bill_date = item.billdate if isinstance(item.billdate, date) else item.billdate.date()
+            elif isinstance(item.billdate, str) and item.billdate.strip():
+                try:
+                    bill_date = datetime.strptime(item.billdate.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    # Try alternative common format
+                    bill_date = datetime.strptime(item.billdate.strip(), '%d-%m-%Y').date()
+            
+            # Extract and normalize edate (less_date)
+            less_date = None
+            if hasattr(item.edate, 'date'):
+                less_date = item.edate.date()
+            elif isinstance(item.edate, (date, datetime)):
+                less_date = item.edate if isinstance(item.edate, date) else item.edate.date()
+            elif isinstance(item.edate, str) and item.edate.strip():
+                try:
+                    less_date = datetime.strptime(item.edate.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    less_date = datetime.strptime(item.edate.strip(), '%d-%m-%Y').date()
+            
+            # Only calculate if both dates exist
+            if bill_date and less_date:
+                aging_days = (less_date - bill_date).days
+            else:
+                aging_days = None  # Missing date
+            
+            print(f"Debug: less_date={less_date}, bill_date={bill_date}, aging_days={aging_days}")
+            
+            # Add calculated aging and serial number to the object
+            item.calculated_aging = aging_days
+            item.br_ageing = aging_days  # For template compatibility
+            item.billdate_ageing = aging_days  # For template compatibility
+            item.no = idx  # Serial number
+            
+            data_list.append(item)
+            
+        except (ValueError, AttributeError, TypeError) as e:
+            # If there's an error with date calculation, skip this item or set aging to 0
+            print(f"Error calculating aging for item {idx}: {e}")
+            item.calculated_aging = 0
+            item.br_ageing = 0
+            item.billdate_ageing = 0
+            item.no = idx
+            data_list.append(item)
+    
+    # Apply minimum aging filter (if you want to show only bills older than X days)
+    # if min_aging:
+    #     try:
+    #         min_days = int(min_aging)
+    #         data_list = [item for item in data_list if item.calculated_aging >= min_days]
+    #     except ValueError:
+    #         pass
+    if min_aging:
+        try:
+            min_days = int(min_aging)
+            data_list = [item for item in data_list if item.calculated_aging >= min_days]
+        except ValueError:
+            pass
+
+    data_list = [item for item in data_list if item.calculated_aging is not None and item.calculated_aging >= 3]
+
+    # Apply aging range filter
+    if aging_range:
+        filtered_data = []
+        for item in data_list:
+            aging = item.calculated_aging or 0  # ensure numeric
+
+            # Apply 7-day starting filter ranges
+            if aging_range == '7-30' and 7 <= aging <= 30:
+                filtered_data.append(item)
+            elif aging_range == '31-60' and 31 <= aging <= 60:
+                filtered_data.append(item)
+            elif aging_range == '61-90' and 61 <= aging <= 90:
+                filtered_data.append(item)
+            elif aging_range == '91-180' and 91 <= aging <= 180:
+                filtered_data.append(item)
+            elif aging_range == '180+' and aging > 180:
+                filtered_data.append(item)
+        
+        data_list = filtered_data
+
+    
+    # Sort: Module ascending, Aging descending
+    data_list.sort(key=lambda x: (x.module or '', -x.calculated_aging))
+    
+    # Renumber after filtering and sorting
+    for idx, item in enumerate(data_list, 1):
+        item.no = idx
+    
+    # Count filtered results
+    data_count = len(data_list)
+    
+    # Debug: Print some aging values to console (remove this in production)
+    print("=== DEBUG: First 5 aging calculations ===")
+    for i, item in enumerate(data_list[:5]):
+        print(f"Item {i+1}: Bill Date: {item.billdate}, Aging: {item.calculated_aging} days")
+    print("==========================================")
+    
+    return render(request, 'bill.html', {
+        'datas': data_list,
+        'data_count': data_count,
+        'module_datas': module_datas,
+        'employees': employees,
+        'selected_incharge': employee_filter,
+        'selected_module': module,
+        'selected_from_date': from_date,
+        'selected_to_date': to_date,
+        'selected_aging_range': aging_range,
+        'selected_min_aging': min_aging,
+    })
