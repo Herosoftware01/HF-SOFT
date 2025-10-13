@@ -1,0 +1,285 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block content %}
+
+  <!-- AG Grid CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"
+  />
+
+  <style>
+
+     .ag-theme-alpine .ag-cell[col-id="img_fpath"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+    /* Row selected */
+    .ag-row-selected .ag-cell {
+      background-color: #bfdbfe !important; /* Tailwind blue-200 */
+    }
+
+    /* Cell focused (selected cell) */
+    .ag-cell-focus {
+      outline: none !important; /* remove default focus ring */
+      background-color: #fbbf24 !important; /* Tailwind yellow-400 */
+      color: black !important;
+      font-weight: bold;
+    }
+
+    /* Highlight only matched text inside cell */
+    .search-highlight {
+      background-color: #facc15; /* Tailwind yellow-400 */
+      color: black;
+      font-weight: bold;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    #myGrid {
+      height: 700px;
+      width: auto;
+      max-width: 100vw; /* don't overflow viewport */
+      box-sizing: border-box;
+      overflow-x: auto; /* allow horizontal scroll on small screens */
+    }
+
+    /* Optional: hide horizontal scrollbar nicely */
+    #myGrid::-webkit-scrollbar {
+      height: 8px;
+    }
+    #myGrid::-webkit-scrollbar-thumb {
+      background: #cbd5e1; /* Tailwind slate-300 */
+      border-radius: 4px;
+    }
+  </style>
+
+<div class="bg-gray-100 p-6 container mx-auto justify-center">
+
+  <h1 class="text-2xl font-semibold mb-4 text-end">Fabric Data Table</h1>
+
+  <!-- Global filter input -->
+  <input
+    type="text"
+    id="globalFilter"
+    placeholder="Search all columns..."
+    class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"
+  />
+
+  <div
+    id="myGrid"
+    class="ag-theme-alpine shadow-lg rounded-lg"
+  ></div>
+
+  <!-- AG Grid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      const gridDiv = document.querySelector('#myGrid');
+
+      let currentGlobalFilter = '';
+      let currentColumnFilters = {};
+
+      function highlightRenderer(params) {
+        if (!params.value) return '';
+
+        const cellValue = params.value.toString();
+
+        const filterTexts = [];
+
+        if (currentGlobalFilter) filterTexts.push(currentGlobalFilter);
+
+        if (currentColumnFilters[params.colDef.field]) {
+          filterTexts.push(currentColumnFilters[params.colDef.field]);
+        }
+
+        if (filterTexts.length === 0) {
+          return cellValue;
+        }
+
+        const escapedFilters = filterTexts.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const regex = new RegExp(escapedFilters.join('|'), 'gi');
+
+        let result = '';
+        let lastIndex = 0;
+        let match;
+
+        while ((match = regex.exec(cellValue)) !== null) {
+          const index = match.index;
+          result += cellValue.substring(lastIndex, index);
+          result += `<span class="search-highlight">${cellValue.substr(index, match[0].length)}</span>`;
+          lastIndex = index + match[0].length;
+        }
+        result += cellValue.substring(lastIndex);
+
+        return result;
+      }
+
+      function imageCellRenderer(params) {
+        if (!params.value) return '';
+        return `<img src="${params.value}" alt="image" style="width: 50px; height: 60px; object-fit: contain;" />`;
+      }
+
+      const columnDefs = [
+        
+        {
+          headerName: 'job No',
+          field: 'jobno_oms',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'Image',
+          field: 'mainimagepath',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: imageCellRenderer,
+          sortable: false,
+          filterParams: { suppressFilterButton: true } // optional, images may not need filtering UI
+        },
+        {
+          headerName: 'finaldelvdate',
+          field: 'finaldelvdate',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'ourdeldate',
+          field: 'ourdeldate',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'jobnoomsnew',
+          field: 'jobnoomsnew',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'buyer',
+          field: 'buyer',
+          filter: 'agNumberColumnFilter',
+          floatingFilter: true,
+          maxWidth: 100,
+          flex: 0,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'u46',
+          field: 'u46',
+          filter: 'agTextColumnFilter',
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 150,
+          cellRenderer: highlightRenderer
+        }
+      ];
+
+      const gridOptions = {
+        columnDefs: columnDefs,
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 120,
+          resizable: true,
+          editable: false,
+        },
+        rowSelection: 'multiple',
+        suppressRowClickSelection: true,
+        enableCellTextSelection: true,
+        animateRows: true,
+        rowData: null,
+        suppressCellFocus: false,
+      };
+
+      new agGrid.Grid(gridDiv, gridOptions);
+
+      try {
+        const response = await fetch('https://app.herofashion.com/order_panda/');
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const data = await response.json();
+        gridOptions.api.setRowData(data);
+
+        // Auto-size columns to fit grid width initially
+        gridOptions.api.sizeColumnsToFit();
+
+        // Set column visibility for responsive
+        updateColumnVisibility();
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      }
+
+      // Filter changed listener for highlighting text
+      gridOptions.api.addEventListener('filterChanged', () => {
+        currentColumnFilters = {};
+        const filterModel = gridOptions.api.getFilterModel();
+
+        for (const colId in filterModel) {
+          if (!filterModel[colId]) continue;
+
+          if (filterModel[colId].filter != null) {
+            currentColumnFilters[colId] = filterModel[colId].filter.toString().toLowerCase();
+          } else if (
+            filterModel[colId].filterType === 'number' &&
+            filterModel[colId].type === 'equals' &&
+            filterModel[colId].filter !== undefined
+          ) {
+            currentColumnFilters[colId] = filterModel[colId].filter.toString().toLowerCase();
+          }
+        }
+        gridOptions.api.refreshCells({ force: true });
+      });
+
+      // Global filter input listener
+      const globalFilterInput = document.querySelector('#globalFilter');
+      globalFilterInput.addEventListener('input', function (event) {
+        currentGlobalFilter = event.target.value.toLowerCase();
+        gridOptions.api.setQuickFilter(currentGlobalFilter);
+        gridOptions.api.refreshCells({ force: true });
+      });
+
+      // Responsive: auto resize columns on window resize
+      window.addEventListener('resize', () => {
+        if (gridOptions.api) {
+          gridOptions.api.sizeColumnsToFit();
+          updateColumnVisibility();
+        }
+      });
+
+      // Responsive: hide some columns on small screens
+      function updateColumnVisibility() {
+        const isSmallScreen = window.innerWidth < 640; // Tailwind 'sm' breakpoint
+
+        if (!gridOptions.columnApi) return;
+
+        gridOptions.columnApi.setColumnVisible('process', !isSmallScreen);
+        gridOptions.columnApi.setColumnVisible('gsm', !isSmallScreen);
+      }
+    });
+  </script>
+</div>
+{% endblock %}

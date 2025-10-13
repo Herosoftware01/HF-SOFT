@@ -1,0 +1,12 @@
+
+from django.contrib import admin
+from django.urls import path
+from .import views
+
+app_name = 'attendance'
+
+urlpatterns = [
+    path('', views.attendance, name='attendance'),
+    path('oneday/', views.oneday, name='oneday'),
+    path('report/', views.report, name='report'),
+]

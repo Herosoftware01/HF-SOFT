@@ -1,0 +1,104 @@
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block content %}
+
+  <style>
+    .card {
+    transition: background-color 0.3s ease;
+  }
+    @keyframes blink {
+      0%, 100% {
+        opacity: 1;
+        background-color: #ffffff;
+        color: #000000;
+      }
+      50% {
+        opacity: 0.6;
+        background-color: #71fc9a;
+        color: #000000;
+      }
+    }
+    .blink {
+      animation: blink 1.5s infinite;
+    }
+  </style>
+
+<div class="bg-[url('{% static 'images/bg.jpg' %}')] bg-no-repeat bg-cover h-screen flex flex-col">
+
+  <!-- DATE at top-left -->
+  <div class="top-4 left-6">
+    <h3 class="text-xl  font-orbitron mt-3 text-center"style="font-family:orbitron;">
+      DATE : <span id="todayDate"></span>
+    </h3>
+  </div>
+
+<!-- Centered content -->
+  <div class="flex flex-col justify-center items-center flex-grow text-center">
+    <!-- Title -->
+    <h1 class="font-orbitron font-bold leading-tight text-5xl sm:text-6xl md:text-7xl lg:text-8xl"style="font-family:orbitron;">
+      LAY SPREADING
+    </h1>
+
+   
+
+     <div class="mt-8 flex items-center gap-8">
+
+      <div class="card cursor-pointer border p-4 rounded-xl hover:bg-gray-100 bg-[#e3e8e8] w-[150px] font-semibold " style="font-family:orbitron;"
+          data-id="1" onclick="selectCard(this)">
+        Table 1
+      </div>
+
+<div class="card cursor-pointer border p-4 rounded-xl hover:bg-gray-100 bg-[#e3e8e8] w-[150px] font-semibold" style="font-family:orbitron;"
+          data-id="2" onclick="selectCard(this)">
+        Table 2
+      </div>
+
+    </div>
+
+    <!-- Button -->
+     <button 
+        id="getStartedBtn"
+        class="hidden blink mt-12 text-lg md:text-xl lg:text-2xl font-orbitron font-bold px-8 py-4 
+              shadow-md border rounded-xl hover:bg-[#a2ffad] transition"
+        onclick="window.location.href='login.html';">
+        GET STARTED &gt;
+      </button>
+  </div>
+
+  <script>
+    const today = new Date();
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' }; 
+    document.getElementById("todayDate").textContent = today.toLocaleDateString('en-GB', options);
+  </script>
+
+<script>
+  let selectedId = null;
+
+  function selectCard(cardElement) {
+    selectedId = cardElement.getAttribute('data-id');
+    console.log("Selected ID:", selectedId);
+
+    document.getElementById('getStartedBtn').classList.remove('hidden');
+
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('bg-green-200');
+      card.classList.add('bg-[#e3e8e8]');
+    });
+
+    cardElement.classList.remove('bg-[#e3e8e8]');
+    cardElement.classList.add('bg-green-200');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('getStartedBtn').addEventListener('click', function () {
+      if (selectedId) {
+        window.location.href = `/lay_spreading/emp/${selectedId}/`;
+      }
+    });
+  });
+</script>
+</div>
+
+{% endblock %}

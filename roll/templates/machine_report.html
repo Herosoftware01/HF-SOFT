@@ -1,0 +1,95 @@
+{% extends 'mains.html' %}
+{% load static %}
+
+
+{% block title %}Roll Checking Report{% endblock %}
+
+
+{% block content %}
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6 min-h-screen">
+
+<div class="max-w-7xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Machine {{ machine_id }} - Report</h1>
+
+    <div class="flex justify-between items-center mb-4">
+        <!-- Stats -->
+        <div class="flex space-x-6 text-xl">
+            <h3 class="text-yellow-600">Total: <span class="font-extrabold text-yellow-600"> {{ total_count }}</span></h3>
+            <h3 class="text-green-600">Good Roll: <span class="font-extrabold text-green-600"> {{ good_count }}</span></h3>
+            <h3 class="text-red-600">Bad Roll: <span class="font-extrabold text-red-600"> {{ bad_count }}</span></h3>
+        </div>
+
+        <!-- Filter Form -->
+        <form method="get" class="flex space-x-2">
+            <select name="roll_status" class="px-2 py-1 border border-gray-300 rounded">
+                <option value="all" {% if roll_status == "all" %}selected{% endif %}>All</option>
+                <option value="good_roll" {% if roll_status == "good_roll" %}selected{% endif %}>Good Roll</option>
+                <option value="bad_roll" {% if roll_status == "bad_roll" %}selected{% endif %}>Bad Roll</option>
+            </select>
+            <input
+                type="text"
+                name="rollfilter"
+                placeholder="Search Roll No"
+                value="{{ rollfilter }}"
+                class="px-2 py-1 border border-gray-300 rounded"
+            >
+            <input
+                type="date"
+                name="datefilter"
+                value="{{ datefilter }}"
+                class="px-2 py-1 border border-gray-300 rounded"
+            >
+            <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full table-auto border-collapse border border-gray-300 text-sm">
+            <thead>
+                <tr class="bg-gray-200 text-left">
+                    <th class="border border-gray-300 px-4 py-2">Roll No</th>
+                    <th class="border border-gray-300 px-4 py-2">DC No</th>
+                    <th class="border border-gray-300 px-4 py-2">Job No</th>
+                    <th class="border border-gray-300 px-4 py-2">Types</th>
+                    <th class="border border-gray-300 px-4 py-2">F_Dia</th>
+                    <th class="border border-gray-300 px-4 py-2">Act GSM</th>
+                    <th class="border border-gray-300 px-4 py-2">Remarks</th>
+                    <th class="border border-gray-300 px-4 py-2">Mistakes</th>
+                    <th class="border border-gray-300 px-4 py-2">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in mistakes %}
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2">{{ data.roll_no }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.dc_no }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.job_no }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.types }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.finish_dia }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.act_gsm }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.remarks }}</td>
+                    <td class="border border-gray-300 px-4 py-2 whitespace-pre-line">
+                        {{ data.mistakes_str }}
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2 font-semibold 
+                        {% if data.status == 'Bad Roll' %} text-red-600 {% else %} text-green-600 {% endif %}">
+                        {{ data.status }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-gray-500 py-4">No data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+{% endblock %}
+

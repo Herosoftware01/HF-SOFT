@@ -1,0 +1,898 @@
+
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+
+  <style>
+    .orbitron {
+      font-family: "Orbitron", sans-serif;
+    }
+    .digital-clock {
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+      letter-spacing: 2px;
+    }
+  </style>
+
+<div class="bg-[url('{% static 'images/bg.jpg' %}')] bg-no-repeat bg-cover min-h-screen flex flex-col bg-cover bg-center">
+<div class="pt-6 sm:pt-10 px-4 sm:px-6 lg:px-12">
+  <!-- Header -->
+  <div class="flex flex-col items-center text-center">
+    <div class="flex items-center justify-between w-full max-w-[1866px]">
+      <!-- Timer -->
+      <div id="clock" class="font-[Play] digital-clock text-[40px] sm:text-[44px] md:text-[48px] font-bold text-[#969696]">00:00</div>
+      <!-- Title -->
+      <h1 class="text-[20px] sm:text-[28px] md:text-[36px] orbitron font-bold leading-[130%] text-center flex-1 drop-shadow-md">
+         <img src="{% static 'images/cutting.png' %}" class="inline-block w-[40px] md:w-[60px]"> LAY SPREADING
+      </h1>
+      <!-- Balance placeholder -->
+      <div class="w-[60px] sm:w-[80px] md:w-[120px]"></div>
+    </div>
+    <div class="w-full max-w-[1866px] h-0.5 bg-black mt-2 rounded"></div>
+  </div>
+
+  <input type="hidden" id="initial_timer" value="{{ initial_timer }}">
+
+  <!-- Date + Title -->
+  <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2">
+    <h3 class="text-[14px] sm:text-[16px] md:text-[19px] orbitron">
+      DATE : <span id="current-date"></span>
+    </h3>
+    <h3 class="text-[14px] sm:text-[16px] md:text-[19px] orbitron">
+      LAY PLAN - TABLE {{ id }}
+    </h3>
+  </div>
+
+  <div class="flex flex-col lg:flex-row justify-between items-start mt-2 gap-6 lg:gap-12 max-w-[1600px] mx-auto">
+    <!-- Job Details Container -->
+    <div class="w-full lg:flex-1">
+      <div class="p-0">
+       {% for datas in datas %}
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-3 sm:gap-x-5 gap-y-2 text-[12px] sm:text-[14px] lg:text-[15px] font-[open sans] mt-4 lg:mt-[35px]">
+          <div class="font-bold text-black">JOB NO :</div>
+          <div class="text-black" id="job_no">{{ datas.jobno }}</div>
+          <div class="font-bold text-black">PLAN NO :</div>
+          <div class="text-black" id="plan_no">{{ datas.planno}}</div>
+          <div class="font-bold text-black col-span-2 sm:col-span-1">LAY LENGTH MTR :</div>
+          <div class="text-black hidden sm:block">{{ datas.lay_lenmtr}}</div>
+          
+          <div class="font-bold text-black">MARKER NO :</div>
+          <div class="text-black" id="marker_no">{{ datas.markerno}}</div>
+          <div class="font-bold text-black">ORDER :</div>
+          <div class="text-black">{{ datas.jobno}}</div>
+          <div class="font-bold text-black col-span-2 sm:col-span-1">PROGRAM WGT :</div>
+          <div class="text-black hidden sm:block">{{ datas.progwgt}}</div>
+          
+          <div class="font-bold text-black">FAB COLOR :</div>
+          <div class="text-black">{{ datas.clrcomb}}</div>
+          <div class="font-bold text-black">TABLE DIA :</div>
+          <div class="text-black">{{ datas.tabledia}}</div>
+          <div class="font-bold text-black">AVG WGT :</div>
+          <div class="text-black">{{ datas.avgwgt}}</div>
+          
+          <div class="font-bold text-black">LOT :</div>
+          <div class="text-black">{{ datas.lotno}}</div>
+          <div class="font-bold text-black col-span-2 sm:col-span-1">CUTTABLE DIA :</div>
+          <div class="text-black hidden sm:block">{{ datas.cuttabledia}}</div>
+          <div class="row-span-1 col-span-2 hidden lg:block"></div>
+          
+          <div class="font-bold text-black">CLR COMBO :</div>
+          <div class="text-black">{{ datas.clrcomb}}</div>
+          <div class="font-bold text-black col-span-2 sm:col-span-1">PROGRAM DIA :</div>
+          <div class="text-black hidden sm:block">{{ datas.prgdia}}</div>
+          <div class="row-span-1 col-span-2 hidden lg:block"></div>
+        </div>
+       {% endfor %}
+      </div>
+    </div>
+    
+   <!-- Checklist -->
+    <div class="w-full max-w-[414px] flex flex-col items-center gap-4">
+      <h3 class="text-[18px] font-bold mb-2 mt-6">CHECK LIST</h3>
+      <div class="border-2 border-black bg-white rounded-lg shadow-lg p-4 flex justify-around items-center w-full font-bold">
+        <div class="flex flex-col items-center">
+            <div class="flex items-center gap-2 mt-4">
+              <input id="brownSheetChk" type="checkbox" class="w-6 h-6 sm:w-8 sm:h-8"
+                    {% if brown_sheet_timer != "00:00" %}checked{% endif %}>
+              <span class="text-[14px] sm:text-[16px] font-medium">Brown Sheet</span>
+            </div>
+            <span id="timer1" data-initial="{{ brown_sheet_timer|default:'00:00' }}" class="font-[Play] text-[20px] sm:text-[25px] text-[#969696] mt-2">
+            {{ brown_sheet_timer|default:'00:00' }}
+          </span>
+          </div>
+
+          <!-- Join Marker -->
+          <div class="flex flex-col items-center">
+            <div class="flex items-center gap-2 mt-4">
+              <input id="joinMarkerChk" type="checkbox" class="w-6 h-6 sm:w-8 sm:h-8"
+                    {% if join_marker_timer != "00:00" %}checked{% endif %}
+                    {% if brown_sheet_timer == "00:00" %}disabled{% endif %}>
+              <span class="text-[14px] sm:text-[16px] font-medium">Join Marker</span>
+            </div>
+            <span id="timer2" data-initial="{{ join_marker_timer|default:'00:00' }}" class="font-[Play] text-[20px] sm:text-[25px] text-[#969696] mt-2">
+            {{ join_marker_timer|default:'00:00' }}
+          </span>
+        </div>          
+      </div>
+
+      <!-- Next + Roll Status -->
+      <div class="flex gap-4 mt-4 sm:mt-6 self-center lg:self-end">
+        <button id="rollStatusBtn" class="hidden w-[107px] h-[40px] text-white rounded-lg font-bold font-[Inter]"
+          style="background-color:#429CBE;">Roll Status</button>
+
+        <button id="nextBtn" class="w-[107px] h-[40px] text-white rounded-lg font-bold"
+          style="background-color:#8AA7B2;">Next</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="w-full max-w-[1866px] h-0.5 bg-[#8AA7B2] mt-6 sm:mt-8 rounded"></div>
+</div>
+
+<!-- Roll Status Modal -->
+<div id="rollModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-xl p-6 w-[90%] max-w-[400px] relative">
+
+    <!-- Close Button -->
+    <button id="closeModal" class="absolute -top-4 -right-4 bg-red-500 text-white rounded-full w-10 h-10">✕</button>
+
+    <!-- Form moved outside of table -->
+    <form id="rollSearchForm" class="text-center mt-4 mb-2">
+      <input
+        id="rollSearch"
+        type="text"
+        class="w-40 text-center border border-gray-300 rounded"
+        placeholder="Enter Roll No"
+        autocomplete="off"
+      />
+      <button type="submit" class="hidden">Submit</button> <!-- Hidden for soft keyboard compatibility -->
+    </form>
+
+    <!-- Table -->
+    <table class="w-full text-center text-[18px] sm:text-[22px]">
+      <thead>
+        <tr class="border-b-2 border-[#969696]">
+          <th class="px-2 py-2 border-r-2 border-[#969696]">ROLL NO</th>
+          <th class="px-2 py-2 border-r-2 border-[#969696]">PLAN PLY</th>
+          <th class="px-2 py-2 border-r-2 border-[#969696]">Status</th>
+          <th class="px-2 py-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for datas in plan_details %}
+        <tr>
+          <td class="border-r-2 border-[#969696] px-2 py-2">{{ datas.rlno }}</td>
+          <td class="border-r-2 border-[#969696] px-2 py-2">{{ datas.ply }}</td>
+          <td class="border-r-2 border-[#969696] px-2 py-2">
+            <span class="{% if datas.status == 'Complete' %}text-green-600 font-semibold{% else %}text-yellow-600 font-semibold{% endif %}">
+              {{ datas.status }}
+            </span>
+          </td>
+          <td class="px-2 py-2"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div id="rollTable" class="mt-4 overflow-x-auto px-4">
+  <p class="flex justify-end font-orbitron font-semibold text-md mb-2">
+    Roll count - <span id="plan_details_count">{{ plan_details_count }}</span> / <span id="count_data">0</span>
+  </p>
+
+  <div class="overflow-y-auto max-h-[250px] border border-gray-300">
+    <table class="w-full border-collapse border border-gray-300 text-center text-[12px] sm:text-[14px]">
+      <thead class="sticky top-0 bg-gray-100 border border-gray-300">
+        <tr>
+          <th class="border px-2 py-2">S.NO</th>
+          <th class="border px-2 py-2">Roll No</th>
+          <th class="border px-2 py-2">F.DIA</th>
+          <th class="border px-2 py-2">PLAN PLY</th>
+          <th class="border px-2 py-2">PLAN OBWGT</th>
+          <th class="border px-2 py-2">REQD WGT</th>
+          <th class="border px-2 py-2">scl_wgt</th>
+          <th class="border px-2 py-2">ACTUAL DIA</th>
+          <th class="border px-2 py-2">ACTUAL PLY</th>
+          <th class="border px-2 py-2">ACTUAL OBWGT</th>
+          <th class="border px-2 py-2">END BIT</th>
+          <th class="border px-2 py-2">BAL WGT</th>
+          <th class="border px-2 py-2">REMARKS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- your dynamic rows go here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4 text-center">
+  <button
+    id="saveAllBtn"
+    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow hidden"
+  >
+    Save
+  </button>
+</div>
+
+
+<script>
+  // Inject modal roll list into JS
+  const modalRollStatus = {{ plan_details|safe }};
+</script>
+
+<script>
+// Listen for Enter key in Roll No search input
+
+//  document.getElementById("rollSearch").addEventListener("keydown", function(e) {
+//   if (e.key === "Enter" || e.keyCode === 13) {
+//     e.preventDefault();  // prevent form submission or weird behavior on tablet
+
+//     const rlno = e.target.value.trim().toUpperCase();
+//     const plan_no = document.getElementById("plan_no").textContent.trim();
+
+//     if (!rlno) return;
+
+//     // ✅ Defensive check for modalRollStatus
+//     if (typeof modalRollStatus === "undefined" || !Array.isArray(modalRollStatus)) {
+//       alert("❌ Roll status data not loaded.");
+//       return;
+//     }
+
+//     const rollEntry = modalRollStatus.find(r => r.rlno === rlno);
+
+//     if (!rollEntry) {
+//       alert("❌ Roll not found in plan.");
+//       return;
+//     }
+
+//     if (rollEntry.status === "Complete") {
+//       alert(`✅ Roll ${rlno} is already marked as Complete.`);
+//       return;
+//     }
+
+//     // ✅ Fetch data
+//     fetch(`/lay_spreading/get-roll-data/${rlno}/${plan_no}`)
+//       .then(response => response.json())
+//       .then(data => {
+//         renderTableRows(data.datas);
+//         document.getElementById("rollModal").classList.add("hidden");
+//         document.getElementById("rollTable").classList.remove("hidden");
+
+//         // 👇 Optional: clear and focus input again
+//         e.target.value = "";
+//         e.target.focus();
+//       })
+//       .catch(error => {
+//         console.error("Error fetching roll data:", error);
+//         alert("❌ Error fetching roll data");
+//       });
+//   }
+// });
+
+
+
+document.getElementById("rollSearchForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const input = document.getElementById("rollSearch");
+  let rlno = input.value.trim().replace(/\s+/g, '').toUpperCase(); // Clean input
+
+  const plan_no = document.getElementById("plan_no").textContent.trim();
+
+  if (!rlno) return;
+
+  // ✅ Defensive check
+  if (typeof modalRollStatus === "undefined" || !Array.isArray(modalRollStatus)) {
+    alert("❌ Roll status data not loaded.");
+    return;
+  }
+
+  // ✅ Debug logging
+  console.log("🔍 Typed Roll No:", rlno);
+  console.log("📦 Plan Details (modalRollStatus):", modalRollStatus);
+
+  // ✅ Safer roll matching
+  let rollEntry = null;
+  for (let r of modalRollStatus) {
+    const rRlno = String(r.rlno || "").trim().replace(/\s+/g, '').toUpperCase();
+    console.log("Checking roll:", rRlno, "vs", rlno);
+    if (rRlno === rlno) {
+      rollEntry = r;
+      break;
+    }
+  }
+
+  // ✅ No match
+  if (!rollEntry) {
+    alert("❌ Roll not found in plan.");
+    return;
+  }
+
+  // ✅ Already completed
+  if (rollEntry.status === "Complete") {
+    alert(`✅ Roll ${rlno} is already marked as Complete.`);
+    return;
+  }
+
+  // ✅ Fetch data
+  fetch(`/lay_spreading/get-roll-data/${rlno}/${plan_no}`)
+    .then(response => {
+      if (!response.ok) throw new Error("Network response not OK");
+      return response.json();
+    })
+    .then(data => {
+      if (!data.datas || !Array.isArray(data.datas)) {
+        throw new Error("Invalid data format from server.");
+      }
+
+      renderTableRows(data.datas);
+
+      document.getElementById("rollModal").classList.add("hidden");
+      document.getElementById("rollTable").classList.remove("hidden");
+
+      // ✅ Clear and focus input
+      input.value = "";
+      input.focus();
+    })
+    .catch(error => {
+      console.error("❌ Error fetching roll data:", error);
+      alert("❌ Error fetching roll data:\n" + error.message);
+    });
+});
+
+
+window.addEventListener('DOMContentLoaded', () => {
+  const planNo = document.getElementById("plan_no").textContent.trim();
+  const jobNo = document.getElementById("job_no").textContent.trim();
+
+  const dateSpan = document.getElementById("current-date");
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    const formattedDate = `${day}/${month}/${year}`; // DD/MM/YYYY
+    dateSpan.textContent = formattedDate;
+
+  const planDetailsCount = parseInt(
+    document.getElementById("plan_details_count").textContent.trim()
+  );
+
+  if (planNo && jobNo) {
+    fetch(`/lay_spreading/get-roll-data-on-load/?plan_no=${planNo}&job_no=${jobNo}`)
+      .then(res => res.json())
+      .then(data => {
+        renderTableRows(data.datas);
+        document.getElementById("rollTable").classList.remove("hidden");
+
+        const countData = parseInt(data.count_data || 0);
+        document.getElementById("count_data").textContent = countData;
+
+        // ✅ Show save button only if both counts match
+        const saveBtn = document.getElementById("saveAllBtn");
+        if (countData === planDetailsCount) {
+          saveBtn.classList.remove("hidden");
+        } else {
+          saveBtn.classList.add("hidden");
+        }
+      })
+      .catch(console.error);
+  }
+});
+
+
+// Helper function to render rows in the #rollTable tbody
+// function renderTableRows(datas) {
+//   const tableBody = document.querySelector("#rollTable tbody");
+//   tableBody.innerHTML = ""; // clear previous rows
+
+//   if (!datas.length) {
+//     tableBody.innerHTML = `<tr><td colspan="14" class="border px-2 py-2">No Data Found</td></tr>`;
+//     return;
+//   }
+
+//   datas.forEach((item, index) => {
+//     // Normalize data fields with fallback keys
+//     const rlno = item.rlno || item.roll_no || "";
+//     const fdia = item.fdia || item.f_dia || "";
+//     const ply = item.ply || item.plan_ply || "";
+//     const planwgt = item.planwgt || item.plan_obwgt || "";
+//     const rejwgt = item.rejwgt || item.req_wgt || "";
+//     const scl_wgt = item.scl_wgt || item.scl_wgt || "";
+//     const actual_dia = item.actual_dia || "";
+//     const actual_ply = item.actual_ply || "";
+//     const actual_obwgt = item.actual_obwgt || "";
+//     const end_bit = item.end_bit || "";
+//     const bal_wgt = item.bal_wgt || "";
+//     const remarks = item.remarks || "";
+//     const timer = item.timer || "00:00";
+
+//     // For roll search, show input fields; for load data, show text only
+//     const isSearchData = !!item.fdia || !!item.ply; // crude check if this is search data from TrsCplan4
+
+//     const row = `
+//       <tr>
+//         <td class="border px-2 py-2">${index + 1}</td>
+//         <td class="border px-2 py-2">${rlno}</td>
+//         <td class="border px-2 py-2">${fdia}</td>
+//         <td class="border px-2 py-2">${ply}</td>
+//         <td class="border px-2 py-2">${planwgt}</td>
+//         <td class="border px-2 py-2">${rejwgt}</td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="scl_wgt" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : scl_wgt}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="actual_dia" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : actual_dia}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="actual_ply" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : actual_ply}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="actual_obwgt" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : actual_obwgt}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="end_bit" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : end_bit}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="bal_wgt" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : bal_wgt}
+//         </td>
+//         <td class="border px-2 py-2">
+//           ${isSearchData ? `<input type="text" name="remarks" class="w-full border border-gray-300 rounded px-1 py-1 text-sm" />` : remarks}
+//         </td>
+//         <td class="border px-2 py-2 text-green-500 font-bold">${timer}</td>
+
+//         ${isSearchData ? `<td class="border px-2 py-2">
+//           <button class="bg-blue-500 text-white px-2 py-1 rounded saveBtn" data-rlno="${rlno}">Save</button>
+//         </td>` : `<td></td>`}
+//       </tr>
+//     `;
+//     tableBody.insertAdjacentHTML("beforeend", row);
+//   });
+  
+// }
+
+
+
+function renderTableRows(datas) {
+  const tableBody = document.querySelector("#rollTable tbody");
+  tableBody.innerHTML = ""; // clear previous rows
+
+  if (!datas.length) {
+    tableBody.innerHTML = `<tr><td colspan="15" class="border px-2 py-2">No Data Found</td></tr>`;
+    return;
+  }
+
+  datas.forEach((item, index) => {
+    const rlno = item.rlno || item.roll_no || "";
+    const fdia = item.fdia || item.f_dia || "";
+    const ply = item.ply || item.plan_ply || "";
+    const planwgt = item.planwgt || item.plan_obwgt || "";
+    const rejwgt = item.rejwgt || item.req_wgt || "";
+    const scl_wgt = item.scl_wgt || "";
+    const actual_dia = item.actual_dia || "";
+    const actual_ply = item.actual_ply || "";
+    const actual_obwgt = item.actual_obwgt || "";
+    const end_bit = item.end_bit || "";
+    const bal_wgt = item.bal_wgt || "";
+    const remarks = item.remarks || "";
+    const timer = item.timer || "00:00";
+
+    const isSearchData = !!item.fdia || !!item.ply;
+
+    const row = `
+      <tr>
+        <td class="border px-2 py-2">${index + 1}</td>
+        <td class="border px-2 py-2">${rlno}</td>
+        <td class="border px-2 py-2">${fdia}</td>
+        <td class="border px-2 py-2">${ply}</td>
+        <td class="border px-2 py-2">${planwgt}</td>
+        <td class="border px-2 py-2">${rejwgt}</td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="scl_wgt" class="input scl_wgt" data-row="${index}" />` : scl_wgt}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="actual_dia" class="input actual_dia" data-row="${index}" />` : actual_dia}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="actual_ply" class="input actual_ply" data-row="${index}" />` : actual_ply}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="actual_obwgt" class="input actual_obwgt" data-row="${index}" />` : actual_obwgt}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="end_bit" class="input end_bit" data-row="${index}" />` : end_bit}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="number" name="bal_wgt" class="input bal_wgt" data-row="${index}" readonly />` : bal_wgt}
+        </td>
+        <td class="border px-2 py-2">
+          ${isSearchData ? `<input type="text" name="remarks" class="input remarks" />` : remarks}
+        </td>
+        <td class="border px-2 py-2 text-green-500 font-bold">${timer}</td>
+        ${isSearchData ? `<td class="border px-2 py-2"><button class="bg-blue-500 text-white px-2 py-1 rounded saveBtn" data-rlno="${rlno}">Save</button></td>` : `<td></td>`}
+      </tr>
+    `;
+    tableBody.insertAdjacentHTML("beforeend", row);
+  });
+
+  // Attach input listeners for real-time BAL WGT calculation
+  document.querySelectorAll(".input").forEach(input => {
+    input.addEventListener("input", (e) => {
+      const row = e.target.dataset.row;
+      const scl = parseFloat(document.querySelector(`input.scl_wgt[data-row="${row}"]`)?.value) || 0;
+      const obwgt = parseFloat(document.querySelector(`input.actual_obwgt[data-row="${row}"]`)?.value) || 0;
+      const ply = parseFloat(document.querySelector(`input.actual_ply[data-row="${row}"]`)?.value) || 0;
+      const endBit = parseFloat(document.querySelector(`input.end_bit[data-row="${row}"]`)?.value) || 0;
+
+      const bal = scl - (obwgt * ply) - endBit;
+
+      const balInput = document.querySelector(`input.bal_wgt[data-row="${row}"]`);
+      if (balInput) {
+        balInput.value = isNaN(bal) ? "" : bal.toFixed(2);
+      }
+    });
+  });
+}
+
+
+document.querySelector("#rollTable tbody").addEventListener("click", function (e) {
+  if (e.target && e.target.classList.contains("saveBtn")) {
+    const button = e.target;
+    const row = button.closest("tr");
+    const roll_no = button.dataset.rlno;
+    const timer = document.getElementById("clock").textContent.trim();
+
+    const data = {
+      timer: timer,
+      roll_no: roll_no,
+      plan_no: document.getElementById("plan_no").textContent.trim(),
+      job_no: document.getElementById("job_no").textContent.trim(),
+      f_dia: row.children[2].textContent.trim(),
+      plan_ply: row.children[3].textContent.trim(),
+      plan_obwgt: row.children[4].textContent.trim(),
+      req_wgt: row.children[5].textContent.trim(),
+      scl_wgt: row.querySelector('input[name="scl_wgt"]').value.trim(),
+      actual_dia: row.querySelector('input[name="actual_dia"]').value.trim(),
+      actual_ply: row.querySelector('input[name="actual_ply"]').value.trim(),
+      actual_obwgt: row.querySelector('input[name="actual_obwgt"]').value.trim(),
+      end_bit: row.querySelector('input[name="end_bit"]').value.trim(),
+      bal_wgt: row.querySelector('input[name="bal_wgt"]').value.trim(),
+      remarks: row.querySelector('input[name="remarks"]').value.trim()
+    };
+
+    fetch('/lay_spreading/save-roll-data/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        // Optionally: add CSRF token here
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        alert("✅ Data saved successfully");
+        localStorage.setItem("showRollModal", "true");
+
+        // 🟩 Reload page
+        location.reload();
+        document.getElementById("rollModal").classList.remove("hidden");
+        document.querySelector("#rollTable tbody").innerHTML = "";
+
+        // 👉 Optional: clear roll input
+        document.getElementById("rollSearch").value = "";
+
+        // 👉 Optional: set focus back to input
+        document.getElementById("rollSearch").focus();
+      } else {
+        alert("❌ Error saving data: " + result.message);
+      }
+    })
+    .catch(error => {
+      console.error("Error saving data:", error);
+      alert("❌ Unexpected error occurred");
+    });
+  }
+});
+document.addEventListener("DOMContentLoaded", function () {
+  const shouldShowModal = localStorage.getItem("showRollModal");
+
+
+  if (shouldShowModal === "true") {
+    // 🟩 Show the modal
+    document.getElementById("rollModal").classList.remove("hidden");
+
+    // 🧹 Clear the flag
+    localStorage.removeItem("showRollModal");
+
+    // 🧼 Optional: reset table and focus input
+    document.querySelector("#rollTable tbody").innerHTML = "";
+    document.getElementById("rollSearch").value = "";
+    document.getElementById("rollSearch").focus();
+  }
+});
+
+</script>
+
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const nextBtn = document.getElementById("nextBtn");
+    const joinMarkerChk = document.getElementById("joinMarkerChk");
+    const rollModal = document.getElementById("rollModal");
+    const closeModal = document.getElementById("closeModal");
+
+    nextBtn.addEventListener("click", function () {
+      if (joinMarkerChk.checked) {
+        // ✅ Show modal
+        rollModal.classList.remove("hidden");
+      } else {
+        // ❌ Show warning or do nothing
+        alert("Please complete the 'Join Marker' step before continuing.");
+      }
+    });
+
+    // Close modal button
+    closeModal.addEventListener("click", function () {
+      rollModal.classList.add("hidden");
+    });
+  });
+</script>
+
+
+
+<script>
+(function(){
+
+  // Helper to convert mm:ss to total seconds
+  function parseTimerToSeconds(timerStr) {
+    const [m, s] = timerStr.split(':').map(Number);
+    return (m * 60) + s;
+  }
+
+  // Helper to convert seconds to mm:ss
+  function formatSecondsToTimer(seconds) {
+    let m = String(Math.floor(seconds / 60)).padStart(2, '0');
+    let s = String(seconds % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  // CSRF token getter for POST requests
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+
+  const timer1 = document.getElementById('timer1');
+const timer2 = document.getElementById('timer2');
+
+// ✅ Load initial timer values from data attributes
+const brownSheetInitial = timer1.dataset.initial || "00:00";
+const joinMarkerInitial = timer2.dataset.initial || "00:00";
+
+const brownSheetAlreadySaved = brownSheetInitial !== "00:00";
+const joinMarkerAlreadySaved = joinMarkerInitial !== "00:00";
+
+
+  // Get initial values
+  const initialTimer = document.getElementById("initial_timer")?.value || "00:00";
+  let seconds = parseTimerToSeconds(initialTimer);
+
+  const planNoElem = document.getElementById("plan_no");
+  const jobNoElem = document.getElementById("job_no");
+  const markerNoElem = document.getElementById("marker_no");
+
+  const clockDisplay = document.getElementById("clock");
+  const brownSheetChk = document.getElementById('brownSheetChk');
+  const joinMarkerChk = document.getElementById('joinMarkerChk');
+
+if (brownSheetAlreadySaved) {
+  brownSheetChk.checked = true;
+  joinMarkerChk.disabled = false;
+  timer1.textContent = brownSheetInitial;
+  timer1.dataset.saved = "true";         // 🟢 Mark as saved
+  brownSheetChk.disabled = true;         // 🟢 Prevent unchecking
+  
+}
+
+if (joinMarkerAlreadySaved) {
+  joinMarkerChk.checked = true;
+  timer2.textContent = joinMarkerInitial;
+  timer2.dataset.saved = "true";         // 🟢 Mark as saved
+  joinMarkerChk.disabled = true;         // 🟢 Prevent unchecking
+}
+
+
+  // ✅ Timer loop
+  function updateTimer() {
+    seconds++;
+    const currentTime = formatSecondsToTimer(seconds);
+    if (clockDisplay) {
+      clockDisplay.textContent = currentTime;
+    }
+
+    // Send update to DB every 2 seconds
+    if (seconds % 2 === 0) {
+      sendTimerUpdate(currentTime);
+    }
+  }
+
+  console.log("Join Marker Timer from dataset:", timer2.dataset.initial);
+console.log("Join Marker Timer from textContent:", timer2.textContent.trim());
+
+  // ✅ Send main timer to DB
+  function sendTimerUpdate(timerValue) {
+    const csrftoken = getCookie('csrftoken');
+    fetch('/lay_spreading/update-timer/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        plan_no: planNoElem?.textContent.trim(),
+        job_no: jobNoElem?.textContent.trim(),
+        marker_no: markerNoElem?.textContent.trim(),
+        timer: timerValue
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Main timer updated:", data);
+    })
+    .catch(err => {
+      console.error("Main timer update error:", err);
+    });
+  }
+
+  // ✅ Save checkbox timers to DB
+  function saveTimerToDB(timerValue, columnName) {
+    const csrftoken = getCookie('csrftoken');
+    fetch('/lay_spreading/update-checkbox-timer/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        plan_no: planNoElem?.textContent.trim(),
+        job_no: jobNoElem?.textContent.trim(),
+        marker_no: markerNoElem?.textContent.trim(),
+        timer_value: timerValue,
+        timer_column: columnName
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log(`Timer (${columnName}) saved:`, data);
+    })
+    .catch(err => {
+      console.error(`Error saving (${columnName}) timer:`, err);
+    });
+  }
+
+
+function checkboxHandler(checkbox, timerSpan, dbColumn) {
+  checkbox.addEventListener("change", function () {
+    const alreadySaved = timerSpan.dataset.saved === "true";
+
+    if (this.checked && !alreadySaved) {
+      const confirmSave = confirm("Are you sure you want to save this step?");
+      if (!confirmSave) {
+        this.checked = false; // Reset checkbox if user cancels
+        return;
+      }
+
+      const time = formatSecondsToTimer(seconds);
+      timerSpan.textContent = time;
+      saveTimerToDB(time, dbColumn);
+      timerSpan.dataset.saved = "true";  // Mark as saved
+      checkbox.disabled = true;          // Lock checkbox
+    } else if (!this.checked && alreadySaved) {
+      // Prevent unchecking
+      this.checked = true;
+    }
+  });
+}
+
+
+joinMarkerChk.addEventListener("change", function () {
+  const nextBtn = document.getElementById("nextBtn");
+  if (this.checked) {
+    nextBtn.disabled = false;
+    nextBtn.style.backgroundColor = "#429CBE";
+  } else {
+    nextBtn.disabled = true;
+    nextBtn.style.backgroundColor = "#8AA7B2";
+  }
+});
+
+
+
+  // ✅ Enable Join Marker only when Brown Sheet is checked
+  brownSheetChk.addEventListener('change', function () {
+    if (this.checked) {
+      joinMarkerChk.disabled = false;
+    } else {
+      joinMarkerChk.disabled = true;
+      joinMarkerChk.checked = false;
+      timer2.textContent = "00:00";
+      saveTimerToDB("00:00", "join_marker_timer");
+    }
+  });
+
+  // Attach checkbox listeners
+  checkboxHandler(brownSheetChk, timer1, "brown_sheet_timer");
+  checkboxHandler(joinMarkerChk, timer2, "join_marker_timer");
+
+  // ✅ Start main timer
+  setInterval(updateTimer, 1000);
+
+})();
+
+
+
+document.getElementById("saveAllBtn").addEventListener("click", function () {
+    const job_no = document.getElementById("job_no").textContent.trim();
+    const plan_no = document.getElementById("plan_no").textContent.trim();
+    const marker_no = document.getElementById("marker_no").textContent.trim();
+    const lot_no = "{{ datas.lotno }}";
+    const fabric_color = "{{ datas.clrcomb }}";
+    const timer = document.getElementById("clock").textContent.trim();
+    const id = "{{ id }}";
+
+    fetch('/lay_spreading/save_final_plan', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            job_no,
+            plan_no,
+            marker_no,
+            lot_no,
+            fabric_color,
+            timer
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to task/<id>
+            window.location.href = `/lay_spreading/task/${id}/`;
+        } else {
+            alert("Save failed");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Something went wrong");
+    });
+});
+
+</script>
+
+
+</div>
+
+
+{% endblock %}

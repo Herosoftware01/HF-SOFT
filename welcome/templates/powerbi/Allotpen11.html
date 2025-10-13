@@ -1,0 +1,233 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" rel="stylesheet"/>
+
+<style>
+  .search-highlight {
+    background-color: #facc15;
+    color: black;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+  #myGrid {
+    height: 700px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+  #myGrid::-webkit-scrollbar { height: 8px; }
+  #myGrid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .ag-cell {
+    padding: 5px 10px;
+    line-height: 1.4;
+  }
+  .ag-row {
+    border-bottom: 1px solid #e2e8f0;
+  }
+</style>
+
+<div class="bg-gray-100 p-6 container mx-auto">
+  <h1 class="text-2xl font-semibold mb-4">Allot Details Table</h1>
+  <div class="flex items-center justify-between mb-4">
+    <input type="text" id="globalFilter" placeholder="Search all columns..." class="p-2 border border-gray-300 rounded w-full max-w-md"/>
+    <span id="totalApiRows" class="text-gray-700 font-medium ml-4">Total API Rows: 0</span>
+  </div>
+  <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+  const gridDiv = document.querySelector('#myGrid');
+  const totalApiRowsSpan = document.querySelector('#totalApiRows');
+  let currentGlobalFilter = '';
+  let currentColumnFilters = {};
+
+  // Custom renderer for multi-line text
+  function multiLineRenderer(params) {
+    if (params.value == null) return '';
+    const valueString = params.value.toString();
+    const lines = valueString.split(/\r\n|\n/).filter(line => line.trim() !== '');
+    const container = document.createElement('div');
+    container.style.whiteSpace = "normal";
+    container.style.lineHeight = "1.4";
+    container.innerHTML = lines.join('<br>');
+    return container;
+  }
+
+  // Custom renderer for highlighting search terms
+  function highlightRenderer(params) {
+    if (!params.value) return '';
+    const raw = params.value.toString();
+    
+    const displayLines = raw.split(/\r\n|\n/).filter(line => line.trim() !== '');
+    
+    const filterTexts = [];
+    if (currentGlobalFilter) filterTexts.push(currentGlobalFilter);
+    if (params.colDef.filter && gridOptions.api.getFilterModel()[params.colDef.field]) {
+        const columnFilterValue = gridOptions.api.getFilterModel()[params.colDef.field].filter;
+        if (columnFilterValue) filterTexts.push(columnFilterValue);
+    }
+
+    if (filterTexts.length === 0) {
+      return displayLines.join('<br>'); 
+    }
+    
+    const escapedFilters = filterTexts.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(escapedFilters.join('|'), 'gi');
+    
+    const finalDisplayParts = [];
+
+    displayLines.forEach(line => {
+      let lineResult = '', lineLastIndex = 0, lineMatch;
+      const lineRegex = new RegExp(escapedFilters.join('|'), 'gi'); 
+      while ((lineMatch = lineRegex.exec(line)) !== null) {
+        const idx = lineMatch.index;
+        lineResult += line.substring(lineLastIndex, idx);
+        lineResult += `<span class="search-highlight">${line.substr(idx, lineMatch[0].length)}</span>`;
+        lineLastIndex = idx + lineMatch[0].length;
+      }
+      lineResult += line.substring(lineLastIndex);
+      finalDisplayParts.push(lineResult);
+    });
+
+    return finalDisplayParts.join('<br>');
+  }
+  
+  // Custom renderer for image display
+  function imageCellRenderer(params) {
+        if (!params.value) return '';
+        // Increased image size here: width: 80px, height: 90px
+        return `<img src="${params.value}" alt="image" style="width: 80px; height: 90px; object-fit: contain;" />`; 
+  }
+
+  const columnDefs = [
+    {headerName: 'z_o_yy_findt_dir_sty_uom_pty', field: 'z_o_yy_findt_dir_sty_uom_pty', filter: 'agTextColumnFilter', checkboxSelection: true, minWidth: 150, flex: 1, 
+     wrapText: true, autoHeight: true, 
+     cellRenderer: multiLineRenderer
+    },
+    {headerName: 'z_o_dd_ord_findt_buy_mer_qty', field: 'z_o_dd_ord_findt_buy_mer_qty', filter: 'agTextColumnFilter', floatingFilter: true, flex: 2, minWidth: 220, cellRenderer: multiLineRenderer},
+    {
+        headerName: 'Production Type_Allot Pen', 
+        field: 'productionTypeAndAllotPen', 
+        filter: 'agTextColumnFilter', 
+        floatingFilter: true, 
+        flex: 2, 
+        minWidth: 250, 
+        wrapText: true, 
+        autoHeight: true, 
+        cellRenderer: highlightRenderer, 
+    },
+    {
+        headerName: 'Main Image', 
+        field: 'mainimagepath', 
+        filter: 'agTextColumnFilter', 
+        floatingFilter: true, 
+        flex: 1, 
+        minWidth: 160, 
+        cellRenderer: imageCellRenderer,
+        // Set a minimum row height to accommodate larger images if autoHeight isn't sufficient
+        // This is a global row height, if specific to image, use getRowHeight below.
+        // On an image column, you might want to explicitly set a fixed height or a higher minWidth.
+        // For individual image column height, consider using getRowHeight for specific rows or a higher default.
+        // A simple way for image columns is to use a fixed row height or adjust getRowHeight.
+    },
+  ];
+
+  const gridOptions = {
+    columnDefs: columnDefs,
+    defaultColDef: {sortable: true, filter: true, floatingFilter: true, flex: 1, minWidth: 120, resizable: true, editable: false, 
+      wrapText: false, autoHeight: false 
+    },
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    enableCellTextSelection: true,
+    animateRows: true,
+    rowData: null,
+    suppressCellFocus: false,
+    getRowHeight: params => {
+      if (!params.data) return 35; // Default height for empty rows
+      
+      const textFieldsToCheck = ['z_o_yy_findt_dir_sty_uom_pty', 'z_o_dd_ord_findt_buy_mer_qty', 'productionTypeAndAllotPen']; 
+      let maxTextLines = 1;
+      textFieldsToCheck.forEach(field => {
+        const value = params.data[field];
+        if (value) {
+          const lines = value.toString().split(/\r\n|\n/).filter(line => line.trim() !== '').length;
+          maxTextLines = Math.max(maxTextLines, lines);
+        }
+      });
+
+      // Calculate height needed for text content
+      const textHeight = maxTextLines * 20 + 15; // 20px per line, 15px padding
+
+      // If an image is present, ensure row is tall enough for the image
+      const imageHeight = 90; // The height we set for the image
+      const imagePadding = 10; // Extra padding around the image
+
+      // The row height should be at least the image height + padding, or the text height
+      return Math.max(textHeight, imageHeight + imagePadding); 
+    },
+    // Removed onGridReady as we don't need it to set the totalApiRowsSpan
+    onFilterChanged: function() {
+      // No dynamic row count for totalApiRowsSpan, but keep this for internal grid filter updates if needed
+    },
+  };
+  
+  new agGrid.Grid(gridDiv, gridOptions);
+
+  try {
+    const response = await fetch('https://app.herofashion.com/bala/Allotpen/');
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    
+    totalApiRowsSpan.textContent = `Total Rows: ${data.length}`;
+
+    const mappedData = data.map(row => {
+      const productionType = row.production_type_inside_outside || '';
+      const allotPen = row.allot_pen || '';
+      
+      return {
+        z_o_yy_findt_dir_sty_uom_pty: row.z_o_yy_findt_dir_sty_uom_pty, 
+        z_o_dd_ord_findt_buy_mer_qty: row.z_o_dd_ord_findt_buy_mer_qty,
+        productionTypeAndAllotPen: `Production Type: ${productionType}\nAllot Pen: ${allotPen}`, 
+        mainimagepath: row.mainimagepath,
+      };
+    });
+
+    gridOptions.api.setRowData(mappedData);
+    gridOptions.api.sizeColumnsToFit();
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    totalApiRowsSpan.textContent = `Total API Rows: Error`; 
+  }
+
+  gridOptions.api.addEventListener('filterChanged', () => {
+    currentColumnFilters = {}; 
+    const filterModel = gridOptions.api.getFilterModel();
+    for (const colId in filterModel) {
+      if (filterModel[colId] && filterModel[colId].filter != null) {
+        currentColumnFilters[colId] = filterModel[colId].filter.toString().toLowerCase();
+      }
+    }
+    gridOptions.api.refreshCells({ force: true }); 
+  });
+
+  document.querySelector('#globalFilter').addEventListener('input', e => {
+    currentGlobalFilter = e.target.value.toLowerCase();
+    gridOptions.api.setQuickFilter(currentGlobalFilter);
+    gridOptions.api.refreshCells({ force: true }); 
+  });
+
+  window.addEventListener('resize', () => {
+    if (gridOptions.api) gridOptions.api.sizeColumnsToFit();
+  });
+});
+</script>
+
+{% endblock %}

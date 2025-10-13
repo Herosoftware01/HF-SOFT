@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Styled 12 Grid Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-tr from-blue-50 to-white min-h-screen p-4 sm:p-6 lg:p-8">
+  
+  
+  <div class="max-w-7xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+    <table class="w-full table-auto border">
+  <tr class="bg-gray-200">
+    <th class="px-4 py-2">TYPE</th>
+    <th class="px-4 py-2">Date</th>
+    <th class="px-4 py-2">Mistake 1 (Eng)</th>
+    <th class="px-4 py-2">Actions</th>
+  </tr>
+  {% for mistake in all %}
+  <tr>
+    <td class="border px-4 py-2">{{ mistake.ty }}</td>
+    <td class="border px-4 py-2">{{ mistake.dt }}</td>
+    <td class="border px-4 py-2">{{ mistake.mist1_eng }}</td>
+    <td class="border px-4 py-2">
+      <!-- Edit Button -->
+      <a href="?edit={{ mistake.id }}" class="text-blue-500 hover:underline mr-4">Edit</a>
+
+      <!-- Delete Button -->
+      <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this?');">
+        {% csrf_token %}
+        <input type="hidden" name="delete_id" value="{{ mistake.id }}">
+        <button type="submit" class="text-red-500 hover:underline">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+  </div>
+
+  <div class="max-w-7xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4">
+  {% if edit_instance %}Update Mistake{% else %}Add New Mistake{% endif %}
+</h2>
+
+    <form id="myForm" method="post" enctype="multipart/form-data"  class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% csrf_token %}
+      <div class="col-span-full">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type (P or D)</label>
+        <select name="ty" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <option value="P">Print</option>
+          <option value="D">Dyed</option>
+        </select>
+      </div>
+  
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 1</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist1_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ edit_instance.mist1_ta|default:'' }}"  />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist1_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ edit_instance.mist1_eng|default:'' }}"  />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist1_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ edit_instance.mist1_hin|default:'' }}"  />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m1" value="{{ edit_instance.m1|default:0 }}" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m1_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+           <option value="C" {% if edit_instance.m1_choice == "C" %}selected{% endif %}>Number</option>
+          <option value="M" {% if edit_instance.m1_choice == "M" %}selected{% endif %}>Meter</option>
+          <option value="P" {% if edit_instance.m1_choice == "P" %}selected{% endif %}>Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist1_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          {% if edit_instance and edit_instance.mist1_img %}
+    <img src="{{ edit_instance.mist1_img.url }}" alt="Current Image"
+      class="w-full h-36 object-cover rounded border border-gray-300 mt-2" />
+  {% else %}
+    <img src="" alt="Preview"
+      class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+  {% endif %}
+        </div>
+      </div>
+
+
+
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 2</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist2_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist2_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist2_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m2" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m2_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist2_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+      <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 3</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist3_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist3_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist3_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m3" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m3_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist3_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 4</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist4_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist4_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist4_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m4" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m4_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist4_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 5</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist5_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist5_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist5_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m5" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m5_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist5_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 6</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist6_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist6_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist6_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m6" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m6_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist6_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 7</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist7_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist7_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist7_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m7" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m7_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist7_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 8</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist8_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist8_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist8_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m8" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m8_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist8_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 9</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist9_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist9_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist9_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m9" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m9_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist9_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 10</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist10_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist10_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist10_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m10" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m10_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist10_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 11</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist11_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist11_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist11_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m11" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m11_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist11_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+
+       <div class="bg-white rounded-lg shadow border border-gray-200 p-6 flex flex-col gap-5">
+        <p class="text-xl font-semibold text-blue-700">Mistake 12</p>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Tamil</label>
+          <input type="text" name="mist12_ta" placeholder="தமிழ்" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">English</label>
+          <input type="text" name="mist12_eng" placeholder="English" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Hindi</label>
+          <input type="text" name="mist12_hin" placeholder="हिन्दी" class="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Mistake Allowed</label>
+          <button type="button" onclick="changeValue(this, -1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">−</button>
+          <input type="number" name="m12" value="0" class="w-20 text-center px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <button type="button" onclick="changeValue(this, 1)" class="px-3 py-2 bg-gray-100 text-gray-700 border rounded hover:bg-gray-200 transition">+</button>
+
+          <select name="m12_choice" class="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="C">Number</option>
+            <option value="M">Meter</option>
+            <option value="P">Popup</option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Image Upload</label>
+          <input type="file" name="mist12_img" accept="image/*" onchange="previewImage(event, this)" class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+        </div>
+
+        <div>
+          <img src="" alt="Preview" class="w-full h-36 object-cover rounded hidden border border-gray-300 mt-2" />
+        </div>
+      </div>
+
+    </form>
+
+
+    <div class="mt-10 text-center">
+      <!-- <button type="submit" form="myForm" class="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+        Submit
+      </button> -->
+
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
+    {% if edit_instance %}Update{% else %}Submit{% endif %}
+  </button>
+  {% if edit_instance %}
+    <a href="{% url 'submit_mistake' %}" class="text-gray-600 ml-4">Cancel</a>
+  {% endif %}
+    </div>
+  </div>
+
+
+  <script>
+    function previewImage(event, input) {
+      const file = input.files[0];
+      const preview = input.parentElement.nextElementSibling.querySelector('img');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+      }
+    }
+
+    function changeValue(button, delta) {
+      const container = button.parentElement;
+      const input = container.querySelector('input[type="number"]');
+      let current = parseInt(input.value) || 0;
+      input.value = Math.max(0, current + delta); // Prevent negative values
+    }
+  </script>
+</body>
+</html>

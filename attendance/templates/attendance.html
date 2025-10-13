@@ -1,0 +1,454 @@
+
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+
+
+  <style>
+    .sunday-row {
+      background-color: #fee2e2 !important; /* Light red background */
+      color: #dc2626 !important; /* Red text */
+    }
+    .sunday-row:hover {
+      background-color: #fecaca !important; /* Slightly darker red on hover */
+    }
+  </style>
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6">
+
+ 
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row justify-between gap-4 items-center">
+      <h1 class="text-2xl font-bold text-gray-500">📊 ATTENDANCE DASHBOARD</h1>
+ 
+      <form method="get" class="flex gap-3 items-center" id="filterForm">
+        <label>UNIT:</label>
+        <select name="dept" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
+          <option value="ALL" {% if unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
+          <option value="CUTTING" {% if unit == 'CUTTING' %}selected{% endif %}>CUTTING</option>
+          <option value="UNIT-1" {% if unit == 'UNIT-1' %}selected{% endif %}>UNIT 1</option>
+          <option value="UNIT-2" {% if unit == 'UNIT-2' %}selected{% endif %}>UNIT 2</option>
+          <option value="UNIT-3" {% if unit == 'UNIT-3' %}selected{% endif %}>UNIT 3</option>
+          <option value="UNIT-4" {% if unit == 'UNIT-4' %}selected{% endif %}>UNIT 4</option>
+          <option value="Training Instutite" {% if unit == 'Training Instutite' %}selected{% endif %}>UNIT 5</option>
+        </select>
+
+        <label>From:</label>
+        <input type="date" name="startDate" value="{{ default_start }}" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
+
+        <label>To:</label>
+        <input type="date" name="endDate" value="{{ default_end }}" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
+
+        <button type="button" onclick="setDateRange(1)" class="bg-green-500 text-white px-3 py-2 rounded-lg text-sm">1</button>
+        <button type="button" onclick="setDateRange(6)" class="bg-orange-500 text-white px-3 py-2 rounded-lg text-sm">6</button>
+        <button type="button" onclick="clearFilters()" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm">Clear</button>
+        <a href="{% url 'attendance:oneday' %}" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm">One</a>
+        
+        
+        
+      </form>
+    </div>
+
+    <!-- Table + Chart -->
+    <div class="grid grid-cols-2 gap-6">
+      <div class="p-4 shadow-lg rounded-2xl bg-white">
+        <h2 class="text-lg font-bold mb-2 font-[Orbitron] text-center" id="tableTitle">ATTENDANCE {{ unit }}</h2>
+        <div class="overflow-y-auto max-h-96">
+          <table class="table-auto border-collapse border border-separate border-spacing-0 w-full text-sm text-center" id="attendanceTable">
+            <thead class="sticky top-0 ">
+              <tr class="bg-[#D9EAF7]">
+                <th rowspan="2" class="border border-gray-700 px-4 py-2">DATE</th>
+                <th rowspan="2" class="border border-gray-700 px-4 py-2">ONROLL EMP</th>
+                <th colspan="2" class="border border-gray-700 px-4 py-2 bg-green-300">PRESENT</th>
+                <th colspan="2" class="border border-gray-700 px-4 py-2 bg-red-300">ABSENT</th>
+              </tr>
+              <tr class="bg-[#D9EAF7]">
+                <th class="border border-gray-700 px-4 py-2 bg-green-100">Count</th>
+                <th class="border border-gray-700 px-4 py-2 bg-green-100">%</th>
+                <th class="border border-gray-700 px-4 py-2 bg-red-100">Count</th>
+                <th class="border border-gray-700 px-4 py-2 bg-red-100">%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in data %}
+              <tr class="hover:bg-[#D8D8D8] text-center">
+                <td class="border border-gray-300 px-4 py-2 font-semibold date-cell">{{ row.date }}</td>
+                <td class="border border-gray-300 px-4 py-2 font-semibold text-blue-600">{{ row.total }}</td>
+                <td class="border border-gray-300 px-4 py-2 text-green-600 font-semibold">{{ row.present }}</td>
+                <td class="border border-gray-300 px-4 py-2 text-green-600">
+                  {{ row.present_pct }} %
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-red-600 font-semibold">{{ row.absent }}</td>
+                <td class="border border-gray-300 px-4 py-2 text-red-600">
+                  {{ row.absent_pct }} %
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- total Chart -->
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+        <h2 class="text-lg font-bold mb-2 text-center">ONROLL</h2>
+        <div class="relative w-full h-[300px]">
+          <canvas id="totalChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Present & Absent Graphs -->
+    <div class="grid grid-cols-2 gap-6">
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+        <h2 class="text-lg font-bold mb-2 text-center">PRESENT</h2>
+        <div class="relative w-full h-[300px]">
+          <canvas id="presentChart"></canvas>
+        </div>
+      </div>
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+        <h2 class="text-lg font-bold mb-2 text-center ">ABSENT</h2>
+        <div class="relative w-full h-[300px]">
+          <canvas id="absentChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combined Graph -->
+    <div class="p-4 mt-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+      <h2 class="text-lg font-bold mb-2 text-center">COMBINED ATTENDANCE</h2>
+      <div class="relative w-full h-[400px]">
+        <canvas id="combinedChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Helper function to format date properly
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Convert date to Indian format (DD-MM-YYYY)
+  function formatDateToIndian(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  // Check if a date is Sunday
+  function isSunday(dateString) {
+    const date = new Date(dateString);
+    return date.getDay() === 0; // Sunday = 0
+  }
+
+  // Calculate default Friday to Thursday range
+  function setDefaultDates() {
+    const today = new Date();
+    const currentWeekday = today.getDay(); // Sunday=0, Monday=1, ..., Saturday=6
+    
+    // Calculate last Friday
+    let daysSinceLastFriday;
+    if (currentWeekday >= 5) { // Friday(5) or Saturday(6)
+      daysSinceLastFriday = currentWeekday - 5;
+    } else { // Sunday(0) to Thursday(4)
+      daysSinceLastFriday = currentWeekday + 2;
+    }
+    
+    const lastFriday = new Date(today);
+    lastFriday.setDate(today.getDate() - daysSinceLastFriday);
+    
+    // Calculate this Thursday
+    let daysUntilThursday;
+    if (currentWeekday <= 4) { // Sunday(0) to Thursday(4)
+      daysUntilThursday = 4 - currentWeekday;
+    } else { // Friday(5) or Saturday(6)
+      daysUntilThursday = 11 - currentWeekday; // Next week's Thursday
+    }
+    
+    const thisThursday = new Date(today);
+    thisThursday.setDate(today.getDate() + daysUntilThursday);
+    
+    return {
+      startDate: formatDate(lastFriday),
+      endDate: formatDate(thisThursday)
+    };
+  }
+
+  // Auto-submit form function
+  function submitForm() {
+    document.getElementById('filterForm').submit();
+  }
+
+  // Set date range function for 1 month and 6 months buttons
+  function setDateRange(months) {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setMonth(today.getMonth() - months);
+    
+    document.querySelector('input[name="startDate"]').value = formatDate(startDate);
+    document.querySelector('input[name="endDate"]').value = formatDate(today);
+    
+    // Auto-submit after setting dates
+    submitForm();
+  }
+
+  // Clear filters function - Reset to Friday-Thursday range
+  function clearFilters() {
+    // Reset dropdown to first option (ALL)
+    document.querySelector('select[name="dept"]').value = 'ALL';
+    
+    // Reset dates to default Friday-Thursday range
+    const defaultDates = setDefaultDates();
+    document.querySelector('input[name="startDate"]').value = defaultDates.startDate;
+    document.querySelector('input[name="endDate"]').value = defaultDates.endDate;
+    
+    // Auto-submit after clearing
+    submitForm();
+  }
+
+  // Highlight Sunday rows in table
+  function highlightSundayRows() {
+    const tableRows = document.querySelectorAll('#attendanceTable tbody tr');
+    tableRows.forEach(row => {
+      const dateCell = row.querySelector('.date-cell');
+      if (dateCell) {
+        const originalDate = dateCell.getAttribute('data-original-date');
+        if (originalDate && isSunday(originalDate)) {
+          row.classList.add('sunday-row');
+        }
+      }
+    });
+  }
+
+  // Page load functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates if no dates are provided from backend
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const endDateInput = document.querySelector('input[name="endDate"]');
+    
+    // If backend doesn't provide dates, set Friday-Thursday defaults
+    if (!startDateInput.value || !endDateInput.value) {
+      const defaultDates = setDefaultDates();
+      startDateInput.value = defaultDates.startDate;
+      endDateInput.value = defaultDates.endDate;
+      submitForm(); // Auto-submit to load data
+    }
+    
+    // Convert table dates to Indian format and store original date
+    const dateCells = document.querySelectorAll('.date-cell');
+    dateCells.forEach(cell => {
+      const originalDate = cell.textContent.trim();
+      if (originalDate) {
+        cell.setAttribute('data-original-date', originalDate); // Store original date
+        cell.textContent = formatDateToIndian(originalDate);
+      }
+    });
+
+    // Highlight Sunday rows
+    highlightSundayRows();
+
+    // Initialize charts after DOM is ready
+    initializeCharts();
+  });
+
+  // Initialize all charts with Sunday highlighting
+  function initializeCharts() {
+    const serverData = {{ data|safe }};
+    
+    // Handle empty data case
+    if (!serverData || serverData.length === 0) {
+      return;
+    }
+
+    const labels = serverData.map(item => formatDateToIndian(item.date));
+    const present = serverData.map(item => item.present);
+    const absent = serverData.map(item => item.absent);
+    const total = serverData.map(item => item.total);
+
+    // Create background colors array - red for Sundays, default for others
+    const backgroundColors = serverData.map(item => 
+      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(59,130,246,0.3)'
+    );
+    
+    const presentBackgroundColors = serverData.map(item => 
+      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(34,197,94,0.3)'
+    );
+    
+    const absentBackgroundColors = serverData.map(item => 
+      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(239,68,68,0.3)'
+    );
+
+    // Create x-axis label colors - red for Sundays, default for others
+    const labelColors = serverData.map(item => 
+      isSunday(item.date) ? '#903794' : '#374151'
+    );
+
+    const datalabelsConfig = {
+      color: "#000", 
+      anchor: "end", 
+      align: "top",
+      offset: 6, 
+      font: { weight: "bold" }, 
+      formatter: v => v
+    };
+
+    // Common chart options with Sunday date label highlighting
+    const getChartOptions = () => ({
+      responsive: true, 
+      maintainAspectRatio: false, 
+      plugins: { datalabels: datalabelsConfig },
+      scales: {
+        x: {
+          ticks: {
+            color: function(context) {
+              return labelColors[context.index];
+            },
+            font: {
+              weight: function(context) {
+                return labelColors[context.index] === '#dc2626' ? 'bold' : 'normal';
+              }
+            }
+          }
+        },
+        y: {
+          ticks: {
+            color: '#374151'
+          }
+        }
+      }
+    });
+
+    // Total Chart with Sunday highlighting (dates + data)
+    const totalChart = new Chart(document.getElementById("totalChart"), {
+      type: "line",
+      data: { 
+        labels, 
+        datasets: [{ 
+          label: "Total", 
+          data: total, 
+          borderColor: "blue", 
+          backgroundColor: backgroundColors,
+          pointBackgroundColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#3b82f6'
+          ),
+          pointBorderColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#3b82f6'
+          ),
+          pointRadius: 6,
+          fill: true 
+        }] 
+      },
+      options: getChartOptions(),
+      plugins: [ChartDataLabels]
+    });
+
+    // Present Chart with Sunday highlighting (dates + data)
+    const presentChart = new Chart(document.getElementById("presentChart"), {
+      type: "line",
+      data: { 
+        labels, 
+        datasets: [{ 
+          label: "Present", 
+          data: present, 
+          borderColor: "green", 
+          backgroundColor: presentBackgroundColors,
+          pointBackgroundColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#22c55e'
+          ),
+          pointBorderColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#22c55e'
+          ),
+          pointRadius: 6,
+          fill: true 
+        }] 
+      },
+      options: getChartOptions(),
+      plugins: [ChartDataLabels]
+    });
+
+    // Absent Chart with Sunday highlighting (dates + data)
+    const absentChart = new Chart(document.getElementById("absentChart"), {
+      type: "line",
+      data: { 
+        labels, 
+        datasets: [{ 
+          label: "Absent", 
+          data: absent, 
+          borderColor: "red", 
+          backgroundColor: absentBackgroundColors,
+          pointBackgroundColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#ef4444'
+          ),
+          pointBorderColor: serverData.map(item => 
+            isSunday(item.date) ? '#903794' : '#ef4444'
+          ),
+          pointRadius: 6,
+          fill: true 
+        }] 
+      },
+      options: getChartOptions(),
+      plugins: [ChartDataLabels]
+    });
+
+    // Combined Chart with Sunday highlighting (dates + data)
+    const combinedChart = new Chart(document.getElementById("combinedChart"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { 
+            label: "Total", 
+            data: total, 
+            backgroundColor: serverData.map(item => 
+              isSunday(item.date) ? 'rgb(185, 102, 131)' : 'rgba(59,130,246,0.5)'
+            ),
+            borderColor: serverData.map(item => 
+              isSunday(item.date) ? '#637AB9' : 'blue'
+            )
+          },
+          { 
+            label: "Present", 
+            data: present, 
+            backgroundColor: serverData.map(item => 
+              isSunday(item.date) ? 'rgba(239,68,68,0.6)' : 'rgba(34,197,94,0.5)'
+            ),
+            borderColor: serverData.map(item => 
+              isSunday(item.date) ? '#637AB9' : 'green'
+            )
+          },
+          { 
+            label: "Absent", 
+            data: absent, 
+            backgroundColor: serverData.map(item => 
+              isSunday(item.date) ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.5)'
+            ),
+            borderColor: serverData.map(item => 
+              isSunday(item.date) ? '#637AB9' : 'red'
+            )
+          },
+        ]
+      },
+      options: getChartOptions(),
+      plugins: [ChartDataLabels]
+    });
+}
+</script>
+
+
+</div>
+
+
+
+
+{% endblock %}

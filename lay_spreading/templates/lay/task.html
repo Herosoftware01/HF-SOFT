@@ -1,0 +1,505 @@
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+    <style>
+
+  #popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+
+   
+    .popup-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+
+  @keyframes blink {
+    0%, 100% {
+      opacity: 1;
+      background-color: #8AA7B2; /* Default color */
+      color: white;
+    }
+    50% {
+      opacity: 0.6;
+      background-color: #22a731; /* Blink color */
+      color: #fcfcfc; /* Soft yellow text */
+    }
+  }
+
+  .blink {
+    animation: blink 1.5s infinite;
+  }
+
+  /* Table responsive scroll */
+  @media (max-width: 1200px) {
+    .table-responsive {
+      overflow-x: auto;
+    }
+  }
+</style>
+
+
+
+<div class="bg-[url('{% static 'images/bg.jpg' %}')] bg-no-repeat bg-cover min-h-screen flex flex-col">
+  <div class="pt-4 md:pt-8">
+    <div class="flex flex-col items-center text-center">
+      <h1 class="text-2xl md:text-[36px] font-[orbitron] font-bold leading-[130%]">
+       <img src="{% static 'images/cutting.png' %}" class="inline-block w-[40px] md:w-[60px]">  LAY SPREADING 
+      </h1><br>   
+      <div class="w-full h-0.5 bg-black mt- rounded"></div>
+    </div>
+
+    <input type="hidden" id="tableId" value="{{ id }}">
+      <script>
+        const tableId = document.getElementById('tableId').value;
+      </script>
+
+    <div class="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-4 ml-4 md:ml-8 mr-4 md:mr-0 gap-4 md:gap-0">
+      <h3 class="text-base  font-[orbitron] font-normal">
+        DATE : <span id="todayDate"></span>
+      </h3>
+       <div class="flex items-center justify-center text-[13px] gap-3 md:gap-6 font-[Inter] text-xs md:text-[14px]">
+      <button onclick="window.location.href = `/lay_spreading/emp/${tableId}/`;"
+      class="bg-[#8AA7B2] px-2 md:px-4 py-1 text-white rounded shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)]  w-[95] h-[33px]">
+        Table Allocate
+      </button>
+      
+      <!-- <button onclick="window.location.href = `/overwrite/${tableId}/`;"
+        class="bg-[#F89D9D] px-2 md:px-4 py-1 text-white rounded shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)]  w-[107px] h-[33px]">
+        Overwrite
+      </button> -->
+
+      {% if 'overwrite' in request.path %}
+        <a href="{% url 'task' id %}">
+          <button class="bg-[#F89D9D] px-2 md:px-4 py-1 text-white rounded shadow w-[107px] h-[33px] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)]">
+            back
+          </button>
+        </a>
+      {% else %}
+        <button onclick="openOverwriteModal('{{ id }}')"
+                class="bg-[#F89D9D] px-2 md:px-4 py-1 text-white rounded shadow w-[107px] h-[33px] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)]">
+          <span class="">Overwrite</span>
+        </button>
+      {% endif %}
+
+     <!-- <button onclick="openOverwriteModal('{{ id }}')"
+        class="bg-[#F89D9D] px-2 md:px-4 py-1 text-white rounded shadow w-[107px] h-[33px]">
+        Overwrite
+      </button> -->
+
+      <button onclick="openPopup()" class="bg-[#FFC9CA] px-2 md:px-4 py-1 text-white rounded shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] w-auto h-[33px] ">
+        🔓
+      </button>
+    </div>
+    {% block table %}
+      <h3 class="text-base font-[orbitron] md:mr-5">
+        LAY PLAN - TABLE - {{ id }}
+      </h3>
+    {% endblock %}
+    </div>
+  </div>
+
+  {% block content_table %}
+
+<div class="overflow-x-auto w-full  px-4">
+  <div class="flex items-center justify-center  font-[Inter] text-xs">
+      <div class="-rotate-90 w-auto h-auto">
+        <h1 class="text-[16px] font-bold font-[open sans] px-4 md:w-[100px]">CUT SAMPLE</h1>
+      </div>
+      <div>
+        <p class="text-xl md:text-xl text-[#8AA7B2] text-center ">count - {{ cutsample_count }}</p>
+<div class="overflow-x-auto">
+  <div class="relative max-h-[250px]">
+    
+    <table class="table-auto border-collapse w-full">
+      <thead class="text-center font-[Inter] font-bold text-xs md:text-sm bg-white">
+        <tr>
+          <th scope="col" class="sticky top-0 left-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            PLAN NO
+          </th>
+          <th scope="col" class="sticky top-0  bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            JOB NO
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[120px] md:w-[150px] border border-black">
+            COLOR
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            LOT NO
+          </th>
+          <th scope="col" class="sticky top-0  bg-white px-2 md:px-2 py-2 md:py-2 w-[100px] md:w-[120px] border border-black">
+            TOTAL PLY
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            WEIGHT
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[100px] md:w-[120px] border border-black">
+            LAY LENGTH
+          </th>
+          <th scope="col" class="sticky top-0 z-10 bg-white px-2 md:px-2 py-2 md:py-2 border border-black">
+            Ready To Spread
+          </th>
+        </tr>
+      </thead>
+
+      <tbody class="text-center font-[Inter] text-sm md:text-base overflow-y-auto max-h-[300px] divide-y divide-gray-200">
+        {% for data in datas %}
+        <tr class="hover:bg-gray-100 transition-colors">
+          <td class="sticky left-0  border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.planno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.jobno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[120px] md:w-[150px]">
+            {{ data.clrcomb }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.lotno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[100px] md:w-[120px]">
+            {{ data.ply }}
+          </td>
+          
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.wgt }}
+          </td>
+
+          <td class="border border-black px-2 md:px-4 py-2 w-[100px] md:w-[120px]">
+            {{ data.lay_lenmtr }}
+          </td>
+          <!-- <td class="border border-black px-2 md:px-4 py-2">
+            <a href="{% url 'lay_check' planno=data.planno id=id %}" aria-label="Go to Ready to Spread page">
+              <button class="blink bg-[#8AA7B2] px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg text-xs md:text-sm">
+                Ready To Spread
+              </button>
+            </a>
+          </td> -->
+
+
+          <td class="border border-black px-2 md:px-4 py-2">
+            {% if not lock_status.table_no_1 or forloop.first %}
+              <a href="{% url 'lay_check' planno=data.planno id=id %}" aria-label="Go to Ready to Spread page">
+                <button class="blink bg-[#8AA7B2] px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg text-xs md:text-sm">
+                  Ready To Spread
+                </button>
+              </a>
+            {% else %}
+              <button class="bg-gray-400 px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg text-xs md:text-sm cursor-not-allowed" disabled>
+                Locked
+              </button>
+            {% endif %}
+          </td>
+
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+      </div>
+    </div>
+</div>
+
+<div class="overflow-x-auto w-full mt-4 md:mt-4 lg:mt-4 px-4 mb-4">
+  <div class="flex items-center justify-center font-[Inter] text-xs">
+      <div class="-rotate-90 w-auto h-auto">
+        <h1 class="text-[16px] font-bold font-[open sans] px-4 md:w-[100px]">Order</h1>
+      </div>
+      <div>
+        <p class="text-xl md:text-xl text-[#8AA7B2] text-center ">count - {{ order_count }}</p>
+    <div class="overflow-x-auto">
+  <div class="relative max-h-[250px]">
+    <table class="table-auto border-collapse w-full">
+      <thead class="text-center font-[Inter] font-bold text-xs md:text-sm bg-white">
+        <tr>
+          <th scope="col" class="sticky top-0 left-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            PLAN NO
+          </th>
+          <th scope="col" class="sticky top-0  bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            JOB NO
+          </th>
+          <th scope="col" class="sticky top-0  bg-white px-2 md:px-2 py-2 md:py-2 w-[120px] md:w-[150px] border border-black">
+            COLOR
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            LOT NO
+          </th>
+          <th scope="col" class="sticky top-0  bg-white px-2 md:px-2 py-2 md:py-2 w-[100px] md:w-[120px] border border-black">
+            TOTAL PLY
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[80px] md:w-[100px] border border-black">
+            WEIGHT
+          </th>
+          <th scope="col" class="sticky top-0 bg-white px-2 md:px-2 py-2 md:py-2 w-[100px] md:w-[120px] border border-black">
+            LAY LENGTH
+          </th>
+          <th scope="col" class="sticky top-0 z-10 bg-white px-2 md:px-2 py-2 md:py-2 border border-black">
+            Ready To Spread
+          </th>
+        </tr>
+      </thead>
+
+      <tbody class="text-center font-[Inter] text-sm md:text-base overflow-y-auto max-h-[300px] divide-y divide-gray-200">
+        {% for data in orders %}
+        <tr class="hover:bg-gray-100 transition-colors">
+          <td class="sticky left-0  border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.planno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.jobno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[120px] md:w-[150px]">
+            {{ data.clrcomb }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.lotno }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[100px] md:w-[120px]">
+            {{ data.ply }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[80px] md:w-[100px]">
+            {{ data.wgt }}
+          </td>
+          <td class="border border-black px-2 md:px-4 py-2 w-[100px] md:w-[120px]">
+            {{ data.lay_lenmtr }}
+          </td>
+
+          <!-- <td class="border border-black px-2 md:px-4 py-2">
+            <a href="{% url 'lay_check' planno=data.planno id=id %}" aria-label="Go to Ready to Spread page">
+              <button class="blink bg-[#8AA7B2] px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg text-xs md:text-sm">
+                Ready To Spread
+              </button>
+            </a>
+          </td> -->
+         
+          <td class="border border-black px-2 md:px-4 py-2">
+            {% if not lock_status.table_no_1 or forloop.first %}
+              <a href="{% url 'lay_check' planno=data.planno id=id %}" aria-label="Go to Ready to Spread page">
+                <button class="blink bg-[#8AA7B2] px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg text-xs md:text-sm">
+                  Ready To Spread
+                </button>
+              </a>
+            {% else %}
+              <button class="bg-gray-400 px-2 md:px-4 py-1 text-white rounded-md md:rounded-lg text-xs md:text-sm cursor-not-allowed" disabled>
+                Locked
+              </button>
+            {% endif %}
+          </td>
+
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+      </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<div id="overwriteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+    <h2 class="text-lg font-semibold mb-4">Enter Credentials</h2>
+    <input type="number" id="empIdInput" placeholder="Emp ID" class="w-full mb-3 border px-3 py-2 rounded" />
+    <input type="password" id="passwordInput" placeholder="Password" class="w-full mb-4 border px-3 py-2 rounded" maxlength="6" />
+    
+    <div class="flex justify-end space-x-2">
+      <button onclick="closeOverwriteModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+      <button onclick="submitOverwriteCredentials()" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+    </div>
+    
+    <p id="overwriteError" class="text-red-600 text-sm mt-3 hidden">Invalid credentials.</p>
+  </div>
+</div>
+
+
+<!-- BACKDROP + CENTERED POPUP -->
+<div id="popup" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md relative">
+    
+    <!-- Close Button (optional) -->
+    <button onclick="closePopup()" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+
+    <!-- Toggle (optional feature, clarify use) -->
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-sm text-gray-600 font-medium">Toggle Option</span>
+      <label class="relative inline-block w-[60px] h-[34px]">
+        <input type="checkbox" class="peer opacity-0 w-0 h-0">
+        <span class="absolute inset-0 bg-gray-300 peer-checked:bg-blue-500 rounded-full transition duration-300"></span>
+        <span class="absolute left-1 top-[4px] bg-white w-[26px] h-[26px] rounded-full transition peer-checked:translate-x-6"></span>
+      </label>
+    </div>
+
+    <!-- Heading -->
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">Login Required</h2>
+
+    <!-- Employee ID -->
+    <label class="block mb-1 text-sm font-medium text-gray-700">Employee ID</label>
+    <input type="text" id="empId" class="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <!-- Password -->
+    <label class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+    <input type="password" id="password" class="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <!-- Buttons -->
+    <div class="flex justify-end space-x-2">
+      <button onclick="closePopup()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition">Cancel</button>
+      <button onclick="submitForm()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Submit</button>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Date Update -->
+  <script>
+    const today = new Date();
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' }; 
+    document.getElementById("todayDate").textContent = today.toLocaleDateString('en-GB', options);
+  </script>
+
+
+<script>
+  let currentTableId = null;
+
+  function openOverwriteModal(tableId) {
+    currentTableId = tableId;
+    document.getElementById("overwriteModal").classList.remove("hidden");
+    document.getElementById("overwriteError").classList.add("hidden");
+  }
+
+  function closeOverwriteModal() {
+    document.getElementById("overwriteModal").classList.add("hidden");
+    document.getElementById("empIdInput").value = "";
+    document.getElementById("passwordInput").value = "";
+    document.getElementById("overwriteError").classList.add("hidden");
+  }
+
+  function submitOverwriteCredentials() {
+    const empId = document.getElementById("empIdInput").value;
+    const password = document.getElementById("passwordInput").value;
+
+    fetch("{% url 'validate_overwrite_user' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: new URLSearchParams({
+        emp_id: empId,
+        password: password
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.valid) {
+        // Redirect to overwrite page
+        window.location.href = `/lay_spreading/overwrite/${currentTableId}/${currentTableId}/`;
+      } else {
+        document.getElementById("overwriteError").classList.remove("hidden");
+      }
+    })
+    .catch(err => {
+      console.error("Error:", err);
+    });
+  }
+</script>
+
+<!-- 
+<script>
+    function openPopup() {
+      document.getElementById("popup").style.display = "flex";
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+
+    function submitForm() {
+      const empId = document.getElementById("empId").value;
+      const password = document.getElementById("password").value;
+      // Do your form validation or AJAX here
+      alert("Emp ID: " + empId + "\nPassword: " + password);
+      closePopup();
+    }
+  </script> -->
+
+
+<script>
+  function openPopup() {
+    document.getElementById("popup").style.display = "flex";
+  }
+
+  function closePopup() {
+    document.getElementById("popup").style.display = "none";
+  }
+
+  function submitForm() {
+    const empId = document.getElementById("empId").value;
+    const password = document.getElementById("password").value;
+
+    fetch("{% url 'toggle_table_lock' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie('csrftoken'),
+      },
+      body: new URLSearchParams({
+        emp_id: empId,
+        password: password
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Table 1 lock status changed to: " + (data.table_no_1 ? "ON" : "OFF"));
+        location.reload(); // Reload to reflect new status
+      } else {
+        alert("Invalid credentials.");
+      }
+    })
+    .catch(err => console.error("Error:", err));
+  }
+
+  // Helper to get CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
+
+</div>
+
+{% endblock %}

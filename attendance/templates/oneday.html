@@ -1,0 +1,258 @@
+
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+
+
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row justify-between gap-4 items-center">
+        <h1 class="text-2xl font-bold text-gray-500">📊 ATTENDANCE DASHBOARD</h1>
+  
+        <form method="get" class="flex gap-3 items-center" id="filterForm">
+          <label>UNIT:</label>
+          <select name="dept" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
+            <option value="ALL" {% if unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
+            <option value="CUTTING" {% if unit == 'CUTTING' %}selected{% endif %}>CUTTING</option>
+            <option value="UNIT-1" {% if unit == 'UNIT-1' %}selected{% endif %}>UNIT 1</option>
+            <option value="UNIT-2" {% if unit == 'UNIT-2' %}selected{% endif %}>UNIT 2</option>
+            <option value="UNIT-3" {% if unit == 'UNIT-3' %}selected{% endif %}>UNIT 3</option>
+            <option value="UNIT-4" {% if unit == 'UNIT-4' %}selected{% endif %}>UNIT 4</option>
+            <option value="Training Instutite" {% if unit == 'Training Instutite' %}selected{% endif %}>UNIT 5</option>
+          </select>
+          <a href="{% url 'attendance:attendance' %}" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm">BACK</a>
+          </form>
+      </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+        <div class="p-4 shadow-lg rounded-2xl bg-white">
+            <h2 class="text-lg font-bold mb-2 font-orbitron text-center"> TODAY'S ATTENDANCE {{ unit }}</h2>
+            <div class="overflow-y-auto h-96">
+            <table class="table-auto border-collapse border border-separate border-spacing-0 w-full text-sm text-center">
+                <thead class="sticky top-0">
+                <tr class="bg-[#D9EAF7]">
+                   
+                    <th rowspan="2" class="border border-gray-700 px-4  py-2">DEPT</th>
+                    <th rowspan="2" class="border border-gray-700 px-4 py-2">ONROLL EMP</th>
+                    <th colspan="2" class="border border-gray-700 px-4 py-2 bg-green-300">PRESENT</th>
+                    <th colspan="2" class="border border-gray-700 px-4 py-2 bg-red-300">ABSENT</th>
+                </tr>
+                <tr class="bg-[#D9EAF7]">
+                    <th class="border border-gray-700 px-4 py-2 bg-green-100">COUNT</th>
+                    <th class="border border-gray-700 px-4 py-2 bg-green-100">%</th>
+                    <th class="border border-gray-700 px-4 py-2 bg-red-100">COUNT</th>
+                    <th class="border border-gray-700 px-4 py-2 bg-red-100">%</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in unit_data %}
+                <tr class="hover:bg-[#D8D8D8] text-center">
+                    
+                    <td class="border border-gray-300 px-4 py-2 font-semibold">{{ row.unit }}</td>
+                    <td class="border border-gray-300 px-4 py-2 font-semibold text-blue-600">{{ row.total }}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-green-600 font-semibold">{{ row.present }}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-green-600">{{ row.present_pct }} %</td>
+                    <td class="border border-gray-300 px-4 py-2 text-red-600 font-semibold">{{ row.absent }}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-red-600">{{ row.absent_pct }} %</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-4 text-gray-500">No attendance data available.</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="p-4 shadow-lg rounded-2xl bg-white">
+            <h2 class="text-lg font-bold mb-2 font-orbitron text-center">COMBINED ATTENDANCE</h2>
+            <div class="relative w-full h-[400px]">
+            <canvas id="combinedChart"></canvas>
+            </div>
+        </div>
+        </div>
+  </div>
+
+  
+  <script>
+   
+  function submitForm() {
+    document.getElementById("filterForm").submit();
+  }
+
+
+ const serverData = {{ unit_data|safe }};
+
+if (serverData.length > 0) {
+  const labels = serverData.map(item => item.unit);
+  const total = serverData.map(item => item.total);
+  const present = serverData.map(item => item.present);
+  const absent = serverData.map(item => item.absent);
+
+  function isSunday() {
+    const today = new Date();
+    return today.getDay() === 0;
+  }
+  const isSun = isSunday();
+
+  const backgroundColorsTotal = total.map(() => isSun ? 'rgb(185, 102, 131)' : 'rgba(59,130,246,0.5)');
+  const borderColorsTotal = total.map(() => isSun ? '#637AB9' : 'blue');
+
+  const backgroundColorsPresent = present.map(() => isSun ? 'rgba(239,68,68,0.6)' : 'rgba(34,197,94,0.5)');
+  const borderColorsPresent = present.map(() => isSun ? '#637AB9' : 'green');
+
+  const backgroundColorsAbsent = absent.map(() => isSun ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.5)');
+  const borderColorsAbsent = absent.map(() => isSun ? '#637AB9' : 'red');
+
+  function getChartOptions() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "top" },
+      datalabels: {
+        color: "#000",
+        font: { family: "Open Sans, sans-serif",weight: "bold" },
+        position: "top",
+        rotation: -90,           // Rotates the label by 90 degrees
+        anchor: "end",
+        align: "top",
+        offset: 6,
+        formatter: function(value, context) {
+          const datasetIndex = context.datasetIndex;
+          const dataIndex = context.dataIndex;
+          const totalVal = total[dataIndex];
+
+          if (datasetIndex === 1 || datasetIndex === 2) {
+            // Show only percentage on top
+            const percent = ((value / totalVal) * 100).toFixed(1) + "%";
+            return percent;
+          }
+
+          // Total: no label
+          return null;
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#374151' }
+      },
+      y: {
+        ticks: { color: '#374151', beginAtZero: true }
+      }
+    }
+  };
+}
+
+
+  const chart = new Chart(document.getElementById("combinedChart"), {
+  type: "bar",
+  data: {
+    labels,
+    datasets: [
+      {
+        label: "Onroll",
+        data: total,
+        backgroundColor: backgroundColorsTotal,
+        borderColor: borderColorsTotal,
+        borderWidth: 1,
+        datalabels: {
+          labels: {
+            inside: {
+              color: "#000",
+              align: "center",
+              anchor: "center",
+              formatter: (value) => value // count inside
+            },
+            top: {
+              color: "#000",
+              align: "top",
+              anchor: "end",
+             formatter: (value, context) => {
+              const totalVal = total[context.dataIndex];
+              return Math.round((value / totalVal) * 100) + "%"; // integer %
+            }
+            
+            }
+          }
+        }
+      },
+      {
+        label: "Present",
+        data: present,
+        backgroundColor: backgroundColorsPresent,
+        borderColor: borderColorsPresent,
+        borderWidth: 1,
+        datalabels: {
+          labels: {
+            inside: {
+              color: "#000",
+              align: "center",
+              anchor: "center",
+              formatter: (value) => value // count inside
+            },
+            top: {
+              color: "#000",
+              align: "top",
+              anchor: "end",
+              formatter: (value, context) => {
+                const totalVal = total[context.dataIndex];
+                return Math.round((value / totalVal) * 100) + "%";// % above
+              }
+            }
+          }
+        }
+      },
+      {
+        label: "Absent",
+        data: absent,
+        backgroundColor: backgroundColorsAbsent,
+        borderColor: borderColorsAbsent,
+        borderWidth: 1,
+        datalabels: {
+          labels: {
+            inside: {
+              color: "#000",
+              align: "center",
+              anchor: "center",
+              formatter: (value) => value // count inside
+            },
+            top: {
+              color: "#000",
+              align: "top",
+              anchor: "end",
+              formatter: (value, context) => {
+                const totalVal = total[context.dataIndex];
+                return Math.round((value / totalVal) * 100) +  "%"; // % above
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  options: getChartOptions(),
+  plugins: [ChartDataLabels]
+});
+
+
+} else {
+  console.log("No attendance data found for selected range.");
+}
+
+  </script>
+</div>
+
+
+
+
+{% endblock %}

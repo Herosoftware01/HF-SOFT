@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Roll Checking{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="//unpkg.com/alpinejs" defer></script>
+     
+  <link rel="manifest" href="/manifest.json" />
+
+   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="//unpkg.com/alpinejs" defer></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inder&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&family=Play:wght@400;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex">
+        <div id="sidebar" class="bg-white shadow-lg transition-all duration-300 w-64 fixed h-screen overflow-hidden">
+            <div class="p-4 flex justify-between items-center border-b">
+                <h2 class="font-semibold text-xl text-gray-800 sidebar-text">Dashboard</h2>
+                <button onclick="toggleSidebar()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+            </div>
+            <nav class="mt-4 flex flex-col gap-2">
+                {% if permission.can_access_admin %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 {% if '/user_list/' in request.path or '/register/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/admin.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="ml-4 sidebar-text">Admin Control</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/user_list/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/user_list/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      User List
+    </a>
+    <a href="/register/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/register/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      User Create
+    </a>
+  </div>
+</div>
+{% endif %}
+
+ {% if permission.can_access_roll %}
+                <a href="/roll/" class="flex items-center p-4 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200 {% if '/roll/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600
+       {% endif %}">
+                    <i class="fas fa-user text-xl"></i>
+                    <span class="ml-4 sidebar-text">Roll Check</span>
+                </a>
+ {% endif %}
+{% if permission.can_access_attendance %}
+                <a href="/attendance/" class="flex items-center p-4 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200 {% if '/attendance/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600
+       {% endif %}">
+                    <i class="fas fa-cog text-xl"></i>
+                    <span class="ml-4 sidebar-text">Attendance</span>
+                </a>
+               {% endif %} 
+
+
+                <!-- <a href="#" class="flex items-center p-4 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="ml-4 sidebar-text">Notifications</span>
+                </a>
+                <a href="#" class="flex items-center p-4 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-chart-line text-xl"></i>
+                    <span class="ml-4 sidebar-text">Analytics</span>
+                </a> -->
+            </nav>
+
+            <h2 class="mt-auto flex items-center p-4 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200"><a href="{% url 'logout' %}" class="text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors duration-200"><i class="fas fa-sign-out-alt text-xl"></i><span class="ml-4 sidebar-text">Logout</span"></a></h2>
+        </div>
+        <main id="main-content" class="flex-1 ml-64 transition-all duration-300">
+            
+                {% block content %}{% endblock %}
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            
+            if(sidebar.classList.contains('w-64')) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-16');
+                mainContent.classList.remove('ml-64');
+                mainContent.classList.add('ml-16');
+                sidebarTexts.forEach(text => text.style.display = 'none');
+            } else {
+                sidebar.classList.remove('w-16');
+                sidebar.classList.add('w-64');
+                mainContent.classList.remove('ml-16');
+                mainContent.classList.add('ml-64');
+                sidebarTexts.forEach(text => text.style.display = 'block');
+            }
+        }
+    </script>
+</body>
+</html>

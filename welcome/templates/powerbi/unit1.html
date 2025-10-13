@@ -1,0 +1,190 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block content %}
+
+<!-- AG Grid CSS -->
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"
+/>
+
+<style>
+  .ag-theme-alpine .ag-cell[col-id="orderimage"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+
+  /* Row selected */
+  .ag-row-selected .ag-cell {
+    background-color: #bfdbfe !important; /* blue-200 */
+  }
+
+  /* Focused cell */
+  .ag-cell-focus {
+    outline: none !important;
+    background-color: #fbbf24 !important; /* yellow-400 */
+    color: black !important;
+    font-weight: bold;
+  }
+
+  .search-highlight {
+    background-color: #facc15;
+    color: black;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  #myGrid {
+    height: 700px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  #myGrid::-webkit-scrollbar {
+    height: 8px;
+  }
+  #myGrid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+</style>
+
+<div class="bg-gray-100 p-6 container mx-auto">
+  <h1 class="text-2xl font-semibold mb-4">UNIT-1 Fabric Data Table</h1>
+
+  <!-- Search input -->
+  <input
+    type="text"
+    id="globalFilter"
+    placeholder="Search all columns..."
+    class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"
+  />
+
+  <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg"></div>
+
+  <!-- AG Grid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const gridDiv = document.querySelector('#myGrid');
+
+      let currentGlobalFilter = '';
+      let currentColumnFilters = {};
+
+      // Highlight matched text
+      function highlightRenderer(params) {
+        if (!params.value) return '';
+        const cellValue = params.value.toString();
+        const filterTexts = [];
+
+        if (currentGlobalFilter) filterTexts.push(currentGlobalFilter);
+        if (currentColumnFilters[params.colDef.field]) {
+          filterTexts.push(currentColumnFilters[params.colDef.field]);
+        }
+        if (filterTexts.length === 0) return cellValue;
+
+        const escapedFilters = filterTexts.map((t) =>
+          t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        );
+        const regex = new RegExp(escapedFilters.join('|'), 'gi');
+
+        return cellValue.replace(regex, (match) => {
+          return `<span class="search-highlight">${match}</span>`;
+        });
+      }
+
+      // Image renderer
+      function imageCellRenderer(params) {
+        if (!params.value) return '';
+        return `<img src="${params.value}" alt="image"
+                style="width:50px;height:60px;object-fit:contain;border-radius:4px;" />`;
+      }
+
+      // Column definitions
+      const columnDefs = [
+        { headerName: 'No', field: 'no', maxWidth: 80, checkboxSelection: true },
+        { headerName: 'Order No', field: 'jobno', cellRenderer: highlightRenderer },
+        {
+          headerName: 'Image',
+          field: 'Image',
+          cellRenderer: imageCellRenderer,
+          sortable: false,
+          filter: false,
+        },
+        { headerName: 'Unit', field: 'unit', cellRenderer: highlightRenderer },
+        {
+          headerName: 'Transaction Type',
+          field: 'trstype_all',
+          cellRenderer: highlightRenderer,
+        },
+        {
+          headerName: 'Final Delivery Date',
+          field: 'finaldelvdate',
+          valueFormatter: (params) =>
+            params.value ? new Date(params.value).toLocaleDateString() : '',
+          cellRenderer: highlightRenderer,
+        },
+        { headerName: 'Color', field: 'clr', cellRenderer: highlightRenderer },
+        { headerName: 'Pack', field: 'pack', cellRenderer: highlightRenderer },
+      ];
+
+      // Grid options
+      const gridOptions = {
+        columnDefs,
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          floatingFilter: true,
+          flex: 1,
+          minWidth: 120,
+          resizable: true,
+        },
+        rowSelection: 'multiple',
+        suppressRowClickSelection: true,
+        enableCellTextSelection: true,
+        animateRows: true,
+        suppressCellFocus: false,
+        rowData: {{ datas_json|safe }},
+      };
+
+      new agGrid.Grid(gridDiv, gridOptions);
+
+      // Listen for filter changes
+      gridOptions.api.addEventListener('filterChanged', () => {
+        currentColumnFilters = {};
+        const filterModel = gridOptions.api.getFilterModel();
+        for (const colId in filterModel) {
+          const model = filterModel[colId];
+          if (model.filter) {
+            currentColumnFilters[colId] = model.filter.toLowerCase();
+          }
+        }
+        gridOptions.api.refreshCells({ force: true });
+      });
+
+      // Global search input
+      const globalFilterInput = document.querySelector('#globalFilter');
+      globalFilterInput.addEventListener('input', function (event) {
+        currentGlobalFilter = event.target.value.toLowerCase();
+        gridOptions.api.setQuickFilter(currentGlobalFilter);
+        gridOptions.api.refreshCells({ force: true });
+      });
+
+      // Auto resize on window resize
+      window.addEventListener('resize', () => {
+        if (gridOptions.api) gridOptions.api.sizeColumnsToFit();
+      });
+    });
+  </script>
+</div>
+
+{% endblock %}

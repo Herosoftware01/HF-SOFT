@@ -1,0 +1,1351 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block title %}Roll Checking{% endblock %}
+{% block content %}
+
+    <style>
+      #popupHistory div {
+  font-family: monospace;
+  border-bottom: 1px dashed #ccc;
+  padding: 6px 0;
+}
+  .plus-cell {
+    background: green;
+    color: white;
+    cursor: not-allowed;
+    user-select: none;
+    text-align: center;
+    font-weight: bold;
+  }
+  .plus-cell.cursor-pointer {
+    cursor: pointer;
+  }
+  #popupModal, #modalOverlay {
+    display: none;
+  }
+  .input-cell {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+</style>
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat min-h-screen">
+     
+
+  <!-- Alert Modal -->
+<div id="customAlert" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+    <p id="customAlertMessage" class="text-gray-800 mb-4"></p>
+    <button id="customAlertOk" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">OK</button>
+  </div>
+</div>
+
+
+
+  <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
+    <h2 class="text-lg font-semibold mb-4">🔔 Confirm Action</h2>
+    <p class="mb-6">Are you sure you want to increase the count?</p>
+    <div class="flex justify-center gap-4">
+      <button id="confirmYesBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Yes</button>
+      <button id="confirmNoBtn" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">No</button>
+    </div>
+  </div>
+</div>
+
+    <div class="container mx-auto px-4 py-8">
+
+      {% if messages %}
+  <div class="my-2">
+    {% for message in messages %}
+      <div class="p-3 rounded bg-yellow-100 text-yellow-800 border border-yellow-300 mb-2">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+        
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-white rounded-lg shadow-md gap-6">
+
+  <!-- LEFT COLUMN (75%) -->
+  <div class="flex flex-col flex-grow md:w-3/4 space-y-4">
+
+    <!-- Info Section -->
+    <div class="flex flex-wrap gap-x-6 gap-y-2 border-y-2 border-gray-300 p-4">
+      <p class="text-sm md:text-base" ><strong class="text-blue-500">MACHINE ID:</strong> {{ group_id }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">ROLL NO:</strong> {{ roll_no }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">Job No:</strong> {{ jobno }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">Color:</strong> {{ tybe }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">LOT NO:</strong> {{ lotno }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">DC NO:</strong> {{ dc }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">Fabric:</strong> {{ fabric }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">weight:</strong> {{ weight }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">f_dia:</strong> {{ f_dia }}</p>
+      <!-- <p class="text-sm md:text-base"><strong class="text-blue-500">types:</strong> {{ types }}</p> -->
+      <!-- <p class="text-sm md:text-base"><strong class="text-blue-500">Emp_name:</strong> {{ emp_name }}</p> -->
+
+      {% if mtr %}
+      <p class="text-sm md:text-base"><strong class="text-blue-500">MTR:</strong> {{ mtr }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Timer + Submit Section -->
+    <div class="flex flex-wrap justify-between items-center gap-4">
+      
+      <div class="text-base font-semibold p-2" id="timerDisplay">Timer: 00:00:00</div>
+      <button id="stopBtn" type="button" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-green-300 ">
+        💾 Submit
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN (25%) - Image -->
+  <div class="md:w-1/4 w-full flex justify-center md:justify-end">
+     <div class="p-2 flex flex-col">
+      <div class="mb-4">
+        <button id="openModalBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 h-14 ">
+      📸 Image Capture
+      </button>
+      </div>
+
+      <div>
+        <button id="view image" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 h-14 ">
+       🎴 View Images
+      </button>
+    </div>
+     </div>
+     <div class="p-2">
+       <img src="{{ full_image_url }}" alt="order image" class="w-32 h-32 object-contain" />
+     </div>
+  </div>
+
+  <div id="viewImageModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div class="bg-white p-6 rounded-lg w-full max-w-4xl shadow-xl relative">
+
+    <!-- ❌ Close Button -->
+    <button id="closeViewModalBtn" class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold">&times;</button>
+
+    <h2 class="text-xl font-semibold mb-4 text-center text-blue-700">Uploaded Images</h2>
+
+    <!-- 🖼️ Image Grid -->
+    <div id="imageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[500px] overflow-y-auto">
+      <!-- JavaScript will insert <img> tags here -->
+    </div>
+  </div>
+</div>
+
+<!-- 🔳 Modal -->
+ <div id="imageModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
+
+    <!-- ❌ Close -->
+    <button id="closeModalBtn" class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold">&times;</button>
+
+    <form id="imageUploadForm" enctype="multipart/form-data">
+      <h2 class="text-xl font-semibold mb-4">Take up to 4 Photos</h2>
+
+      <input type="file" id="cameraInput" name="images" multiple accept="image/*" capture="environment"
+        class="block w-full border border-gray-300 rounded p-2 mb-4" />
+
+      <!-- Hidden Fields -->
+      <input type="hidden" name="lot_no" value="{{ lotno }}">
+      <input type="hidden" name="job_no" value="{{ jobno }}">
+      <input type="hidden" name="roll_no" value="{{ roll_no }}">
+      <input type="hidden" name="machine_id" value="{{ group_id }}">
+      <input type="hidden" name="color" value="{{ tybe }}">
+
+      <!-- Previews -->
+      <div id="previewContainer" class="grid grid-cols-2 gap-4 min-h-[180px] mb-4">
+        <!-- Image previews will appear here -->
+      </div>
+
+      <button type="submit"
+        class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">Upload</button>
+    </form>
+  </div>
+</div>
+
+
+</div>
+
+{% csrf_token %}
+<input type="hidden" id="currentRollNo" value="{{ roll_no }}">
+     
+
+        
+
+       
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
+                <thead>
+                    {% for mistake in all_mistakes %}
+                    <tr class="bg-gray-200">
+                        
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist1_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist2_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist3_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist4_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist5_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist6_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist7_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist8_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist9_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist10_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist11_eng }}</th>
+                        <th class="py-3 px-2 text-left text-sm font-semibold text-gray-700 text-center w-16 md:w-20 lg:w-20">{{ mistake.mist12_eng | default:"" }}</th>
+                        
+                    </tr>
+                    {% endfor %}
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-200 text-center">
+                       
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">तेल</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">दाग</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">छेद</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">सेटऑफ़</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">सुई रेखा</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">कॉम्पैक्ट कड़ी</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">साइड पिनहोल</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">रोल जोइंट</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">प्रिंट गलती</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">यार्न गलती</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center w-16 md:w-20 lg:w-20">जीएसएम छेद</td>
+                        <td class="py-3 px-2 text-sm text-gray-700">0</td>
+                        
+                       
+                    </tr>
+                     {% for mistake in all_mistakes %}
+                    <tr class="border-b border-gray-200 text-center">
+                        
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist1_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist2_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist3_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist4_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist5_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist6_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist7_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist8_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist9_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist10_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist11_ta }}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700 mistake_type text-center w-16 md:w-20 lg:w-20">{{ mistake.mist12_ta | default:""  }}</td>
+                        
+                    </tr>
+                    {% endfor %}
+
+                
+
+                    {% for mistake in all_mistakes %}
+                    <tr class="border-b border-gray-200 text-center">
+                        
+                       <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist1_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist1_img.url }}" alt="Mistake 1 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist2_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist2_img.url }}" alt="Mistake 2 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist3_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist3_img.url }}" alt="Mistake 3 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist4_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist4_img.url }}" alt="Mistake 4 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist5_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist5_img.url }}" alt="Mistake 5 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist6_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist6_img.url }}" alt="Mistake 6 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist7_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist7_img.url }}" alt="Mistake 7 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist8_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist8_img.url }}" alt="Mistake 8 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist9_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist9_img.url }}" alt="Mistake 9 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist10_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist10_img.url }}" alt="Mistake 10 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist11_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist11_img.url }}" alt="Mistake 11 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              No Image
+                          {% endif %}
+                      </td>
+                        <td class="py-3 px-2 text-sm text-gray-700 text-center align-middle">
+                          {% if mistake.mist12_img %}
+                              <div class="flex justify-center items-center">
+                                  <img src="{{ mistake.mist12_img.url }}" alt="Mistake 12 Image" class="w-16 h-16 object-cover rounded-md">
+                              </div>
+                          {% else %}
+                              
+                          {% endif %}
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="13" class="py-3 px-2 text-sm text-center text-gray-700">No mistakes found.</td>
+                    </tr>
+                    {% endfor %}
+
+                    
+                     {% for mistake in all_mistakes %}
+                    <tr class="border-b border-gray-200 text-center" id="dataRow" style="display:none">
+                     
+                      <td class="text-sm text-gray-700" id="choice1" data-type="{{ mistake.m1_choice }}">{{ mistake.m1_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice2" data-type="{{ mistake.m2_choice }}">{{ mistake.m2_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice3" data-type="{{ mistake.m3_choice }}">{{ mistake.m3_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice4" data-type="{{ mistake.m4_choice }}">{{ mistake.m4_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice5" data-type="{{ mistake.m5_choice }}">{{ mistake.m5_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice6" data-type="{{ mistake.m6_choice }}">{{ mistake.m6_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice7" data-type="{{ mistake.m7_choice }}">{{ mistake.m7_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice8" data-type="{{ mistake.m8_choice }}">{{ mistake.m8_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice9" data-type="{{ mistake.m9_choice }}">{{ mistake.m9_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice10" data-type="{{ mistake.m10_choice }}">{{ mistake.m10_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice11" data-type="{{ mistake.m11_choice }}">{{ mistake.m11_choice }}</td>
+                      <td class="py-3 px-2 text-sm text-gray-700" id="choice12" data-type="{{ mistake.m12_choice }}">{{ mistake.m12_choice }}</td>
+                      
+                    </tr>
+                    {% endfor %} 
+        
+
+                <tr> 
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="1" id="input1" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="2" id="input2" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center"> 
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="3" id="input3" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="4" id="input4" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="5" id="input5" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20 text-center" data-index="6" id="input6" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="7" id="input7" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="8" id="input8" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="9" id="input9" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="10" id="input10" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="11" id="input11" disabled />
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-sm text-gray-700">
+                    <div class="flex items-center justify-center">
+                      <input type="text" class="input-cell w-16 md:w-20 lg:w-20" data-index="12" id="input12" disabled />
+                    </div>
+                  </td>
+                  
+                </tr>
+
+            
+            <!-- Plus row -->
+               <tr class="border-b border-gray-200 text-center text-4xl">
+                <td class="py-2 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="1" id="plus1">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="2" id="plus2">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="3" id="plus3">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="4" id="plus4">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="5" id="plus5">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="6" id="plus6">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="7" id="plus7">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="8" id="plus8">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="9" id="plus9">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="10" id="plus10">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="11" id="plus11">+</td>
+                <td class="py-3 px-2 border border-gray-300 text-white bg-green-500 plus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="12" id="plus12">+</td>
+                
+              </tr>
+
+              <tr class="border-b border-gray-200 text-center text-4xl">
+                  
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="1" id="minus1">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="2" id="minus2">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="3" id="minus3">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="4" id="minus4">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="5" id="minus5">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="6" id="minus6">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="7" id="minus7">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="8" id="minus8">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="9" id="minus9">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="10" id="minus10">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="11" id="minus11">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="12" id="minus12">-</td>
+                  
+                </tr>
+                      
+
+                </tbody>
+            </table>
+        </div>
+
+         <div class="flex flex-col md:flex-row flex-wrap gap-4 mb-6 p-4 bg-white rounded-lg shadow-md mt-4">
+      <!-- Finish Dia -->
+      <div class="flex flex-col w-full md:w-[23%]">
+        <label for="finishDia" class="text-gray-700 font-medium mb-1">Finish Dia:</label>
+        <input type="text" id="finishDia" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
+      </div>
+
+      <!-- Total Mtrs -->
+      <div class="flex flex-col w-full md:w-[23%]">
+        <label for="totalMtrs" class="text-gray-700 font-medium mb-1">Total Mtrs:</label>
+        <input type="text" id="totalMtrs" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
+      </div>
+
+      <!-- Act. GSM -->
+      <div class="flex flex-col w-full md:w-[23%]">
+        <label for="actGSM" class="text-gray-700 font-medium mb-1">Act. GSM:</label>
+        <input type="text" id="actGSM" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
+      </div>
+
+    <!-- Review -->
+      <div class="flex flex-col w-full md:w-[23%]">
+        <label for="review" class="text-gray-700 font-medium mb-1" >Remarks:</label>
+        <textarea
+          id="review"
+          rows="1"
+          oninput="autoResize(this)"
+          class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full overflow-hidden resize-none transition-all duration-150"
+          placeholder="Type your remarks here..."
+        ></textarea>
+      </div>
+
+    </div>
+        </div>
+
+
+<input type="hidden" id="rollNo" value="{{ roll_no }}">
+<input type="hidden" id="machineId" value="{{ group_id }}">
+<input type="hidden" id="dcNo" value="{{ dc }}">
+<input type="hidden" id="lotNo" value="{{ lotno }}">
+<!-- <input type="hidden" id="fieldId" value="some_field_id">  -->
+<input type="hidden" id="jobNo" value="{{ jobno }}">
+<input type="hidden" id="tybe" value="{{ tybe }}">
+<input type="hidden" id="color" value="{{ tybe }}">
+<input type="hidden" id="weight" value="{{ weight }}">
+<input type="hidden" id="fabric" value="{{ fabric }}">
+<input type="hidden" id="meter" value="{{ mtr }}">
+<input type="hidden" id="emp_name" value="{{ emp_name }}">
+<input type="hidden" id="types" value="{{ types }}">
+    
+
+<!-- Popup Modal + Overlay -->
+<div id="modalOverlay"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;">
+</div>
+
+<!-- Modal -->
+<div id="popupModal"
+     style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+     background:white; padding:20px; border-radius:12px; width:90%; max-width:600px; box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:1001;">
+
+ <div class="flex flex-wrap gap-4">
+  <!-- Side -->
+  <label style="flex:1; min-width: 120px;">
+    <span style="display:block; font-weight:600; color:#333;">Side:</span>
+    <select id="popupSideSelect"
+            style="width:100%; padding:15px; border:1px solid #ccc; border-radius:6px; margin-top:4px;">
+      <option value="">Select</option>
+      <option value="First">First</option>
+      <option value="Second">Second</option>
+      <option value="Both">Both</option>
+    </select>
+  </label>
+
+  <!-- Inches -->
+  <label style="flex:1; min-width: 120px;">
+    <span style="display:block; font-weight:600; color:#333;">Inches:</span>
+    <select id="popupInchSelect"
+            style="width:100%; padding:15px; border:1px solid #ccc; border-radius:6px; margin-top:4px;">
+      <option value="">Select</option>
+      <option value="1">1 Inch</option>
+      <option value="2">2 Inch</option>
+      <option value="3">3 Inch</option>
+      <option value="4">4 Inch</option>
+      <option value="5">5 Inch</option>
+      <option value="6">6 Inch</option>
+      <option value="7">7 Inch</option>
+      <option value="8">8 Inch</option>
+    </select>
+  </label>
+
+  <!-- Meter -->
+  <div id="meterInputRow">
+  <label style="display:block;">
+    <span style="display:block; font-weight:600; color:#333;">Meter:</span>
+    <input type="text" id="popupmeter"
+           style="width:100%; padding:15px; border:1px solid #ccc; border-radius:6px; margin-top:4px;" />
+  </label>
+</div>
+
+  <!-- Full Roll Checkbox -->
+  <label style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+    <input type="checkbox" id="popupCheckbox" />
+    <span style="color:#333;">Full Roll</span>
+  </label>
+</div>
+
+<!-- 📜 Old History Display -->
+<div id="popupHistory"
+     style="max-height: 200px; overflow-y: auto; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px;">
+  <!-- Old entries will appear here -->
+</div>
+
+ 
+
+  <!-- Button Row -->
+  <div style="margin-top: 20px; text-align: right;">
+    <button id="closeModal"
+            style="background:#e53e3e; color:white; border:none; padding:15px 16px; border-radius:6px; margin-right:8px; cursor:pointer;">
+      Cancel
+    </button>
+    <button id="savePopup"
+            style="background:#38a169; color:white; border:none; padding:15px 16px; border-radius:6px; cursor:pointer;">
+      Save
+    </button>
+  </div>
+</div>
+
+
+
+
+<script>
+  const viewBtn = document.getElementById('view image');
+  const viewModal = document.getElementById('viewImageModal');
+  const closeViewModalBtn = document.getElementById('closeViewModalBtn');
+  const imageGrid = document.getElementById('imageGrid');
+
+  viewBtn.addEventListener('click', async () => {
+    // Get values from template context or hidden inputs
+    const job_no = '{{ jobno }}';
+    const roll_no = '{{ roll_no }}';
+    const color = '{{ tybe }}';
+
+    const url = `{% url 'view_images' %}?job_no=${job_no}&roll_no=${roll_no}&color=${color}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      imageGrid.innerHTML = '';
+
+      if (data.images.length === 0) {
+        imageGrid.innerHTML = `<p class="text-gray-600 col-span-4">No images found for this roll.</p>`;
+      } else {
+        data.images.forEach(url => {
+          const img = document.createElement('img');
+          img.src = url;
+          img.className = 'w-full h-32 object-cover rounded border';
+          imageGrid.appendChild(img);
+        });
+      }
+
+      viewModal.classList.remove('hidden');
+    } else {
+      alert("Failed to load images.");
+    }
+  });
+
+  closeViewModalBtn.addEventListener('click', () => {
+    viewModal.classList.add('hidden');
+  });
+</script>
+
+
+
+
+
+<script>
+  // Open & Close modal
+  document.getElementById('openModalBtn').addEventListener('click', () => {
+    document.getElementById('imageModal').classList.remove('hidden');
+  });
+
+  document.getElementById('closeModalBtn').addEventListener('click', () => {
+    document.getElementById('imageModal').classList.add('hidden');
+  });
+
+  // 🔍 LIVE PREVIEW of selected images
+  document.getElementById('cameraInput').addEventListener('change', function () {
+    const previewContainer = document.getElementById('previewContainer');
+    previewContainer.innerHTML = ''; // Clear old previews
+
+    const files = this.files;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = "w-full h-24 object-cover rounded border";
+        previewContainer.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  // 🚀 Upload Form
+  document.getElementById('imageUploadForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const response = await fetch("{% url 'upload_images' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: formData
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      alert("Images uploaded successfully!");
+      document.getElementById('imageModal').classList.add('hidden');
+
+      // Optional: clear input & preview
+      form.reset();
+      document.getElementById('previewContainer').innerHTML = '';
+
+    } else {
+      alert("Upload failed!");
+    }
+  });
+</script>
+
+
+<script>
+  function autoResize(textarea) {
+    textarea.style.height = 'auto'; // Reset height
+    textarea.style.height = textarea.scrollHeight + 'px'; // Set new height
+  }
+</script>
+
+
+
+<script>
+let timerStarted = false;
+let timerInterval = null;
+let totalSeconds = 0;
+
+const timerDisplay = document.getElementById('timerDisplay');
+const stopBtn = document.getElementById('stopBtn');
+
+function formatTime(seconds) {
+  const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+  const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${hrs}:${mins}:${secs}`;
+}
+
+function timeToSeconds(timeStr) {
+  const [hrs, mins, secs] = timeStr.split(':').map(Number);
+  return hrs * 3600 + mins * 60 + secs;
+}
+
+function enablePlusCells(enable) {
+  document.querySelectorAll('.plus-cell').forEach(cell => {
+    cell.classList.toggle('cursor-pointer', enable);
+    cell.style.pointerEvents = enable ? 'auto' : 'none';
+    cell.style.cursor = enable ? 'pointer' : 'not-allowed';
+  });
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  document.cookie.split(';').forEach(c => {
+    const trimmed = c.trim();
+    if (trimmed.startsWith(name + '=')) {
+      cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+    }
+  });
+  return cookieValue;
+}
+
+function saveToServer(index, value) {
+  const rollNo = document.getElementById('currentRollNo').value;
+  const field = `m${index}`;
+  
+
+  fetch('/roll/save-roll-update/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      roll_no: rollNo,
+      field: field,
+      value: value
+    })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error("Failed to save");
+    return response.json();
+  })
+  .then(data => {
+    console.log('Saved:', data);
+  })
+  .catch(error => {
+    console.error('Save error:', error);
+  });
+}
+
+function saveTimerToServer() {
+  console.log("⏳ Saving timer to server...", formatTime(totalSeconds));
+  const rollNo = document.getElementById('currentRollNo').value;
+  const formatted = formatTime(totalSeconds);
+  console.log("Saving timer:", formatted);
+
+  fetch('/roll/save-roll-update/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify({
+      roll_no: rollNo,
+      field: 'timer',
+      value: formatted
+    }),
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => { throw new Error(err.error || 'Unknown error') });
+    }
+    return res.json();
+  })
+  .then(data => {
+    console.log("✅ Timer saved to server:", data);
+  })
+  .catch(err => {
+    console.error("❌ Timer save failed:", err);
+  });
+}
+
+
+
+function save_final_mistake() {
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // Collect top fields
+  const finishDia = document.getElementById('finishDia').value.trim();
+  const totalMtrs = document.getElementById('totalMtrs').value.trim();
+  const actGsm = document.getElementById('actGSM').value.trim();
+
+  // Collect all 12 inputs
+  const meterValues = {};
+  for (let i = 1; i <= 12; i++) {
+    const val = document.getElementById(`input${i}`).value.trim();
+    meterValues[`m${i}`] = val;
+  }
+
+  // Add metadata
+  const data = {
+    roll_no: document.getElementById('rollNo')?.value || '',
+    emp_name: document.getElementById('emp_name')?.value || '',
+    types: document.getElementById('types')?.value || '',
+    job_no: document.getElementById('jobNo')?.value || '',
+    machine_id: document.getElementById('machineId')?.value || '',
+    dc_no: document.getElementById('dcNo')?.value || '',
+    lot_no: document.getElementById('lotNo')?.value || '',
+    color: document.getElementById('color')?.value || '',
+    fabric: document.getElementById('fabric')?.value || '',
+    weight: document.getElementById('weight')?.value || '',
+    meter: document.getElementById('meter')?.value || '',
+    timer: document.getElementById('timerDisplay')?.innerText || '',
+
+    ...meterValues,
+
+    finish_dia: finishDia,
+    total_meters: totalMtrs,
+    act_gsm: actGsm,
+    remarks: document.getElementById('review')?.value || ''
+  };
+
+  // Send to backend
+  fetch('/roll/save-final-data/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to save');
+    return response.json();
+  })
+  .then(res => {
+    showCustomAlert('✅ Data saved successfully!');
+    const machineId = res.machine_id || data.machine_id || '1';
+    window.location.href = `/roll/home/${machineId}/`;  // ← ✅ Relative URL
+  })
+  .catch(err => {
+    console.error(err);
+    showCustomAlert('❌ Failed to save data. Please try again.');
+  });
+}
+
+
+
+function showCustomAlert(message, callback = null) {
+  const modal = document.getElementById('customAlert');
+  const messageBox = document.getElementById('customAlertMessage');
+  const okBtn = document.getElementById('customAlertOk');
+
+  messageBox.textContent = message;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  okBtn.onclick = () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (callback) callback();
+  };
+}
+
+
+
+
+// function startTimer(fromSeconds = 0) {
+//   // totalSeconds = fromSeconds;
+//   timerDisplay.textContent = `${formatTime(totalSeconds)}`;
+//   timerInterval = setInterval(() => {
+//     totalSeconds++;
+//     timerDisplay.textContent = `${formatTime(totalSeconds)}`;
+//   }, 1000);
+
+//   console.log("🔄 Auto-saving timer every 2s...");
+//   autoSaveInterval = setInterval(saveTimerToServer, 5000);
+// }
+
+
+function startTimer(fromSeconds = 0) {
+  totalSeconds = fromSeconds;  // 👈 This is essential!
+  timerDisplay.textContent = `${formatTime(totalSeconds)}`;
+  timerInterval = setInterval(() => {
+    totalSeconds++;
+    timerDisplay.textContent = `${formatTime(totalSeconds)}`;
+  }, 1000);
+
+  autoSaveInterval = setInterval(saveTimerToServer, 5000);
+}
+
+// ✅ Single DOMContentLoaded for everything
+window.addEventListener('DOMContentLoaded', () => {
+  // const rollNo = document.getElementById('currentRollNo').value;
+  const rollNo = document.getElementById('currentRollNo').value;
+  
+
+  // Initially disable controls
+  enablePlusCells(false);
+  stopBtn.disabled = true;
+
+  // 🔁 Fetch previous data & resume timer
+  
+  fetch(`/roll/fetch-roll-data/${rollNo}/`)
+  .then(res => res.json())
+  .then(res => {
+    if (res.success) {
+      const timerVal = res.data.timer || '00:00:00';
+      totalSeconds = timeToSeconds(timerVal);
+
+      // ✅ Start timer AND auto-save
+      startTimer(totalSeconds);
+
+      timerStarted = true;
+      stopBtn.disabled = false;
+      enablePlusCells(true);
+
+      // Populate inputs m1–m12
+      Object.entries(res.data).forEach(([key, val]) => {
+        if (key.startsWith('m')) {
+          const idx = key.replace('m','');
+          const input = document.getElementById(`input${idx}`);
+          if (input && val != null) {
+            input.value = val;
+            input.disabled = true;
+          }
+        }
+      });
+    }
+  })
+  .catch(console.error);
+});
+
+// Submit button logic
+stopBtn.addEventListener('click', async () => {
+  // confirm("Are you sure you want to save this Record ?");
+  const confirmMinus = await showConfirmPopup("Are you sure you want to save this Record ?");
+  if (!confirmMinus) return;
+
+  const finishDia = document.getElementById('finishDia').value.trim();
+  const totalMtrs = document.getElementById('totalMtrs').value.trim();
+
+  if (finishDia === '' || totalMtrs === '') {
+    // alert('Please fill both "Finish Dia" and "Total Mtrs" before submitting.');
+    await showConfirmPopup("Please fill 'both Finish' Dia and 'Total Mtrs' before submitting.");
+    return;
+  }
+
+  timerStarted = false;
+  clearInterval(timerInterval);
+  stopBtn.disabled = true;
+  enablePlusCells(false);
+
+  document.getElementById('finishDia').disabled = true;
+  document.getElementById('totalMtrs').disabled = true;
+  document.getElementById('actGSM').disabled = true;
+
+  save_final_mistake(); 
+});
+
+
+function showConfirmPopup(message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('confirmModal');
+    modal.querySelector('p').textContent = message;
+
+    modal.classList.remove('hidden');
+
+    const yesBtn = document.getElementById('confirmYesBtn');
+    const noBtn = document.getElementById('confirmNoBtn');
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+    };
+
+    const onYes = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onNo = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+  });
+}
+
+
+
+// + Button Logic
+document.querySelectorAll('.plus-cell').forEach(cell => {
+  cell.addEventListener('click', async () => {
+    if (!timerStarted) return;
+
+    const index = cell.dataset.index;
+    const input = document.getElementById(`input${index}`);
+    const choiceCell = document.getElementById(`choice${index}`);
+    const type = (choiceCell.dataset.type || '').trim().toLowerCase();
+
+    if (type === 'c') {
+    const confirmAdd = await showConfirmPopup("Are you sure you want to increase the count?");
+  // const confirmAdd = confirm("Are you sure you want to increase the count?");
+  if (!confirmAdd) return;
+
+  let count = parseInt(input.value.replace('c-', '')) || 0;
+  count++;
+  input.value = `${count}`;
+  input.title = input.value;
+  input.disabled = true;
+
+  saveToServer(index, input.value);
+
+    } else if (type === 'm') {
+      const existing = parseFloat(input.value.replace('m-', '')) || 0;
+      // const meter = prompt('Enter meter value:');
+      const meter = await showMeterPrompt('Enter meter value:');
+      if (meter !== null && meter.trim() !== '') {
+        const newVal = parseFloat(meter.trim());
+        if (!isNaN(newVal)) {
+          const total = existing + newVal;
+          input.value = `m-${total}`;
+          input.title = input.value;
+          input.disabled = true;
+
+          saveToServer(index, input.value);
+        }
+      }
+    } else if (type === 'p') {
+      showPopup(index);
+    }
+  });
+});
+
+
+function showMeterPrompt(message) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.style = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    `;
+
+    modal.innerHTML = `
+      <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%;">
+        <label>${message}</label>
+        <input type="number" id="meterInput" style="width: 100%; margin-top: 8px; padding: 6px;" />
+        <div style="margin-top: 12px; text-align: right;">
+          <button id="cancelBtn" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+          <button id="okBtn" class="bg-blue-500 text-white px-4 py-2 rounded">OK</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector('#meterInput');
+    const okBtn = modal.querySelector('#okBtn');
+    const cancelBtn = modal.querySelector('#cancelBtn');
+
+    input.focus();
+
+    okBtn.onclick = () => {
+      const val = input.value.trim();
+      document.body.removeChild(modal);
+      resolve(val);
+    };
+
+    cancelBtn.onclick = () => {
+      document.body.removeChild(modal);
+      resolve(null);
+    };
+
+    // Optional: handle Enter key for OK and Escape for Cancel
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        okBtn.click();
+      } else if (e.key === 'Escape') {
+        cancelBtn.click();
+      }
+    });
+  });
+}
+
+
+
+
+// - Button Logic
+document.querySelectorAll('.minus-cell').forEach(cell => {
+  cell.addEventListener('click', async() => {
+    if (!timerStarted) return;
+
+    const index = cell.dataset.index;
+    const input = document.getElementById(`input${index}`);
+    const choiceCell = document.getElementById(`choice${index}`);
+    const type = (choiceCell.dataset.type || '').trim().toLowerCase();
+
+    if (type === 'c') {
+      const currentCount = parseInt(input.value.replace('c-', '')) || 0;
+      if (currentCount === 0) return;
+
+      // const confirmMinus = confirm("Are you sure you want to decrease the count?");
+      const confirmMinus = await showConfirmPopup("Are you sure you want to decrease the count?");
+      if (!confirmMinus) return;
+
+      let count = currentCount - 1;
+      input.value = `${count}`;
+      input.title = input.value;
+      input.disabled = true;
+
+      saveToServer(index, input.value);
+    }
+    else if (type === 'm') {
+      const current = parseFloat(input.value.replace('m-', '')) || 0;
+      if (current === 0) return;
+
+      // const reduceStr = prompt(`Current: ${current} meter(s)\nHow many meters to reduce?`);
+      const reduceStr = await showMeterPrompt(`Current: ${current} meter(s)\nHow many meters to reduce?`);
+      if (reduceStr === null || reduceStr.trim() === '') return;
+
+      const reduceVal = parseFloat(reduceStr.trim());
+      if (isNaN(reduceVal) || reduceVal <= 0) {
+        await showConfirmPopup("Invalid meter value.");
+        return;
+      }
+
+      if (reduceVal > current) {
+        await showConfirmPopup(`You cannot reduce more than ${current} meter(s).`);
+        return;
+      }
+
+      const newTotal = current - reduceVal;
+      input.value = `m-${newTotal}`;
+      input.title = input.value;
+      input.disabled = true;
+
+      saveToServer(index, input.value);
+    }
+
+
+    
+  });
+});
+
+
+
+document.getElementById('popupCheckbox').addEventListener('change', function () {
+  const meterRow = document.getElementById('meterInputRow');
+  if (this.checked) {
+    meterRow.style.display = 'none';
+    document.getElementById('meter').value = ''; // Optional: clear meter value
+  } else {
+    meterRow.style.display = 'block';
+  }
+});
+
+function showPopup(index) {
+  const modal = document.getElementById('popupModal');
+  const overlay = document.getElementById('modalOverlay');
+  const input = document.getElementById(`input${index}`);
+  const value = input.value.trim();
+  modal.setAttribute('data-index', index);
+
+  // Show modal
+  modal.style.display = 'block';
+  overlay.style.display = 'block';
+
+  // Reset form fields
+  document.getElementById('popupSideSelect').selectedIndex = 0;
+  document.getElementById('popupInchSelect').selectedIndex = 0;
+  document.getElementById('popupCheckbox').checked = false;
+  document.getElementById('meter').value = '';
+
+  // ✅ Always show meter initially
+  document.getElementById('meterInputRow').style.display = 'block';
+
+  // Render history
+  const historyContainer = document.getElementById('popupHistory');
+  historyContainer.innerHTML = '';
+  if (value) {
+    const entries = value.split('|').map(line => line.trim()).filter(Boolean);
+    // const historyHtml = entries.map(entry => {
+    //   return `<div style="padding: 6px 0; border-bottom: 1px dashed #ccc;">${entry}</div>`;
+    // }).join('');
+
+    const historyHtml = entries.map((entry, index) => {
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #ccc;">
+      <span>${entry}</span>
+      <button onclick="deleteEntry(${index})" style="background: #e53e3e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+        Delete
+      </button>
+    </div>`;
+}).join('');
+
+
+    historyContainer.innerHTML = `<div style="font-weight: bold; margin-bottom: 10px;">Previous Entries:</div>${historyHtml}`;
+  }
+}
+
+
+document.getElementById('closeModal').addEventListener('click', () => {
+  document.getElementById('popupModal').style.display = 'none';
+  document.getElementById('modalOverlay').style.display = 'none';
+});
+
+
+document.getElementById('savePopup').addEventListener('click', () => {
+  const modal = document.getElementById('popupModal');
+  const index = modal.getAttribute('data-index');
+  const input = document.getElementById(`input${index}`);
+
+  const side = document.getElementById('popupSideSelect').value;
+  const inch = document.getElementById('popupInchSelect').value;
+  const meter = document.getElementById('popupmeter').value.trim();
+  const isFullRoll = document.getElementById('popupCheckbox').checked;
+
+  console.log("meter", meter);
+
+  // ✅ Input validation
+  if (!side || !inch) {
+    alert('Please select both Side and Inches before saving.');
+    return;
+  }
+
+  let result = `Side: ${side}, Inch: ${inch}"`;
+
+  if (meter !== '') {
+    result += `, Meter: ${meter}`;
+  }
+
+  if (isFullRoll) {
+    result += `, Full Roll`;
+  }
+
+  // ✅ Clean existing entries (remove blank/numbered lines)
+  let prev = input.value.trim();
+  let entries = [];
+
+  if (prev) {
+    entries = prev
+      .split('|')
+      .map(line => line.trim().replace(/^\d+\)\s*/, ''))
+      .filter(line => line && line.includes('Side:') && line.includes('Inch:'));
+  }
+
+  // ✅ Add new result
+  entries.push(result);
+
+  // ✅ Update field
+  const newValue = entries.join(' | ');
+  input.value = newValue;
+  input.title = newValue;
+  input.disabled = true;
+
+  // ✅ Save to server
+  saveToServer(index, newValue);
+
+  // ✅ Close and reset popup
+  modal.style.display = 'none';
+  document.getElementById('modalOverlay').style.display = 'none';
+  document.getElementById('popupSideSelect').selectedIndex = 0;
+  document.getElementById('popupInchSelect').selectedIndex = 0;
+  document.getElementById('popupCheckbox').checked = false;
+  document.getElementById('meter').value = '';
+});
+
+function deleteEntry(entryIndex) {
+  const modal = document.getElementById('popupModal');
+  const index = modal.getAttribute('data-index');
+  const input = document.getElementById(`input${index}`);
+
+  let entries = input.value.split('|').map(e => e.trim()).filter(Boolean);
+  entries.splice(entryIndex, 1); // Remove selected entry
+
+  const newValue = entries.join(' | ');
+  input.value = newValue;
+  input.title = newValue;
+
+  // Re-render history
+  showPopup(index);
+
+  // Save to server after deletion
+  saveToServer(index, newValue);
+}
+
+</script>
+
+
+</div>
+
+{% endblock %}

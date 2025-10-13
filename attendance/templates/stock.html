@@ -1,0 +1,300 @@
+
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block title %}Production{% endblock %}
+
+{% block content %}
+
+
+<style>
+    /* New Loader style */
+    .loader {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00aeff;
+      position: relative;
+    }
+    .loader:before,
+    .loader:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      inset: 0;
+      background: #fff;
+      transform: rotate(0deg) translate(30px);
+      animation: rotate 1s ease infinite;
+    }
+    .loader:after {
+      animation-delay: 0.5s;
+    }
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg) translate(30px);
+      }
+    }
+
+    /* Centered loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* z-index: 9999; */
+    }
+    .hidden { display: none; }
+
+    /* Sticky first column */
+    th:nth-child(1),
+    td:nth-child(1) {
+      position: sticky;
+      left: 0;
+      background: white; /* or matching background */
+      /* z-index: 0;  */
+    }
+
+    /* Sticky second column */
+    th:nth-child(2),
+    td:nth-child(2) {
+      position: sticky;
+      left: 50px; /* width of first column */
+      background: rgb(245, 245, 245);
+      /* z-index: 0; */
+    }
+  </style>
+
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6 min-h-screen">
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div>
+      <div class="loader"></div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6 p-4 sm:p-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row justify-between gap-4 items-center">
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-700 text-center">
+        👕 PRODUCTION DASHBOARD
+      </h1>
+
+      <!-- Filters -->
+      <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 w-full lg:w-auto" id="filterForm">
+
+        <!-- Search -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label for="globalSearch" class="font-semibold text-sm">SEARCH:</label>
+          <input 
+            type="text" name="search" id="globalSearch"
+            placeholder="Type to search..."
+            class="p-2 rounded-lg border-2 border-gray-700 w-full sm:w-[150px] text-sm"
+            value="{{ request.GET.search|default:'' }}"
+          />
+        </div>
+
+        <!-- UNIT -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label for="unit" class="font-semibold text-sm">UNIT:</label>
+          <select name="unit" id="unit" class="p-2 rounded-lg border-2 border-gray-700 text-sm">
+            <option value="ALL" {% if request.GET.unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
+            <option value="UNIT-1" {% if request.GET.unit == 'UNIT-1' %}selected{% endif %}>UNIT 1</option>
+            <option value="UNIT-2" {% if request.GET.unit == 'UNIT-2' %}selected{% endif %}>UNIT 2</option>
+            <option value="UNIT-3" {% if request.GET.unit == 'UNIT-3' %}selected{% endif %}>UNIT 3</option>
+            <option value="UNIT-4" {% if request.GET.unit == 'UNIT-4' %}selected{% endif %}>UNIT 4</option>
+            <option value="UNIT-5" {% if request.GET.unit == 'UNIT-5' %}selected{% endif %}>UNIT 5</option>
+          </select>
+        </div>
+
+        <!-- JOB NO -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label for="jobno" class="font-semibold text-sm">JOB NO:</label>
+          <select name="jobno" id="jobno" class="p-2 rounded-lg border-2 border-gray-700 text-sm">
+            <option value="">All Jobs</option>
+            {% for row in job_datas %}
+              <option value="{{ row }}" {% if request.GET.jobno == row %}selected{% endif %}>{{ row }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- MERCH -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label for="merch" class="font-semibold text-sm">MERCH:</label>
+          <select name="merch" id="merch" class="p-2 rounded-lg border-2 border-gray-700 text-sm">
+            <option value="">Merch</option>
+            <option value="M1" {% if m1 == 'M1' %}selected{% endif %}>MERCH 1</option>
+            <option value="M2" {% if m2 == 'M2' %}selected{% endif %}>MERCH 2</option>
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="p-4 shadow-lg rounded-2xl bg-white">
+      <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-2 relative">
+        <h2 class="text-base sm:text-lg font-bold font-[Orbitron] text-center">
+          📦 PRODUCTION REPORT
+        </h2>
+        <button id="clearFiltersBtn" type="button"
+          class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition">
+          🗑️ Clear Filters
+        </button>
+      </div>
+
+      <div class="mb-2 font-semibold text-gray-700 text-sm">Total Records: {{ data_count }}</div>
+
+      <!-- Scrollable Table -->
+      <div class="overflow-x-auto h-[600px]" id="tableContainer">
+
+        <table class="table-auto border-collapse border border-gray-700 border-spacing-0 border-separate w-full h-[650px] text-xs sm:text-sm text-center min-w-[900px]" id="stockTable">
+          <thead class="sticky top-0">
+            <tr class="bg-[#D9EAF7]">
+              <th rowspan="2" class="border border-gray-700 px-2 py-1">IMAGE</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1">JOB NO</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-green-300">MERCH</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-blue-300">UNIT</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-yellow-300">TOP BOTTOM</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-red-300">COLOR</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-orange-300">ORDER QTY</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-gray-300">BIT CHECKING</th>
+              <th rowspan="2" class="border border-gray-700 px-2 py-1 bg-gray-300">SEWING</th>
+              <th colspan="2" class="border border-gray-700 px-2 py-1 bg-gray-300">CHECKING</th>
+              <th colspan="2" class="border border-gray-700 px-2 py-1 bg-gray-300">FINISHING</th>
+            </tr>
+            <tr>
+              <th class="border border-gray-700 px-2 py-1 ">FIRST</th>
+              <th class="border border-gray-700 px-2 py-1 ">FINAL</th>
+              <th class="border border-gray-700 px-2 py-1 bg-gray-200">IRONING</th>
+              <th class="border border-gray-700 px-2 py-1 bg-gray-200">PACKING</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            {% for row in datas %}
+            <tr class="cursor-pointer">
+              <td class="border border-gray-700 px-2 py-1">
+                {% if row.Image %}
+                  <img src="{{ row.Image }}" class="h-10 w-10 object-cover preview-image" style="cursor:pointer" alt="Stock Image"/>
+                {% else %}
+                  No Image
+                {% endif %}
+              </td>
+              <td class="border border-gray-700 px-2 py-1">{{ row.jobno }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-green-100">{{ row.o_merch }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-blue-100">{{ row.unit }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-yellow-100">{{ row.topbottom_des }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-red-100">{{ row.clr }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-orange-100">{{ row.o_ordqty }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.bc }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.sew }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.tc }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.fc }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.ir }}</td>
+              <td class="border border-gray-700 px-2 py-1 bg-gray-100">{{ row.pac }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="14" class="border px-2 py-1">No data available</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Preview Modal -->
+  <div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div class="relative max-w-full max-h-full p-4">
+      <button id="modalClose" class="absolute top-2 right-2 text-white bg-red-600 rounded-full p-2 py-1 cursor-pointer px-3 text-2xl font-bold hover:text-gray-400">&times;</button>
+      <img id="modalImage" src="" alt="Image Preview" class="w-[500px] h-[600px]  rounded-lg shadow-lg" />
+    </div>
+  </div>
+
+<script>
+  // Elements for loading and form
+  const filterForm = document.getElementById("filterForm");
+  const loadingOverlay = document.getElementById("loadingOverlay");
+  const stockTable = document.getElementById("stockTable");
+  const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
+  // Loading functions (always full screen loader)
+  function showLoading() {
+    loadingOverlay.classList.remove('hidden');
+  }
+  function hideLoading() {
+    loadingOverlay.classList.add('hidden');
+    stockTable.style.opacity = '1';
+  }
+
+  // Auto-submit on filter changes
+  document.querySelectorAll("#filterForm select").forEach(sel=>{
+    sel.addEventListener("change", () => {
+      showLoading();
+      setTimeout(() => { filterForm.submit(); }, 100);
+    });
+  });
+
+  // Debounced search submit
+  let typingTimer;
+  document.getElementById("globalSearch").addEventListener("keyup", () => {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      showLoading();
+      setTimeout(() => { filterForm.submit(); }, 100);
+    }, 600);
+  });
+
+  // Clear filters button
+  clearFiltersBtn.addEventListener("click", () => {
+    showLoading();
+    document.getElementById("globalSearch").value = "";
+    document.getElementById("unit").selectedIndex = 0;
+    document.getElementById("jobno").selectedIndex = 0;
+    document.getElementById("merch").selectedIndex = 0;
+    setTimeout(() => { window.location.href = window.location.pathname; }, 500);
+  });
+
+  // Show loading on form submit
+  filterForm.addEventListener("submit", () => { showLoading(); });
+  window.addEventListener("load", hideLoading);
+  if(document.readyState === "complete") { hideLoading(); }
+
+  // Image Preview Modal logic
+  const imageModal = document.getElementById('imageModal');
+  const modalImage = document.getElementById('modalImage');
+  const modalClose = document.getElementById('modalClose');
+
+  document.querySelectorAll('.preview-image').forEach(img => {
+    img.addEventListener('click', () => {
+      modalImage.src = img.src;
+      imageModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  modalClose.addEventListener('click', () => {
+    imageModal.classList.add('hidden');
+    modalImage.src = '';
+    document.body.style.overflow = 'auto';
+  });
+
+  imageModal.addEventListener('click', (e) => {
+    if(e.target === imageModal) {
+      imageModal.classList.add('hidden');
+      modalImage.src = '';
+      document.body.style.overflow = 'auto';
+    }
+  });
+</script>
+</div>
+
+
+
+
+{% endblock %}

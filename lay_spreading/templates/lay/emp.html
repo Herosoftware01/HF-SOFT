@@ -1,0 +1,332 @@
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block content %}
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+  </style>
+
+<div class="bg-[url('{% static 'images/bg.jpg' %}')] bg-cover bg-center bg-no-repeat min-h-screen">
+
+<div class="pt-12 px-4 sm:px-6 lg:px-12">
+  <!-- Header -->
+  <div class="flex flex-col items-center text-center">
+    <h1 class="text-[28px] md:text-[36px] font-orbitron font-bold leading-[130%]">
+      <img src="{% static 'images/cutting.png' %}" class="inline-block w-[40px] md:w-[60px]"> LAY SPREADING
+    </h1>
+    <div class="w-full max-w-[1866px] h-0.5 bg-black mt-3 rounded"></div>
+  </div>
+
+  <!-- Date + Title -->
+  <div class="flex flex-col md:flex-row justify-between items-center mt-9 gap-2">
+    <h3 class="text-[16px] md:text-[19px] font-orbitron">
+      DATE : <span id="todayDate"></span>
+    </h3>
+    <h3 class="text-[16px] md:text-[19px] font-orbitron">
+      TABLE ALLOCATE
+    </h3>
+  </div>
+</div>
+
+<!-- Main Table Section -->
+<div class="mx-auto flex flex-col lg:flex-row justify-center gap-12 mt-12 px-4">
+  <!-- Table -->
+  <div class="text-center flex-1 max-w-[600px]">
+    <h3 class="text-[24px] md:text-[30px] lg:text-[33px] font-bold mb-4 font-orbitron">TABLE {{ id }}</h3>
+    <input type="hidden" id="tableId" value="{{ id }}">
+    
+    <div class="overflow-x-auto rounded-md ">
+      <table class="w-full border-collapse text-left rounded-md">
+        <thead class="text-center">
+          <tr>
+            <th class="p-3 text-sm md:text-base">EMP NO</th>
+            <th class="p-3 text-sm md:text-base">EMP NAME</th>
+            <th class="p-3 text-sm md:text-base">Image</th>
+            <th class="w-[60px] p-3 "></th>
+          </tr>
+        </thead>
+        <tbody id="empTableBody"></tbody>
+      </table>
+    </div>
+
+    <button id="nextBtn"
+    class="mt-6 px-7 py-3 bg-[#8AA7B2] text-white font-bold text-[16px] rounded shadow-md font-inter">
+    Next
+    </button>
+  </div>
+  <input type="hidden" id="tableId" value="{{ id }}">
+</div>
+
+
+<script>
+  // This sets today's date in DD/MM/YYYY format
+  document.getElementById("todayDate").textContent = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+</script>
+
+
+<script>
+
+const TOTAL_ROWS = 6;  // since layemployee has 6 emp fields
+  const empTableBody = document.getElementById('empTableBody');
+  const initialEmps = {{ initial_emps|safe }};  // ensure this is a JS list
+  
+  function createRows() {
+    for (let i = 0; i < TOTAL_ROWS; i++) {
+      const tr = document.createElement('tr');
+      tr.classList.add('emp-row');
+      tr.setAttribute('data-index', i);
+
+      const empIdVal = initialEmps[i] || "";
+
+      const readonlyClass = empIdVal ? "cursor-not-allowed" : "cursor-not-allowed";  // if initial, maybe readonly
+      const readonlyAttr = empIdVal ? "readonly" : "readonly";  // maybe always readonly unless QR clicked
+      
+      const qrVisible = (i === 0 || empIdVal) ? "" : "hidden";
+      
+      tr.innerHTML = `
+        <td class="border border-black px-2 py-3 text-center">
+          <input type="text" 
+                 value="${empIdVal}" 
+                 class="w-full outline-none emp-id-input bg-transparent ${readonlyClass} text-gray-700 text-center" 
+                 ${readonlyAttr}
+                 data-index="${i}" />
+        </td>
+        <td class="border border-black px-2 py-3 emp-name-cell text-center"></td>
+        <td class="border border-black px-2 py-3 emp-name-cell text-center"></td>
+        <td class="text-center justify-item-center ">
+          <img src="{% static 'images/gr.png' %}" 
+               class="w-8 h-8 mx-auto cursor-pointer qr-btn ${qrVisible}" 
+               data-index="${i}">
+        </td>
+      `;
+      empTableBody.appendChild(tr);
+    }
+
+    attachQRListeners();
+    // After creating rows, if initialEmps have some IDs, fetch their names/photos
+    initialEmps.forEach((empId, idx) => {
+      if (empId && empId.trim() !== "") {
+        const input = document.querySelector(`.emp-row[data-index="${idx}"] .emp-id-input`);
+        finalizeInput(input, idx);
+      }
+    });
+  }
+
+
+
+
+function attachQRListeners() {
+  const qrButtons = document.querySelectorAll('.qr-btn');
+
+  qrButtons.forEach(btn => {
+    btn.addEventListener('click', function () {
+      const index = parseInt(this.dataset.index);
+      const row = document.querySelector(`.emp-row[data-index="${index}"]`);
+      const input = row.querySelector('.emp-id-input');
+      const nameCell = row.querySelectorAll('.emp-name-cell')[0];
+      const imageCell = row.querySelectorAll('.emp-name-cell')[1];
+
+      // If already has value, clicking QR again will reset the row
+      if (input.value.trim() !== '') {
+        input.value = '';
+        nameCell.textContent = '';
+        imageCell.innerHTML = '';
+      }
+
+      // First, disable all inputs
+      document.querySelectorAll('.emp-id-input').forEach(inp => {
+        inp.setAttribute('readonly', true);
+        inp.classList.add('cursor-not-allowed');
+      });
+
+      // Enable this input
+      input.removeAttribute('readonly');
+      input.classList.remove('cursor-not-allowed');
+      input.focus();
+
+      // Add Enter key handler
+      const onKeyPress = async (e) => {
+        if (e.key === 'Enter') {
+          await finalizeInput(input, index);
+        }
+      };
+
+      const onBlur = async () => {
+        if (input.value.trim() !== '') {
+          await finalizeInput(input, index);
+        }
+      };
+
+      // Remove old listeners to avoid duplication
+      input.removeEventListener('keypress', onKeyPress);
+      input.removeEventListener('blur', onBlur);
+
+      input.addEventListener('keypress', onKeyPress);
+      input.addEventListener('blur', onBlur);
+    });
+  });
+}
+
+async function finalizeInput(input, index) {
+  const empId = input.value.trim();
+
+  const allInputs = document.querySelectorAll(".emp-id-input");
+  let isDuplicate = false;
+
+  // Check for duplicates in other rows
+  allInputs.forEach((inp, idx) => {
+    if (idx !== index && inp.value.trim() === empId) {
+      isDuplicate = true;
+    }
+  });
+
+  const row = document.querySelector(`.emp-row[data-index="${index}"]`);
+  const nameCell = row.querySelectorAll(".emp-name-cell")[0];
+  const imageCell = row.querySelectorAll(".emp-name-cell")[1];
+
+  if (isDuplicate) {
+    alert("Duplicate ID not allowed.");
+    input.value = "";
+    nameCell.textContent = "";
+    imageCell.innerHTML = "";
+    input.focus();
+    return;
+  }
+
+  if (empId) {
+    try {
+      const response = await fetch("{% url 'get_employee' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify({ emp_id: empId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // ✅ Valid employee
+        nameCell.textContent = result.name;
+        imageCell.innerHTML = `<img src="${result.photo || '/static/images/default-user.png'}" class="w-10 h-10 object-cover rounded-full" />`;
+
+        input.setAttribute('readonly', true);
+        input.classList.add('cursor-not-allowed');
+
+        // Show next QR button
+        const nextRow = document.querySelector(`.emp-row[data-index="${index + 1}"]`);
+        if (nextRow) {
+          const nextBtn = nextRow.querySelector('.qr-btn');
+          if (nextBtn && nextBtn.classList.contains('hidden')) {
+            nextBtn.classList.remove('hidden');
+          }
+        }
+
+      } else {
+        // ❌ Wrong ID: show message and keep input editable
+        nameCell.innerHTML = `<span class="text-red-600 font-semibold">Wrong ID</span>`;
+        imageCell.innerHTML = "";
+
+        // Make input editable again
+        input.removeAttribute('readonly');
+        input.classList.remove('cursor-not-allowed');
+        input.focus();
+      }
+
+    } catch (error) {
+      console.error("Error:", error);
+      nameCell.innerHTML = `<span class="text-red-600 font-semibold">Error</span>`;
+      imageCell.innerHTML = "";
+      input.removeAttribute('readonly');
+      input.classList.remove('cursor-not-allowed');
+      input.focus();
+    }
+  }
+}
+
+  document.addEventListener('DOMContentLoaded', createRows);
+</script>
+
+
+<script>
+
+document.getElementById("nextBtn").addEventListener("click", async () => {
+  const rows = document.querySelectorAll(".emp-row");
+  let empIds = [];
+  let hasWrongId = false;
+
+  // ✅ Force validation on all non-finalized rows
+  for (const row of rows) {
+    const input = row.querySelector(".emp-id-input");
+    const index = parseInt(row.dataset.index);
+    const nameCell = row.querySelectorAll(".emp-name-cell")[0];
+    const empId = input.value.trim();
+
+    if (empId !== "") {
+      // If field is still editable, finalize it
+      if (!input.hasAttribute("readonly")) {
+        await finalizeInput(input, index);
+      }
+
+      // Re-check after finalization
+      const newName = nameCell.textContent.trim().toLowerCase();
+      if (newName === "wrong id") {
+        hasWrongId = true;
+      } else if (empId) {
+        empIds.push(empId);
+      }
+    }
+  }
+
+  // ❌ If any wrong ID, stop
+  if (hasWrongId) {
+    alert("Please correct your ID before proceeding.");
+    return;
+  }
+
+  // ❌ If less than 2 valid IDs, stop
+  if (empIds.length < 2) {
+    alert("Please enter at least 2 Employee IDs.");
+    return;
+  }
+
+  // ✅ Submit to backend
+  const tableId = document.getElementById("tableId").value;
+  
+  const response = await fetch("{% url 'save_emp_ids' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}",
+    },
+    body: JSON.stringify({
+      emp_ids: empIds,
+      table: tableId
+    }),
+  });
+
+  if (response.ok) {
+  
+    window.location.href = `/lay_spreading/task/${tableId}/`;
+  } else {
+    alert("Something went wrong while saving.");
+  }
+});
+
+</script>
+
+</div>
+
+{% endblock %}

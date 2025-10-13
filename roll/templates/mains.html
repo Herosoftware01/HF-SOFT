@@ -1,0 +1,718 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Roll Checking{% endblock %}</title>
+  <link rel="icon" href="{% static 'images/image.png' %}">
+
+  <link rel="manifest" href="/manifest.json" />
+
+   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="//unpkg.com/alpinejs" defer></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inder&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&family=Play:wght@400;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden"> <!-- prevent double scrollbars -->
+<div x-data="setup()" x-init="$refs.loading.classList.add('hidden');" class="h-full">
+  <div class="flex h-full antialiased text-gray-900 bg-gray-100 dark:bg-dark dark:text-light">
+        <!-- Loading screen -->
+        <div
+          x-ref="loading"
+          class="fixed inset-0 z-50 flex items-center justify-center text-2xl font-semibold text-white bg-blue-600"
+        >
+          Loading.....
+        </div>
+
+        <div
+          x-transition:enter="transform transition-transform duration-300"
+          x-transition:enter-start="-translate-x-full"
+          x-transition:enter-end="translate-x-0"
+          x-transition:leave="transform transition-transform duration-300"
+          x-transition:leave-start="translate-x-10"
+          x-transition:leave-end="-translate-x-full"
+          x-show="isSidebarOpen"
+          class="fixed inset-y-0 z-10 flex w-80 "
+        >
+          <!-- Curvy shape -->
+          <svg
+            class="absolute inset-0 w-full h-full text-white"
+            style="filter: drop-shadow(10px 0 10px #58f0d688)"
+            preserveAspectRatio="none"
+            viewBox="0 0 309 800"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+
+            <!-- <path
+              d="M268.487 0H0V800H247.32C207.957 725 207.975 492.294 268.487 367.647C329 243 314.906 53.4314 268.487 0Z"
+            /> -->
+
+
+            
+          <path
+            d="M268.487 0 H0 V800 H268.487 V0 Z"
+            fill="white"
+            stroke="#58f0d6"
+            stroke-width="4"
+            stroke-dasharray="2000"
+            stroke-dashoffset="2000">
+            
+            <animate
+              attributeName="stroke-dashoffset"
+              values="2000;0;2000"
+              dur="4s"
+              repeatCount="indefinite"
+            />
+          </path>
+
+
+
+
+          </svg>
+          <!-- Sidebar content -->
+          <div class="z-10 flex flex-col flex-1 ">
+            <div class="flex items-center justify-between flex-shrink-0 w-64 p-4">
+              <!-- Logo -->
+              <a href="#">
+                <span class="sr-only">Hero Fashion</span>
+
+                <img src="{% static 'images/HeroLogo.png' %}" alt="" class="w-20 h-auto text-blue-600">
+            
+              </a>
+              <!-- Close btn -->
+              <!-- <button @click="isSidebarOpen = false" class="p-1 rounded-lg focus:outline-none focus:ring"> -->
+              <button @click="closeSidebar()" class="p-1 rounded-lg focus:outline-none focus:ring">
+                
+                <svg
+                  class="w-6 h-6"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span class="sr-only">Close sidebar</span>
+              </button>
+            </div>
+          
+
+ <!-- <nav class="flex flex-col flex-1 w-64 p-4 mt-4 gap-8"> -->
+  <nav
+    class="flex flex-col flex-1 w-64 p-4 mt-4 gap-8 overflow-y-auto scrollbar-thin scrollbar-thumb-sky-400 scrollbar-track-gray-100"
+    style="max-height: calc(100vh - 120px);"
+  >
+
+
+{% if permission.can_access_admin %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/user_list/' in request.path or '/register/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/admin.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Admin Control</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/user_list/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/user_list/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Users List
+    </a>
+    <a href="/register/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/register/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      User Create
+    </a>
+  </div>
+</div>
+{% endif %}
+
+
+
+
+  <a href="/apk_download/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/apk_download/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/image.png' %}" alt="lay_admin" class="w-6 h-6">
+    <span class="font-medium">Apk Download</span>
+  </a>
+
+
+
+  {% if permission.powerbi_data %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/order/' in request.path or '/fab_table/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">PowerBi Datas</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/order/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/order/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Order Table
+    </a>
+    <a href="/panda_html/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/panda_html/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Pandas data 
+    </a>
+    <a href="/testing/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/testing/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      testing data 
+    </a>
+    <a href="/Order_panda_html/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Order_panda_html/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Order Pandas data 
+    </a>
+    <a href="/fab_table/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/fab_table/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fab Table
+    </a>
+    <a href="/orderst/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/orderst/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Orderst Table
+    </a>
+    <a href="/empatt/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/empatt/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      empatt Table
+    </a>
+    <a href="/res/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/res/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      emp res Table
+    </a>
+    
+    <a href="/Fabyarn1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabyarn1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fab yarn Table
+    </a>
+    
+  
+    <a href="/Fabmatpen/"             
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabmatpen/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fabmatpen Table
+    </a>
+    <a href="/fabKnitprgvsrec1/"             
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/fabKnitprgvsrec1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fabricknit prg vs Rec Table
+    </a>
+    <a href="/YarnPovspi1/"             
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/YarnPovspi1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Yarnpopi Table
+    </a>
+    <a href="/Allotpen1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Allotpen1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Allot Pending Table
+    </a>
+    
+      <a href="/PrintRgb1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/PrintRgb1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Print Table
+    </a>
+    <a href="/ordmatpen1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/ordmatpen1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fabmatpenresponse Pending
+    </a>
+
+    <a href="/General1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/General1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      General Report
+    </a>
+    <a href="/Fabst1/" 
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabst1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fabst Report 
+    </a>
+    
+    <a href="/unit1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      unit1 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+  {% if permission.can_access_roll %}
+    <a href="/roll/"
+       class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+       {% if '/roll/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600
+       {% endif %}">
+      <img src="{% static 'images/iron-machine.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Roll Checking</span>
+    </a>
+  {% endif %}
+
+  {% if permission.can_access_attendance %}
+  <a href="/attendance/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/attendance/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/business.png' %}" alt="Attendance" class="w-6 h-6">
+    <span class="font-medium">Attendance</span>
+  </a>
+{% endif %}
+
+{% if permission.production_data %}
+  <a href="/attendance/report/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/attendance/report/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/computer.png' %}" alt="report" class="w-6 h-6">
+    <span class="font-medium">Mobile</span>
+  </a>
+{% endif %}
+
+
+
+{% if permission.lay_spreading %}
+  <a href="/lay_spreading/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/lay_spreading/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/fabric.png' %}" alt="lay_spreading" class="w-6 h-6">
+    <span class="font-medium">Lay Spreading</span>
+  </a>
+{% endif %}
+
+{% if permission.lay_admin %}
+  <a href="/lay_spreading/permissions/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/lay_spreading/permissions/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/gr.png' %}" alt="lay_admin" class="w-6 h-6">
+    <span class="font-medium">Lay Admin</span>
+  </a>
+{% endif %}
+
+
+
+
+  {% if permission.unit1 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/unit1/' in request.path or '/unit1/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Unit - 1</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/unit1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      unit1 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+
+  {% if permission.unit2 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/unit2/' in request.path or '/unit2/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Unit - 2</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/unit2/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit2/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      unit2 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+  {% if permission.unit3 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/unit3/' in request.path or '/unit3/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Unit - 3</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/unit3/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit3/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      unit3 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+  {% if permission.unit4 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/unit4/' in request.path or '/unit4/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Unit - 4</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/unit4/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit3/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      unit4 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+
+  {% if permission.merch1 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/merch1/' in request.path or '/merch1/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Merch 1</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/merch1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/merch1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      merch 1 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+  {% if permission.merch2 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/merch2/' in request.path or '/merch2/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Merch 2</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/merch2/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/merch2/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      merch 2 datas
+    </a>
+  </div>
+</div>
+{% endif %}
+
+
+
+
+
+
+
+
+</nav>
+
+
+            <div class="flex-shrink-0 p-4">
+              <button class="flex items-center space-x-2">
+                <svg
+                  aria-hidden="true"
+                  class="w-6 h-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <!-- <span>Logout</span> -->
+                <span><a href="{% url 'logout' %}">Logout</a></span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <main class="flex flex-col  flex-1  overflow-y-auto">
+         
+
+          <button
+          @click="openSidebar()"
+  class="fixed top-5 left-5 flex items-center justify-center w-12 h-12 text-black bg-white rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:bg-gray-100 ring-2 ring-sky-400"
+>
+  <svg
+    class="w-6 h-6"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+  <span class="sr-only">Open menu</span>
+</button>
+                            
+   <div>
+     {% block content %}
+    <!-- Page-specific content will go here -->
+    {% endblock content %}
+   </div>
+ 
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.8.1/alpine.js"></script>
+    <script>
+   
+    const setup = () => {
+  return {
+    isSidebarOpen: JSON.parse(localStorage.getItem('sidebarOpen')) ?? true,  // default to true (open)
+
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
+      localStorage.setItem('sidebarOpen', JSON.stringify(this.isSidebarOpen));
+    },
+
+    openSidebar() {
+      this.isSidebarOpen = true;
+      localStorage.setItem('sidebarOpen', JSON.stringify(true));
+    },
+
+    closeSidebar() {
+      this.isSidebarOpen = false;
+      localStorage.setItem('sidebarOpen', JSON.stringify(false));
+    }
+  }
+}
+
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+
+
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat min-h-screen font-sans text-gray-800 p-6">
+
+  <!-- Employee Details -->
+  <div class="bg-white shadow-md rounded-lg p-6 max-w-3xl mx-auto mb-6">
+    <div class="flex justify-between mb-4">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">👥 Current Employee Allocation</h3>
+      </div>
+      <div>
+        <a href="{% url 'machine_jobs' machine_id %}" class="text-blue-600 hover:underline"><button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Employee Allocate</button></a>
+
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 text-left">
+       <h3 class="text-black font-bold"><strong class="text-blue-700 text-md px-2">Roll Checker : </strong> {{ emp_data.emp_name_1 }} - {{ emp_data.emp_id1 }}</h3>
+      <!-- <p><strong>Emp ID 1:</strong> {{ emp_data.emp_id1 }}</p> -->
+      <h3 class="text-black font-bold"><strong class="text-blue-700 text-md px-2">Helper : </strong> {{ emp_data.emp_name_2 }} - {{ emp_data.emp_id2 }}</h3>
+      <!-- <p><strong>Emp ID 2:</strong> {{ emp_data.emp_id2 }}</p> -->
+    </div>
+  </div>
+
+
+
+  <!-- Machine ID -->
+  <div class="flex justify-around">
+    <div class="text-center text-lg mb-6 space-y-1">
+    <h2 class="text-white font-bold">Machine ID : {{ group_id }}</h2>  
+  </div>
+  <div>
+    <a href="{% url 'roll_report' %}" class="text-red-600 hover:underline">Roll status</a>
+  </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="bg-white rounded-xl shadow-xl max-w-5xl mx-auto p-12 transition-transform transform hover:scale-[1.01] duration-200 animate-fade-in">
+    
+    <!-- GET form to fetch_roll_details -->
+    <form method="GET" action="{% url 'fetch_roll_details' %}" class="flex flex-col md:flex-row bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl mx-auto" onsubmit="return validateForm()">
+      {% csrf_token %}
+
+      <!-- Left: Manual input -->
+      <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
+        <h2 class="text-3xl font-bold text-blue-600 mb-6 text-center md:text-left">Roll Check</h2>
+
+        <label for="roll_no" class="block text-lg font-semibold mb-2">Enter Roll No:</label>
+        <input type="text" name="rollno" id="roll_no" placeholder="e.g., v13188" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 outline-none transition mb-4">
+
+        <!-- Hidden input for machine ID -->
+        <input type="hidden" name="machine_id" value="{{ group_id }}">
+
+        <!-- <input type="hidden" name="dcno" value="{{ dcno }}"> -->
+        
+        <!-- <input type="hidden" name="rollno" value="{{ roll_no }}"  required> -->
+        <input type="hidden" name="employee_name" value="{{ emp_data.emp_name_1 }}"  required>
+
+        <button type="submit"
+                class="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition w-full md:w-auto">
+          ➡️ Next
+        </button>
+      </div>
+
+      <!-- Right: QR Code Scanner -->
+      <div class="w-full md:w-1/2 bg-gradient-to-br from-pink-300 to-yellow-300 flex flex-col items-center justify-center p-6">
+        <p class="text-lg font-semibold text-gray-800 mb-4 text-center">QR Code Scanner</p>
+
+        <button type="button" onclick="startScanner()"
+          class="mb-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition w-full md:w-auto max-w-xs">
+          Start QR Scan
+        </button>
+
+        <div id="qr-reader" class="w-full max-w-sm h-72 bg-white rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
+          <p class="text-gray-500">Click the button to activate camera</p>
+        </div>
+      </div>
+    </form>
+
+    {% if messages %}
+  <div class="text-red-600 mt-4 text-center">
+    <ul class="space-y-1">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+  </div>
+
+
+
+  <!-- Simple Animation with Tailwind -->
+  <style>
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out both;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <script>
+    let qrReader;
+
+    function startScanner() {
+      const qrReaderContainer = document.getElementById("qr-reader");
+      qrReaderContainer.innerHTML = ""; // Clear previous content
+
+      if (!qrReader) {
+        qrReader = new Html5Qrcode("qr-reader");
+      }
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          const cameraId = devices[0].id;
+
+          qrReader.start(
+            cameraId,
+            { fps: 10, qrbox: 250 },
+            qrCodeMessage => {
+              // Stop scanner after scan
+              qrReader.stop();
+
+              // Redirect with rollno and machine_id
+              const rollNo = encodeURIComponent(qrCodeMessage);
+              const machineId = encodeURIComponent("{{ group_id }}");
+
+              const url = `{% url 'fetch_roll_details' %}?rollno=${rollNo}&machine_id=${machineId}`;
+              window.location.href = url;
+            },
+            errorMessage => {
+              console.log("Scanning error:", errorMessage);
+            }
+          ).catch(err => {
+            console.error("QR scanner start error:", err);
+            qrReaderContainer.innerHTML = "<p class='text-red-600'>Unable to start camera.</p>";
+          });
+
+        } else {
+          qrReaderContainer.innerHTML = "<p class='text-red-600'>No cameras found.</p>";
+        }
+      }).catch(err => {
+        console.error("Camera error:", err);
+        qrReaderContainer.innerHTML = "<p class='text-red-600'>Camera access denied or unavailable.</p>";
+      });
+    }
+
+    function validateForm() {
+      const rollInput = document.getElementById("roll_no").value;
+      if (!rollInput) {
+        alert("Please enter or scan a roll number.");
+        return false;
+      }
+      return true;
+    }
+  </script>
+
+</div>
+
+{% endblock %}
