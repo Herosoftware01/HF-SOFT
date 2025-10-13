@@ -34,3 +34,21 @@ class VueOverall1(models.Model):
     class Meta:
         managed = False
         db_table = 'vue_overall1'
+
+
+class BillAge(models.Model):
+    no = models.IntegerField(db_column='No', primary_key=True)  # Field name made lowercase.
+    edate = models.DateTimeField(db_column='EDate')  # Field name made lowercase.
+    billdate = models.DateTimeField(db_column='BillDate')  # Field name made lowercase.
+    billno = models.CharField(db_column='BillNo', max_length=50)  # Field name made lowercase.
+    module = models.CharField(db_column='Module', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    suppliers = models.CharField(db_column='Suppliers', max_length=35, blank=True, null=True)  # Field name made lowercase.
+    employees = models.CharField(db_column='Employees', max_length=35, blank=True, null=True)  # Field name made lowercase.
+    amount = models.DecimalField(db_column='Amount', max_digits=19, decimal_places=4)  # Field name made lowercase.
+    billpassed = models.SmallIntegerField(db_column='BillPassed')  # Field name made lowercase.
+    br_ageing = models.IntegerField(db_column='BR Ageing', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    billdate_ageing = models.IntegerField(db_column='BillDate Ageing', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+
+    class Meta:
+        managed = False
+        db_table = 'bill_age'
