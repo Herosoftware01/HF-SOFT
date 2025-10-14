@@ -53,6 +53,7 @@ urlpatterns = [
     path('server15/', views.server15, name='server15'),
     path('server10/', views.server10, name='server10'),
     path('api/login/', views.login_api, name='api_login'),
+    path('sample_data/', views.sample_data, name='sample_data'),
     
 ]
 

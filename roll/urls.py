@@ -33,6 +33,7 @@ urlpatterns = [
     path('check_roll_exists/', views.check_roll_exists, name='check_roll_exists'),
     path('validate_user/', views.validate_user, name='validate_user'),
     path('fetch_roll_details/', views.fetch_roll_details, name='fetch_roll_details'),
+    path('break/', views.break_screen, name='break_screen'),
 ]
 
 

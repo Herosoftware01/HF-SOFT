@@ -156,6 +156,9 @@ def empatt(request):
 def fabmatpen1(request):
     return render(request, 'powerbi/Fabmatpen.html')
 
+def sample_data(request):
+    return render(request, 'powerbi/sample_data.html')
+
 # def Allot(request):
 #     return render(request, 'powerbi/Allotpen.html')
 

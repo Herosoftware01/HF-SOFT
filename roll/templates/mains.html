@@ -308,6 +308,12 @@
        {% if '/unit1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
       unit1 datas
     </a>
+
+    <a href="/sample_data/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/sample_data/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      sample data
+    </a>
   </div>
 </div>
 {% endif %}
@@ -855,7 +861,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.8.1/alpine.js"></script>
-    <script>
+
+    
+  <script>
    
     const setup = () => {
   return {
@@ -880,6 +888,43 @@
 
 
     </script>
+
+
+
+{% if '/roll/break/' not in request.path %}
+<script>
+  const breakStart = "{{ break_start|default:'00:00:00' }}";
+  const breakEnd = "{{ break_end|default:'00:00:00' }}";
+
+  function parseTime(t) {
+    const now = new Date();
+    const [h, m, s] = t.split(':').map(Number);
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+  }
+
+  const breakStartTime = parseTime(breakStart);
+  const breakEndTime = parseTime(breakEnd);
+
+  function checkBreakRedirect() {
+    const now = new Date();
+    console.log("Checking break redirect at", now.toLocaleTimeString());
+
+    const isOnBreakPage = window.location.pathname.includes('/roll/break/');
+
+    if (now >= breakStartTime && now <= breakEndTime && !isOnBreakPage) {
+      console.log("Redirecting to break page");
+      // Save current page for returning after break
+      sessionStorage.setItem('original_url', window.location.pathname);
+      window.location.href = '/roll/break/';
+    }
+  }
+
+  setInterval(checkBreakRedirect, 5000);
+  checkBreakRedirect();
+</script>
+{% endif %}
+
+
 
 </body>
 </html>

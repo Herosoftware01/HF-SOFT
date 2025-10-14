@@ -433,3 +433,11 @@ class back_permissions(models.Model):
     Password = models.CharField(max_length=6)
     id = models.AutoField(primary_key=True)
 
+
+class BreakTime(models.Model):
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_active = models.BooleanField(default=True)  # so you can toggle it
+
+    def __str__(self):
+        return f"Break from {self.start_time} to {self.end_time}"

@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponse
 from django.contrib import messages
-from .models import JobAllocation,VueRl001,mastermistakes,VueOrdersinhand,master_roll_update,mistake_image,master_final_mistake,Lotsticker,Punchdtls1,VueFindia,back_permissions
+from .models import JobAllocation,VueRl001,mastermistakes,VueOrdersinhand,master_roll_update,mistake_image,master_final_mistake,Lotsticker,Punchdtls1,VueFindia,back_permissions,BreakTime
 from django.db.models import Q
 import json
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -188,36 +188,157 @@ def validate_user(request):
 
     return JsonResponse({ "valid": False })
 
+# def fetch_roll_details(request):
+#     roll_no = request.GET.get('rollno')
+#     group_id = request.GET.get('machine_id')
+#     emp_name= request.GET.get('employee_name')
+
+#     if not roll_no:
+#         messages.error(request, "No roll number provided.")
+#         return redirect('home', machine_id=group_id)
+    
+#     # Fetch the latest matching roll entry
+#     try:
+#         roll_entry = VueRl001.objects.using('demo').filter(rlno__iexact=roll_no).order_by('-dt').first()
+#         if not roll_entry:
+#             messages.error(request, "No roll data found.")
+#             return redirect('home', machine_id=group_id)
+#         dc = roll_entry.dc  # Only access dc after ensuring data is not None
+#         print("DC number:", dc)
+#     except Exception as e:
+#         messages.error(request, f"Error fetching roll data: {e}")
+#         return redirect('home', machine_id=group_id)
+    
+#     # if master_final_mistake.objects.filter(roll_no__iexact=roll_no, dc__iexact=dc).exists():
+#     #     messages.warning(request, f"Roll No {roll_no} has already been checked.")
+#     #     return redirect('home', machine_id=group_id)
+#     if master_final_mistake.objects.filter(roll_no__iexact=roll_no, dc_no__iexact=dc).exists():
+#         messages.warning(request, f"Roll No {roll_no} with DC No {dc} has already been checked.")
+#         return redirect('home', machine_id=group_id)
+
+#     # Now get all needed fields
+#     dc = roll_entry.dc
+#     jobno = roll_entry.jobno
+#     dia = roll_entry.dia
+#     lotno = roll_entry.lotno
+#     tybe = roll_entry.name
+#     fabric = roll_entry.fab
+#     mtr = roll_entry.mtr
+#     weight = roll_entry.weight
+#     color = getattr(roll_entry, 'colour', None)  # optional
+
+
+#     print("jobno:", jobno)
+#     print("dia:", dia)
+#     print("lotno:", lotno)
+#     print("tybe:", tybe)
+#     print("fabric:", fabric)
+#     print("mtr:", mtr)
+#     print("weight:", weight)
+#     print("color:", color)
+
+#     filters = {
+#         'orderno__iexact': jobno,
+#         'fabric__iexact': fabric,
+#         'dia__iexact': dia,
+#     }
+#     if color:
+#         filters['colour__iexact'] = tybe
+
+#     finaldia_queryset = VueFindia.objects.using('test').filter(**filters)
+#     first_entry = finaldia_queryset.first()
+#     f_dia = first_entry.finaldia if first_entry else None
+
+#     # Debug log
+#     for fin in finaldia_queryset:
+#         print("orderno:", fin.orderno, "fabric:", fin.fabric, "dia:", fin.dia, "colour:", fin.colour, "finaldia:", fin.finaldia)
+
+#     # Get image for jobno
+#     image_url = VueOrdersinhand.objects.using('test').filter(orderno__iexact=jobno).values_list('img', flat=True).first()
+#     full_image_url = None
+#     if image_url:
+#         filename = image_url.split('\\')[-1]
+#         full_image_url = f"https://app.herofashion.com/order_image/{filename}"
+
+#     # Determine mistake type list
+#     if tybe and tybe.lower().startswith(('p-', 'p -')) :
+#         all_mistakes = mastermistakes.objects.filter(ty__istartswith='p')
+#         types = "p"
+#     else:
+#         all_mistakes = mastermistakes.objects.filter(ty__iexact='d')
+#         types = "d"
+
+#     return render(request, "mistakes.html", {
+#         'roll_no': roll_no,
+#         'group_id': group_id,
+#         'dc': dc,
+#         'types': types,
+#         'mtr': mtr,
+#         'emp_name': emp_name,
+#         'lotno': lotno,
+#         'weight': weight,
+#         'fabric': fabric,
+#         'jobno': jobno,
+#         'tybe': tybe,
+#         'f_dia': f_dia,
+#         'color': color,
+#         'image_url': image_url,
+#         'full_image_url': full_image_url,
+#         'all_mistakes': all_mistakes
+#     })
+
+
+
 def fetch_roll_details(request):
     roll_no = request.GET.get('rollno')
     group_id = request.GET.get('machine_id')
-    emp_name= request.GET.get('employee_name')
+    emp_name = request.GET.get('employee_name')
 
+    now = datetime.now().time()
+    bt = BreakTime.objects.filter(is_active=True).first()
+
+    # ✅ Break active check: redirect to break screen and save original URL
+    if bt and bt.start_time <= now <= bt.end_time:
+        if not request.path.startswith('/roll/break/'):
+            if 'original_url' not in request.session:
+                # ✅ Save current full path with GET params
+                request.session['original_url'] = request.get_full_path()
+                print("Saving original_url:", request.get_full_path())  # Optional for debug
+            return redirect('/roll/break/')
+        
+
+    def safe_redirect_home():
+        """Redirect safely to home or fallback."""
+        if group_id:
+            return redirect('home', machine_id=group_id)
+        else:
+            messages.error(request, "Machine ID is missing for redirect.")
+            return redirect('lay_spreading')  # 🔁 Replace with a safe default view name
+
+    # Step 1: Validate roll number
     if not roll_no:
         messages.error(request, "No roll number provided.")
-        return redirect('home', machine_id=group_id)
-    
-    # Fetch the latest matching roll entry
+        return safe_redirect_home()
+
+    # Step 2: Fetch roll entry
     try:
         roll_entry = VueRl001.objects.using('demo').filter(rlno__iexact=roll_no).order_by('-dt').first()
         if not roll_entry:
             messages.error(request, "No roll data found.")
-            return redirect('home', machine_id=group_id)
-        dc = roll_entry.dc  # Only access dc after ensuring data is not None
+            return safe_redirect_home()
+
+        dc = roll_entry.dc  # Access safely after ensuring roll_entry is not None
         print("DC number:", dc)
     except Exception as e:
         messages.error(request, f"Error fetching roll data: {e}")
-        return redirect('home', machine_id=group_id)
-    
-    # if master_final_mistake.objects.filter(roll_no__iexact=roll_no, dc__iexact=dc).exists():
-    #     messages.warning(request, f"Roll No {roll_no} has already been checked.")
-    #     return redirect('home', machine_id=group_id)
+        return safe_redirect_home()
+
+    # Step 3: Check for duplicate entry
     if master_final_mistake.objects.filter(roll_no__iexact=roll_no, dc_no__iexact=dc).exists():
         messages.warning(request, f"Roll No {roll_no} with DC No {dc} has already been checked.")
-        return redirect('home', machine_id=group_id)
+        return safe_redirect_home()
 
-    # Now get all needed fields
-    dc = roll_entry.dc
+    # Step 4: Extract roll details
     jobno = roll_entry.jobno
     dia = roll_entry.dia
     lotno = roll_entry.lotno
@@ -225,8 +346,7 @@ def fetch_roll_details(request):
     fabric = roll_entry.fab
     mtr = roll_entry.mtr
     weight = roll_entry.weight
-    color = getattr(roll_entry, 'colour', None)  # optional
-
+    color = getattr(roll_entry, 'colour', None)
 
     print("jobno:", jobno)
     print("dia:", dia)
@@ -237,6 +357,7 @@ def fetch_roll_details(request):
     print("weight:", weight)
     print("color:", color)
 
+    # Step 5: Fetch finaldia if available
     filters = {
         'orderno__iexact': jobno,
         'fabric__iexact': fabric,
@@ -249,25 +370,26 @@ def fetch_roll_details(request):
     first_entry = finaldia_queryset.first()
     f_dia = first_entry.finaldia if first_entry else None
 
-    # Debug log
+    # Debug log for all matched entries
     for fin in finaldia_queryset:
         print("orderno:", fin.orderno, "fabric:", fin.fabric, "dia:", fin.dia, "colour:", fin.colour, "finaldia:", fin.finaldia)
 
-    # Get image for jobno
+    # Step 6: Get job image
     image_url = VueOrdersinhand.objects.using('test').filter(orderno__iexact=jobno).values_list('img', flat=True).first()
     full_image_url = None
     if image_url:
         filename = image_url.split('\\')[-1]
         full_image_url = f"https://app.herofashion.com/order_image/{filename}"
 
-    # Determine mistake type list
-    if tybe and tybe.lower().startswith(('p-', 'p -')) :
+    # Step 7: Determine mistake type list
+    if tybe and tybe.lower().startswith(('p-', 'p -')):
         all_mistakes = mastermistakes.objects.filter(ty__istartswith='p')
         types = "p"
     else:
         all_mistakes = mastermistakes.objects.filter(ty__iexact='d')
         types = "d"
 
+    # Step 8: Render the response
     return render(request, "mistakes.html", {
         'roll_no': roll_no,
         'group_id': group_id,
@@ -286,7 +408,6 @@ def fetch_roll_details(request):
         'full_image_url': full_image_url,
         'all_mistakes': all_mistakes
     })
-
 
 
 # @csrf_exempt
@@ -980,5 +1101,25 @@ def machine_report(request, machine_id):
         'roll_status': roll_status,
         'machine_id': machine_id
     })
+
+
+def break_screen(request):
+    now = datetime.now().time()
+    bt = BreakTime.objects.filter(is_active=True).first()
+
+    if bt:
+        if now > bt.end_time:
+            original = request.session.pop('original_url', None)  # ✅ Don't default yet
+            if original:
+                print("Redirecting to saved original_url:", original)  # Optional
+                return redirect(original)
+            else:
+                print("No original_url in session, redirecting to default.")
+                return redirect('/roll/')  # fallback
+        return render(request, 'break.html', {
+            'break_end_time': bt.end_time.strftime('%H:%M:%S')
+        })
+
+    return redirect('/roll/')
 
 
