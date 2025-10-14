@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponse
 from django.contrib import messages
-from .models import JobAllocation,VueRl001,mastermistakes,VueOrdersinhand,master_roll_update,mistake_image,master_final_mistake,Lotsticker,Punchdtls1,VueFindia
+from .models import JobAllocation,VueRl001,mastermistakes,VueOrdersinhand,master_roll_update,mistake_image,master_final_mistake,Lotsticker,Punchdtls1,VueFindia,back_permissions
 from django.db.models import Q
 import json
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -35,6 +35,7 @@ def home(request):
 #     else:
 #         form = AuthenticationForm()
 #     return render(request, 'login.html', {'form': form})
+
 
 
 # def custom_logout(request):
@@ -167,21 +168,35 @@ def machine_jobs(request, machine_id):
         'employees': employees
     })
 
+def check_roll_exists(request):
+    rollno = request.GET.get("rollno", "").strip()
+    exists = master_roll_update.objects.filter(roll_no__iexact=rollno).exists()
+    return JsonResponse({ "exists": exists })
 
+@csrf_exempt
+def validate_user(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        emp_id = data.get("emp_id")
+        password = data.get("password")
+
+        try:
+            user = back_permissions.objects.get(Emp_id=emp_id, Password=password)
+            return JsonResponse({ "valid": True, "emp_name": f"Emp_{emp_id}" })  # You can fetch actual name if available
+        except back_permissions.DoesNotExist:
+            return JsonResponse({ "valid": False })
+
+    return JsonResponse({ "valid": False })
 
 def fetch_roll_details(request):
     roll_no = request.GET.get('rollno')
     group_id = request.GET.get('machine_id')
     emp_name= request.GET.get('employee_name')
 
-    
-
-
     if not roll_no:
         messages.error(request, "No roll number provided.")
         return redirect('home', machine_id=group_id)
     
-
     # Fetch the latest matching roll entry
     try:
         roll_entry = VueRl001.objects.using('demo').filter(rlno__iexact=roll_no).order_by('-dt').first()
@@ -211,7 +226,6 @@ def fetch_roll_details(request):
     mtr = roll_entry.mtr
     weight = roll_entry.weight
     color = getattr(roll_entry, 'colour', None)  # optional
-
 
 
     print("jobno:", jobno)

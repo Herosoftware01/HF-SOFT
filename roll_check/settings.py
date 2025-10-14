@@ -36,12 +36,13 @@ ALLOWED_HOSTS = ['app.herofashion.com','127.0.0.1']
 #     'http://10.1.21.13:7006/'
 # ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://api.herofashion.com",
-#     "http://localhost:3000",
-   
-    
-# ]
+CORS_ALLOWED_ORIGINS = [
+
+    "https://api.herofashion.com",
+    "http://localhost:3000",
+    "https://5569kpl4-5173.inc1.devtunnels.ms",
+    "https://b5t53rw9-7002.inc1.devtunnels.ms/"
+]
 
 
 # CORS_ALLOW_CREDENTIALS = True
@@ -256,7 +257,7 @@ PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_SCOPE = '/'
 # PWA_APP_ORIENTATION = 'portrait'
-PWA_APP_ORIENTATION = 'landscape'  # ✅ orientation direction
+PWA_APP_ORIENTATION = 'any'  # ✅ orientation direction
 PWA_APP_START_URL = '/'
 PWA_APP_STATUS_BAR_COLOR = 'default'
 

@@ -108,6 +108,7 @@ def user_list(request):
             perm.server13 = bool(request.POST.get(f'server13_{user.id}', False))
             perm.server10 = bool(request.POST.get(f'server10_{user.id}', False))
             perm.server15 = bool(request.POST.get(f'server15_{user.id}', False))
+            perm.bill = bool(request.POST.get(f'bill_{user.id}', False))
             perm.save()
         messages.success(request, "Permissions updated successfully.")
         return redirect('user_list')
@@ -133,11 +134,15 @@ def server13(request):
 
 @xframe_options_exempt
 def server15(request):
-    return render(request, 'powerbi/server13.html')
+    return render(request, 'powerbi/bala10.html')
+
+@xframe_options_exempt
+def iframe_report(request):
+    return render(request, 'powerbi/bala_iframe.html')
 
 @xframe_options_exempt
 def server10(request):
-    return render(request, 'powerbi/server13.html')
+    return render(request, 'powerbi/karthi10.html')
 
 def fab_table(request):
     return render(request, 'powerbi/fab.html')

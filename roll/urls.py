@@ -29,6 +29,10 @@ urlpatterns = [
     path('delete-roll/', views.delete_roll, name='delete_roll'),
     
     path('machine_report/<int:machine_id>/', views.machine_report, name='machine_report'),
+
+    path('check_roll_exists/', views.check_roll_exists, name='check_roll_exists'),
+    path('validate_user/', views.validate_user, name='validate_user'),
+    path('fetch_roll_details/', views.fetch_roll_details, name='fetch_roll_details'),
 ]
 
 
