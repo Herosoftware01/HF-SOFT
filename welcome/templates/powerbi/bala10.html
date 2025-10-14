@@ -1,0 +1,155 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" rel="stylesheet"/>
+
+<style>
+  .search-highlight {
+    background-color: #facc15;
+    color: black;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+  #myGrid {
+    height: 700px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+  #myGrid::-webkit-scrollbar { height: 8px; }
+  #myGrid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .ag-cell {
+    white-space: normal !important;
+    padding: 5px 10px;
+    line-height: 1.4;
+  }
+  .ag-row {
+    border-bottom: 1px solid #e2e8f0;
+  }
+</style>
+
+<div class="bg-gray-100 p-6 container mx-auto">
+  <h1 class="text-2xl font-semibold mb-4">Employee Intime Outtime Table</h1>
+  <input type="text" id="globalFilter" placeholder="Search all columns..." class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"/>
+  <div class="overflow-x-auto w-full">
+      <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg min-w-[640px]"></div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+  const gridDiv = document.querySelector('#myGrid');
+  let currentGlobalFilter = '';
+  let currentColumnFilters = {};
+
+  function multiLineRenderer(params) {
+    if (params.value == null) return '';
+    const valueString = params.value.toString();
+    const lines = valueString.split(/\r\n|\n/).filter(line => line.trim() !== '');
+    const container = document.createElement('div');
+    container.style.whiteSpace = "normal";
+    container.style.lineHeight = "1.4";
+    container.innerHTML = lines.join('<br>');
+    return container;
+  }
+
+  function highlightRenderer(params) {
+    if (!params.value) return '';
+    const raw = params.value.toString();
+    const joined = raw.split(/\r\n|\n/).filter(Boolean).join(' | ');
+    const filterTexts = [];
+    if (currentGlobalFilter) filterTexts.push(currentGlobalFilter);
+    if (currentColumnFilters[params.colDef.field]) filterTexts.push(currentColumnFilters[params.colDef.field]);
+    if (filterTexts.length === 0) return joined;
+    const escapedFilters = filterTexts.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(escapedFilters.join('|'), 'gi');
+    let result = '', lastIndex = 0, match;
+    while ((match = regex.exec(joined)) !== null) {
+      const idx = match.index;
+      result += joined.substring(lastIndex, idx);
+      result += `<span class="search-highlight">${joined.substr(idx, match[0].length)}</span>`;
+      lastIndex = idx + match[0].length;
+    }
+    result += joined.substring(lastIndex);
+    return result;
+  }
+
+  const columnDefs = [
+    {headerName: 'No', field: 'code_emb_attendance_fact', filter: 'agNumberColumnFilter', checkboxSelection: true, maxWidth: 90, flex: 0, cellRenderer: highlightRenderer},
+    {headerName: 'Emp con_code_name_in_out', field: 'con_code_name_in_out', filter: 'agTextColumnFilter', floatingFilter: true, flex: 2, minWidth: 220, cellRenderer: multiLineRenderer},
+    {headerName: 'Name', field: 'name', filter: 'agTextColumnFilter', floatingFilter: true, flex: 1, minWidth: 150, cellRenderer: highlightRenderer},
+    {headerName: 'In Time', field: 'intime', filter: 'agTextColumnFilter', floatingFilter: true, flex: 1, minWidth: 160, cellRenderer: highlightRenderer},
+    {headerName: 'Out Time', field: 'outtime', filter: 'agDateColumnFilter', floatingFilter: true, flex: 1, minWidth: 160, valueFormatter: params => params.value ? new Date(params.value).toLocaleString() : '', cellRenderer: highlightRenderer},
+    {headerName: 'Rel Code Name', field: 'rel_code_name', filter: 'agTextColumnFilter', floatingFilter: true, maxWidth: 190, flex: 0, cellRenderer: highlightRenderer}
+  ];
+
+  const gridOptions = {
+    columnDefs,
+    defaultColDef: {sortable: true, filter: true, floatingFilter: true, flex: 1, minWidth: 120, resizable: true, editable: false, wrapText: true, autoHeight: true},
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    enableCellTextSelection: true,
+    animateRows: true,
+    rowData: null,
+    suppressCellFocus: false,
+    getRowHeight: params => {
+      const field = 'con_code_name_in_out';
+      if (params.data && params.data[field]) {
+        const lines = params.data[field].toString().split(/\r\n|\n/).length;
+        return lines * 20 + 10;
+      }
+      return 35;
+    }
+  };
+
+  new agGrid.Grid(gridDiv, gridOptions);
+
+  try {
+    const response = await fetch('https://app.herofashion.com/testing_api');
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    const mappedData = data.map(row => ({
+      code_emb_attendance_fact: row.code_emb_attendance_fact,
+      con_code_name_in_out: row.con_code_name_in_out,
+      name: row.name,
+      intime: row.intime,
+      outtime: row.outtime,
+      rel_code_name: row.rel_code_name
+    }));
+    gridOptions.api.setRowData(mappedData);
+    gridOptions.api.sizeColumnsToFit();
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+  }
+
+  gridOptions.api.addEventListener('filterChanged', () => {
+    currentColumnFilters = {};
+    const filterModel = gridOptions.api.getFilterModel();
+    for (const colId in filterModel) {
+      if (!filterModel[colId]) continue;
+      if (filterModel[colId].filter != null) {
+        currentColumnFilters[colId] = filterModel[colId].filter.toString().toLowerCase();
+      }
+    }
+    gridOptions.api.refreshCells({ force: true });
+  });
+
+  document.querySelector('#globalFilter').addEventListener('input', e => {
+    currentGlobalFilter = e.target.value.toLowerCase();
+    gridOptions.api.setQuickFilter(currentGlobalFilter);
+    gridOptions.api.refreshCells({ force: true });
+  });
+
+  window.addEventListener('resize', () => {
+    if (gridOptions.api) gridOptions.api.sizeColumnsToFit();
+  });
+});
+</script>
+
+{% endblock %}

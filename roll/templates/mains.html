@@ -363,6 +363,32 @@
 {% endif %}
 
 
+  <a href="/iframe_report/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/iframe_report/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/computer.png' %}" alt="report" class="w-6 h-6">
+    <span class="font-medium">bala iframe</span>
+  </a>
+
+
+{% if permission.bill %}
+  <a href="/attendance/bill/"
+     class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
+     {% if request.path == '/attendance/bill/' %}
+       bg-sky-600 text-white font-bold
+     {% else %}
+       text-sky-600
+     {% endif %}">
+    <img src="{% static 'images/computer.png' %}" alt="report" class="w-6 h-6">
+    <span class="font-medium">Bill Report</span>
+  </a>
+{% endif %}
+
+
 
 {% if permission.lay_spreading %}
   <a href="/lay_spreading/"
@@ -401,7 +427,7 @@
        text-sky-600
      {% endif %}">
     <img src="{% static 'images/business.png' %}" alt="server10" class="w-6 h-6">
-    <span class="font-medium">server 10</span>
+    <span class="font-medium">Karthi 10</span>
   </a>
 {% endif %}
 
@@ -415,11 +441,11 @@
        text-sky-600
      {% endif %}">
     <img src="{% static 'images/business.png' %}" alt="server13" class="w-6 h-6">
-    <span class="font-medium">server13</span>
+    <span class="font-medium">Dhana 13</span>
   </a>
 {% endif %}
 
-  {% if permission.server15 %}
+  <!-- {% if permission.server15 %}
   <a href="/server15/"
      class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
      {% if request.path == '/server15/' %}
@@ -428,9 +454,110 @@
        text-sky-600
      {% endif %}">
     <img src="{% static 'images/business.png' %}" alt="server15" class="w-6 h-6">
-    <span class="font-medium">server 15</span>
+    <span class="font-medium">Bala 15</span>
   </a>
+{% endif %} -->
+
+{% if permission.server15 %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/server15/' in request.path or '/server15/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/computer.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">Bala 15</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/server15/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/server15/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      bala 1 
+    </a>
+     <a href="/Fabyarn1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabyarn1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fabyarn
+    </a>
+       <a href="/Fabst1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabst1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Fab status
+    </a>
+    <a href="/YarnPovspi1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/YarnPovspi1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     YarnPovspi
+    </a>
+      <a href="/Allotpen1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Allotpen1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     Allotpen1
+    </a>
+       <a href="/orderst/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/orderst/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     orderst
+    </a>
+     <a href="/PrintRgb1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/PrintRgb1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     PrintRgb1
+    </a>
+     <a href="/ordmatpen1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/ordmatpen1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     ordmatpen1
+    </a>
+      <a href="/fabKnitprgvsrec1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/fabKnitprgvsrec1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     fabKnitprgvsrec
+    </a>
+       <a href="/Fabmatpen/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/Fabmatpen/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     Fabmatpen
+    </a>
+      <a href="/General1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/General1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     General1
+    </a>
+      <a href="/fab/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/fab/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     fab
+    </a>
+     <a href="/unit1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/unit1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+     unit-1
+    </a>
+  </div>
+</div>
 {% endif %}
+
 
 
 
@@ -739,7 +866,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.8.1/alpine.js"></script>
-    <script>
+
+    
+  <script>
    
     const setup = () => {
   return {
@@ -764,6 +893,43 @@
 
 
     </script>
+
+
+
+{% if '/roll/break/' not in request.path %}
+<script>
+  const breakStart = "{{ break_start|default:'00:00:00' }}";
+  const breakEnd = "{{ break_end|default:'00:00:00' }}";
+
+  function parseTime(t) {
+    const now = new Date();
+    const [h, m, s] = t.split(':').map(Number);
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+  }
+
+  const breakStartTime = parseTime(breakStart);
+  const breakEndTime = parseTime(breakEnd);
+
+  function checkBreakRedirect() {
+    const now = new Date();
+    console.log("Checking break redirect at", now.toLocaleTimeString());
+
+    const isOnBreakPage = window.location.pathname.includes('/roll/break/');
+
+    if (now >= breakStartTime && now <= breakEndTime && !isOnBreakPage) {
+      console.log("Redirecting to break page");
+      // Save current page for returning after break
+      sessionStorage.setItem('original_url', window.location.pathname);
+      window.location.href = '/roll/break/';
+    }
+  }
+
+  setInterval(checkBreakRedirect, 5000);
+  checkBreakRedirect();
+</script>
+{% endif %}
+
+
 
 </body>
 </html>

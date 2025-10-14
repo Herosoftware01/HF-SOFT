@@ -1,0 +1,42 @@
+{% extends 'mains.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] relative bg-cover bg-center min-h-screen text-white">
+
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-800/70 backdrop-blur-sm"></div>
+
+    <div class="relative z-10 flex flex-col justify-center items-center min-h-screen text-center px-4">
+        <h1 class="text-5xl font-bold mb-4">☕ Break Time</h1>
+        <p class="text-lg mb-4">Take a short break! You'll be redirected once the break ends.</p>
+
+        <div class="text-2xl font-semibold mt-4" id="countdown">
+            Time left: <span id="timer">--:--</span>
+        </div>
+    </div>
+</div>
+
+<!-- Countdown & Auto-Refresh Script -->
+<script>
+    const [h, m, s] = "{{ break_end_time }}".split(':').map(Number);
+    const breakEnd = new Date();
+    breakEnd.setHours(h, m, s);
+
+    function updateTimer() {
+        const now = new Date();
+        const timeLeft = breakEnd - now;
+
+        if (timeLeft <= 0) {
+            window.location.reload();  // 🔁 Auto-refresh to trigger break end
+        } else {
+            const mins = Math.floor((timeLeft / 1000 / 60) % 60);
+            const secs = Math.floor((timeLeft / 1000) % 60);
+            document.getElementById("timer").textContent =
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+</script>
+{% endblock %}

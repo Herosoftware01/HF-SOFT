@@ -35,7 +35,10 @@
 <div class="bg-gray-100 p-6 container mx-auto">
   <h1 class="text-2xl font-semibold mb-4">Employee Intime Outtime Table</h1>
   <input type="text" id="globalFilter" placeholder="Search all columns..." class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"/>
-  <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg"></div>
+  <div class="overflow-x-auto w-full">
+      <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg min-w-[640px]"></div>
+  </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>

@@ -34,6 +34,7 @@ urlpatterns = [
     path('testing_api/', views.testing_api, name='testing_api'),
     path('ordmatpen1/', views.ordmatpen1, name='ordmatpen'),
     path('ordmatpen/', views.ordmatpen, name='ordmatpen'),
+    path('iframe_report/', views.iframe_report, name='iframe_report'),
     path('res/', views.res, name='res'),
     path('fab/', views.fab, name='fab'),
     path('General/', views.General, name='General'),

@@ -21,12 +21,11 @@ class UserPermission(models.Model):
     server13 = models.BooleanField(default=False)
     server10 = models.BooleanField(default=False)
     server15 = models.BooleanField(default=False)
-
+    bill = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Permissions for {self.user.username}"
     
-
 
 class VueOverall1(models.Model):
     o_ordqty = models.IntegerField(blank=True, null=True)
@@ -48,7 +47,6 @@ class VueOverall1(models.Model):
     class Meta:
         managed = False
         db_table = 'vue_overall1'
-
 
 
 class OrdOrderOms(models.Model):
