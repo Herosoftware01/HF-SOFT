@@ -464,18 +464,18 @@
 
               <tr class="border-b border-gray-200 text-center text-4xl">
                   
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="1" id="minus1">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="2" id="minus2">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="3" id="minus3">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="4" id="minus4">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="5" id="minus5">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="6" id="minus6">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="7" id="minus7">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="8" id="minus8">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="9" id="minus9">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="10" id="minus10">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="11" id="minus11">-</td>
-                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 md:w-20 lg:w-20" data-index="12" id="minus12">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="1" id="minus1">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="2" id="minus2">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="3" id="minus3">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="4" id="minus4">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="5" id="minus5">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="6" id="minus6">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="7" id="minus7">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="8" id="minus8">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="9" id="minus9">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="10" id="minus10">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="11" id="minus11">-</td>
+                  <td class="py-3 px-2 border border-gray-300 text-white bg-red-500 minus-cell cursor-pointer select-none w-16 text-[60px] md:w-20 lg:w-20" data-index="12" id="minus12">-</td>
                   
                 </tr>
                       
@@ -1057,9 +1057,10 @@ document.querySelectorAll('.plus-cell').forEach(cell => {
     const type = (choiceCell.dataset.type || '').trim().toLowerCase();
 
     if (type === 'c') {
-    const confirmAdd = await showConfirmPopup("Are you sure you want to increase the count?");
+    // const confirmAdd = await showConfirmPopup("Are you sure you want to increase the count?");
+    // const confirmAdd = await showConfirmPopup("Are you sure you want to increase the count?");
   // const confirmAdd = confirm("Are you sure you want to increase the count?");
-  if (!confirmAdd) return;
+  // if (!confirmAdd) return;
 
   let count = parseInt(input.value.replace('c-', '')) || 0;
   count++;

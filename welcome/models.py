@@ -446,6 +446,68 @@ class AllotPen(models.Model):
 
 
 
+<<<<<<< HEAD
+
+class PrintNew(models.Model):
+    jobno_joint = models.CharField(db_column='Jobno Joint', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS',primary_key=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    prnclr = models.CharField(max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    prnfile1 = models.CharField(max_length=250, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    prnfile2 = models.CharField(max_length=250, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    jobno_print_emb = models.CharField(db_column='Jobno Print Emb', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    img_fpath = models.CharField(db_column='Img_Fpath', max_length=1550, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    hex = models.CharField(max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    imgtb1 = models.CharField(max_length=1550, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    print_img_pen = models.CharField(db_column='Print_img_pen', max_length=13, db_collation='SQL_Latin1_General_CP1_CI_AS')  # Field name made lowercase.
+    image_tb = models.CharField(db_column='Image_tb', max_length=8000, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_fimg_grclr = models.CharField(db_column='Con_Fimg_grclr', max_length=20, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_print = models.CharField(db_column='Con_jobno_Print', max_length=802, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    jobno_print_new_rgb = models.CharField(db_column='Jobno_Print_New_RGB', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_prndes = models.CharField(db_column='Con_Jobno_PrnDes', max_length=102, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_top_clr_line = models.CharField(db_column='Con_jobno_top_clr_line', max_length=200, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_top_clr_siz_line = models.CharField(max_length=250, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    con_inout_outsup = models.CharField(db_column='Con_InOut_Outsup', max_length=67, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    print_screen_1 = models.CharField(db_column='Print Screen 1', max_length=150, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_screen_2 = models.CharField(db_column='Print Screen 2', max_length=150, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_screen_3 = models.CharField(db_column='Print Screen 3', max_length=150, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    top_bottom = models.CharField(db_column='Top Bottom', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    clrcomb = models.CharField(max_length=100, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    screen_number = models.IntegerField(db_column='Screen Number', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_type = models.CharField(db_column='Print Type', max_length=25, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_description = models.CharField(db_column='Print Description', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    individual_part_print_emb = models.CharField(db_column='Individual Part Print Emb', max_length=250, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colours = models.IntegerField(db_column='Print Colours', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_emb_ground_colour = models.CharField(db_column='Print & Emb Ground Colour', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    inside_outside_print_emb = models.CharField(db_column='Inside,Outside Print Emb', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_emb_outside_supplier = models.CharField(db_column='Print Emb Outside Supplier', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_1 = models.CharField(db_column='Print Colour 1', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_2 = models.CharField(db_column='Print Colour 2', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_3 = models.CharField(db_column='Print Colour 3', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_4 = models.CharField(db_column='Print Colour 4', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_5 = models.CharField(db_column='Print Colour 5', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_6 = models.CharField(db_column='Print Colour 6', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_7 = models.CharField(db_column='Print Colour 7', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_8 = models.CharField(db_column='Print Colour 8', max_length=80, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_size_details = models.CharField(db_column='Print Size Details', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_emb_ground_colour_rgb = models.CharField(db_column='Print & Emb Ground Colour RGB', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    img_print = models.CharField(db_column='Img_Print', max_length=8000, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    img_print_mmt = models.CharField(db_column='Img_Print_MMT', max_length=8000, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_top_clr_siz = models.CharField(db_column='Con_jobno_top_clr_siz', max_length=256, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    con_jobno_top_clr = models.CharField(db_column='Con_jobno_top_clr', max_length=204, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    rgb = models.CharField(db_column='RGB', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    print_colour_rgb_1 = models.CharField(db_column='Print Colour RGB 1', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_2 = models.CharField(db_column='Print Colour RGB 2', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_3 = models.CharField(db_column='Print Colour RGB 3', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_4 = models.CharField(db_column='Print Colour RGB 4', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_5 = models.CharField(db_column='Print Colour RGB 5', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_6 = models.CharField(db_column='Print Colour RGB 6', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_7 = models.CharField(db_column='Print Colour RGB 7', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    print_colour_rgb_8 = models.CharField(db_column='Print  Colour RGB 8', max_length=15, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+
+    class Meta:
+        managed = False
+        db_table = 'Print_New'
+
+=======
 class OrdSampleStatus(models.Model):
     print = models.CharField(db_column='Print', max_length=750)  # Field name made lowercase.
     emb = models.CharField(db_column='Emb', max_length=750)  # Field name made lowercase.
@@ -476,3 +538,4 @@ class OrdSampleStatus(models.Model):
     class Meta:
         managed = False
         db_table = 'Ord_Sample_status'
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a

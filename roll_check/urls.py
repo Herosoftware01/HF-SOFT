@@ -24,3 +24,5 @@ if settings.DEBUG:
     urlpatterns += static(settings.ORDER_IMAGES_URL, document_root=settings.ORDER_IMAGES_ROOT)
     urlpatterns += static(settings.PRO_URL, document_root=settings.PRO_ROOT)
     urlpatterns += static(settings.ALL_URL, document_root=settings.ALL_ROOT)
+
+

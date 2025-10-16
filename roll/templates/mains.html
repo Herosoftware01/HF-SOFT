@@ -222,6 +222,11 @@
        {% if '/panda_html/' in request.path %} bg-sky-100 font-semibold {% endif %}">
       Pandas data 
     </a>
+    <a href="/non_pandas_1/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/non_pandas_1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Non Pandas data 
+    </a>
     <a href="/testing/"
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
        {% if '/testing/' in request.path %} bg-sky-100 font-semibold {% endif %}">
@@ -235,7 +240,7 @@
     <a href="/fab_table/"
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
        {% if '/fab_table/' in request.path %} bg-sky-100 font-semibold {% endif %}">
-      Fab Table
+      Non pandas Fab Table
     </a>
     <a href="/orderst/"
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
@@ -273,7 +278,7 @@
     <a href="/YarnPovspi1/"             
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
        {% if '/YarnPovspi1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
-      Yarnpopi Table
+      Non pandas Yarnpopi
     </a>
     <a href="/Allotpen1/" 
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
@@ -918,10 +923,11 @@
 
     if (now >= breakStartTime && now <= breakEndTime && !isOnBreakPage) {
       console.log("Redirecting to break page");
-      // Save current page for returning after break
-      sessionStorage.setItem('original_url', window.location.pathname);
-      window.location.href = '/roll/break/';
+      const originalUrl = window.location.href;
+      // Redirect and pass original URL as query param
+      window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
     }
+
   }
 
   setInterval(checkBreakRedirect, 5000);

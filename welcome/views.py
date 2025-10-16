@@ -6,13 +6,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+<<<<<<< HEAD
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
+=======
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a
 import json
 import pandas as pd
 import numpy as np
 from django.http import HttpResponse
 from django.http import JsonResponse
-
+from urllib.parse import quote
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 @login_required
@@ -289,8 +293,24 @@ def ordmatpen1(request):
     return render(request, "powerbi/Fabmatpenresponse.html")
 
 
-def fab(request):
-   
+# def fab(request): 
+#     queryset = FabKnitprgvsrecd.objects.using('demo1').values()
+#     for obj in queryset:
+#         raw_path = obj['img_fpath'] if obj.get('img_fpath') else None
+#         if raw_path:
+#             filename = raw_path.split('\\')[-1]
+#             obj['img_fpath'] = f"https://app.herofashion.com/staff_images/{filename}"
+#         else:
+#             obj['img_fpath'] = ""
+
+#     df = pd.DataFrame.from_records(queryset)
+
+#     # Convert to JSON-serializable format
+#     data = df.to_dict(orient='records')
+#     return JsonResponse(data, safe=False)
+
+
+def fab(request): 
     queryset = FabKnitprgvsrecd.objects.using('demo1').values()
     for obj in queryset:
         raw_path = obj['img_fpath'] if obj.get('img_fpath') else None
@@ -300,10 +320,7 @@ def fab(request):
         else:
             obj['img_fpath'] = ""
 
-    df = pd.DataFrame.from_records(queryset)
-
-    # Convert to JSON-serializable format
-    data = df.to_dict(orient='records')
+    data = list(queryset)
     return JsonResponse(data, safe=False)
 
 def ordst_api(request):
@@ -396,6 +413,25 @@ def fabKnitprgvsrec1(request):
     return render(request, "powerbi/Fabknit.html")
 
 
+# def YarnPovspinew(request):
+#     queryset = YarnPovspi.objects.using('demo1').values()
+
+#     for obj in queryset:
+#         raw_path = obj['img_fpath'] if obj.get('img_fpath') else None
+#         if raw_path:
+#             filename = raw_path.split('\\')[-1]
+#             obj['img_fpath'] = f"https://app.herofashion.com/all_image/{filename}"
+#         else:
+#             obj['img_fpath'] = ""
+
+#     df = pd.DataFrame.from_records(queryset)
+
+#     # Replace NaN/NaT with None so JSON is valid
+#     df = df.replace({np.nan: None, pd.NaT: None})
+
+#     data = df.to_dict(orient='records')
+#     return JsonResponse(data, safe=False)
+
 def YarnPovspinew(request):
     queryset = YarnPovspi.objects.using('demo1').values()
 
@@ -407,33 +443,38 @@ def YarnPovspinew(request):
         else:
             obj['img_fpath'] = ""
 
-    df = pd.DataFrame.from_records(queryset)
+  
 
-    # Replace NaN/NaT with None so JSON is valid
-    df = df.replace({np.nan: None, pd.NaT: None})
-
-    data = df.to_dict(orient='records')
+    data = list(queryset)
     return JsonResponse(data, safe=False)
  
 def YarnPovspi1(request):
     return render(request, "powerbi/Yarnpopi.html")
 
 def PrintRgb(request):
-    queryset = PrintRgbAlt.objects.using('demo1').values()
+    # Fetch all records from PrintNew table in 'demo1' DB
+    queryset = PrintNew.objects.using('demo1').values()
 
     for obj in queryset:
-        raw_path = obj['img_fpath'] if obj.get('img_fpath') else None
+        raw_path = obj.get('prnfile1')
         if raw_path:
+            # Extract filename from Windows path
             filename = raw_path.split('\\')[-1]
-            obj['img_fpath'] = f"https://app.herofashion.com/all_image/{filename}"
+            # filename_encoded = quote(filename)
+            # Replace path with URL format
+            obj['prnfile1'] = f"https://app.herofashion.com/all_image/{filename}"
         else:
-            obj['img_fpath'] = ""
+            obj['prnfile1'] = ""
 
+    # Convert queryset of dicts into DataFrame
     df = pd.DataFrame.from_records(queryset)
 
-    # Replace NaN/NaT with None so JSON is valid
+    # Replace NaN/NaT with None for JSON compatibility
     df = df.replace({np.nan: None, pd.NaT: None})
+
+    # Convert back to list of dicts for JsonResponse
     data = df.to_dict(orient='records')
+
     return JsonResponse(data, safe=False)
 
 def PrintRgb1(request):
@@ -459,6 +500,25 @@ def Allotpen1(request):
     return render(request, "powerbi/Allotpen.html")
 
 
+<<<<<<< HEAD
+def non_pandas(request):
+    queryset = EmpAttendanceFact.objects.using('demo1').values()
+    # Modify image paths
+    for obj in queryset:
+        raw_path = obj['img'] if obj.get('img') else None
+        if raw_path:
+            filename = raw_path.split('\\')[-1]
+            obj['img'] = f"https://app.herofashion.com/staff_images/{filename}"
+        else:
+            obj['img'] = ""
+
+
+    data = list(queryset)
+    return JsonResponse(data, safe=False)
+
+def non_pandas_1(request):
+    return render(request, "powerbi/non_pandas_1.html")
+=======
 def Ordsampst(request):
     queryset = OrdSampleStatus.objects.using('demo1').values()
 
@@ -477,3 +537,4 @@ def Ordsampst(request):
 
 def Ordsampst1(request):
     return render(request, "powerbi/ordsamst.html")
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a
