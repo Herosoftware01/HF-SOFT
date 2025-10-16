@@ -229,19 +229,7 @@ from django.utils import timezone
 
 def bill(request):
     # Get all BillAge objects from the mssql database
-    datas = BillAge.objects.using('demo1').all()
-    
-    # Get distinct values for module dropdown filter
-    module_datas = datas.values_list('module', flat=True).distinct().order_by('module')
-    
-    # Get all employees for dropdown
-    employees = []
-    employee_names = datas.values_list('employees', flat=True).distinct().order_by('employees')
-    # Filter out None/null values
-    employee_names_filtered = [name for name in employee_names if name is not None and name.strip()]
-    
-    for idx, name in enumerate(employee_names_filtered, 1):
-        employees.append({'id': idx, 'name': name})
+    datas = BillAge.objects.using('mssql').all()
     
     # Get filter parameters from GET request
     employee_filter = request.GET.get('employees', '')
@@ -249,27 +237,37 @@ def bill(request):
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
     aging_range = request.GET.get('aging_range', '')
-    min_aging = request.GET.get('min_aging', '')  # New parameter for minimum aging
-
+    min_aging = request.GET.get('min_aging', '')
+    
+    # Create a copy for dropdown population (before final filtering)
+    dropdown_data = datas
+    
     # Apply employee filter
     if employee_filter and employee_filter != "ALL":
         try:
             employee_id = int(employee_filter)
-            if employee_id <= len(employees):
-                employee_name = employees[employee_id - 1]['name']
+            # First get all unique employee names to match ID
+            all_employee_names = list(datas.values_list('employees', flat=True).distinct().order_by('employees'))
+            all_employee_names_filtered = [name for name in all_employee_names if name is not None and name.strip()]
+            
+            if employee_id <= len(all_employee_names_filtered):
+                employee_name = all_employee_names_filtered[employee_id - 1]
                 datas = datas.filter(employees=employee_name)
+                dropdown_data = dropdown_data.filter(employees=employee_name)
         except (ValueError, IndexError):
             pass
     
     # Apply module filter
     if module and module != "ALL" and module:
         datas = datas.filter(module=module)
+        dropdown_data = dropdown_data.filter(module=module)
     
     # Apply date range filter on billdate
     if from_date:
         try:
             start_date = datetime.strptime(from_date, '%Y-%m-%d').date()
             datas = datas.filter(billdate__date__gte=start_date)
+            dropdown_data = dropdown_data.filter(billdate__date__gte=start_date)
         except ValueError:
             pass
     
@@ -277,8 +275,32 @@ def bill(request):
         try:
             end_date = datetime.strptime(to_date, '%Y-%m-%d').date()
             datas = datas.filter(billdate__date__lte=end_date)
+            dropdown_data = dropdown_data.filter(billdate__date__lte=end_date)
         except ValueError:
             pass
+    
+    # Now populate dropdowns based on filtered data for interdependency
+    # Get distinct values for module dropdown filter (based on current filters)
+    if employee_filter and employee_filter != "ALL":
+        # If employee is selected, show only modules for that employee
+        module_datas = dropdown_data.values_list('module', flat=True).distinct().order_by('module')
+    else:
+        # If no employee selected, show all modules
+        module_datas = BillAge.objects.using('mssql').values_list('module', flat=True).distinct().order_by('module')
+    
+    # Get employees for dropdown (based on current module filter if any)
+    if module and module != "ALL":
+        # If module is selected, show only employees for that module
+        employee_names = dropdown_data.values_list('employees', flat=True).distinct().order_by('employees')
+    else:
+        # If no module selected, show all employees
+        employee_names = BillAge.objects.using('mssql').values_list('employees', flat=True).distinct().order_by('employees')
+    
+    # Filter out None/null values and create employee list
+    employee_names_filtered = [name for name in employee_names if name is not None and name.strip()]
+    employees = []
+    for idx, name in enumerate(employee_names_filtered, 1):
+        employees.append({'id': idx, 'name': name})
     
     # Calculate aging in Python after database query
     data_list = []
@@ -295,7 +317,6 @@ def bill(request):
                 try:
                     bill_date = datetime.strptime(item.billdate.strip(), '%Y-%m-%d').date()
                 except ValueError:
-                    # Try alternative common format
                     bill_date = datetime.strptime(item.billdate.strip(), '%d-%m-%Y').date()
             
             # Extract and normalize edate (less_date)
@@ -314,20 +335,19 @@ def bill(request):
             if bill_date and less_date:
                 aging_days = (less_date - bill_date).days
             else:
-                aging_days = None  # Missing date
+                aging_days = None
             
             print(f"Debug: less_date={less_date}, bill_date={bill_date}, aging_days={aging_days}")
             
             # Add calculated aging and serial number to the object
             item.calculated_aging = aging_days
-            item.br_ageing = aging_days  # For template compatibility
-            item.billdate_ageing = aging_days  # For template compatibility
-            item.no = idx  # Serial number
+            item.br_ageing = aging_days
+            item.billdate_ageing = aging_days
+            item.no = idx
             
             data_list.append(item)
             
         except (ValueError, AttributeError, TypeError) as e:
-            # If there's an error with date calculation, skip this item or set aging to 0
             print(f"Error calculating aging for item {idx}: {e}")
             item.calculated_aging = 0
             item.br_ageing = 0
@@ -342,17 +362,16 @@ def bill(request):
             data_list = [item for item in data_list if item.calculated_aging >= min_days]
         except ValueError:
             pass
-
-    # Apply hardcoded filter (aging >= 3 days)
-    data_list = [item for item in data_list if item.calculated_aging is not None and item.calculated_aging >= 3]
-
+    
+    # Apply hardcoded filter (aging >= 1 days)
+    data_list = [item for item in data_list if item.calculated_aging is not None and item.calculated_aging >= 1]
+    
     # Apply aging range filter
     if aging_range:
         filtered_data = []
         for item in data_list:
-            aging = item.calculated_aging or 0  # ensure numeric
-
-            # Apply 7-day starting filter ranges
+            aging = item.calculated_aging or 0
+            
             if aging_range == '7-30' and 7 <= aging <= 30:
                 filtered_data.append(item)
             elif aging_range == '31-60' and 31 <= aging <= 60:
@@ -365,27 +384,9 @@ def bill(request):
                 filtered_data.append(item)
         
         data_list = filtered_data
-
-    # Helper function to safely extract edate for sorting
-    def safe_edate(item):
-        """Helper function to safely extract edate for sorting"""
-        if hasattr(item, 'edate') and item.edate:
-            if hasattr(item.edate, 'date'):
-                return item.edate.date()
-            elif isinstance(item.edate, (date, datetime)):
-                return item.edate if isinstance(item.edate, date) else item.edate.date()
-            elif isinstance(item.edate, str) and item.edate.strip():
-                try:
-                    return datetime.strptime(item.edate.strip(), '%Y-%m-%d').date()
-                except ValueError:
-                    try:
-                        return datetime.strptime(item.edate.strip(), '%d-%m-%Y').date()
-                    except ValueError:
-                        return date.min  # Default for invalid dates
-        return date.min  # Default for None/missing dates
-
-    # Sort by module (ascending) first, then by edate (ascending)
-    data_list.sort(key=lambda x: (x.module or '', safe_edate(x)))
+    
+    # Sort by module (ascending) first, then by aging (descending)
+    data_list.sort(key=lambda x: (x.module or '', -(x.calculated_aging or 0)))
     
     # Renumber after filtering and sorting
     for idx, item in enumerate(data_list, 1):
@@ -393,12 +394,6 @@ def bill(request):
     
     # Count filtered results
     data_count = len(data_list)
-    
-    # Debug: Print some aging values to console (remove this in production)
-    print("=== DEBUG: First 5 aging calculations ===")
-    for i, item in enumerate(data_list[:5]):
-        print(f"Item {i+1}: Module: {item.module}, Bill Date: {item.billdate}, edate: {item.edate}, Aging: {item.calculated_aging} days")
-    print("==========================================")
     
     return render(request, 'bill.html', {
         'datas': data_list,
