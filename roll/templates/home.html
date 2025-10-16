@@ -109,7 +109,7 @@
       100% { opacity: 1; transform: translateY(0); }
     }
   </style>
-
+<!-- 
   <script>
     let qrReader;
 
@@ -164,8 +164,89 @@
       }
       return true;
     }
-  </script>
+  </script> -->
 
+
+
+  <script>
+  let qrReader;
+
+  function startScanner() {
+    const qrReaderContainer = document.getElementById("qr-reader");
+    qrReaderContainer.innerHTML = ""; // Clear previous content
+
+    if (!qrReader) {
+      qrReader = new Html5Qrcode("qr-reader");
+    }
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const cameraId = devices[0].id;
+
+        qrReader.start(
+          cameraId,
+          { fps: 10, qrbox: 250 },
+          qrCodeMessage => {
+            qrReader.stop(); // Stop after scan
+
+            const rollNo = encodeURIComponent(qrCodeMessage);
+            const machineId = encodeURIComponent("{{ group_id }}");
+
+            // Step 1: Check if roll_no exists in master_roll_update
+            fetch(`/check_roll_exists/?rollno=${rollNo}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.exists) {
+                  // If roll exists, ask for ID and password
+                  const empId = prompt("Roll number already exists.\nEnter your Employee ID:");
+                  const password = prompt("Enter your Password:");
+
+                  // Step 2: Validate credentials
+                  fetch(`/validate_user/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                      emp_id: empId,
+                      password: password
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(auth => {
+                      if (auth.valid) {
+                        // Redirect only if auth success
+                        const url = `{% url 'fetch_roll_details' %}?rollno=${rollNo}&machine_id=${machineId}&employee_name=${encodeURIComponent(auth.emp_name)}`;
+                        window.location.href = url;
+                      } else {
+                        alert("Invalid credentials.");
+                      }
+                    });
+                } else {
+                  // No roll found, proceed directly
+                  const url = `{% url 'fetch_roll_details' %}?rollno=${rollNo}&machine_id=${machineId}`;
+                  window.location.href = url;
+                }
+              });
+          },
+          errorMessage => {
+            console.log("Scanning error:", errorMessage);
+          }
+        ).catch(err => {
+          console.error("QR scanner start error:", err);
+          qrReaderContainer.innerHTML = "<p class='text-red-600'>Unable to start camera.</p>";
+        });
+
+      } else {
+        qrReaderContainer.innerHTML = "<p class='text-red-600'>No cameras found.</p>";
+      }
+    }).catch(err => {
+      console.error("Camera error:", err);
+      qrReaderContainer.innerHTML = "<p class='text-red-600'>Camera access denied or unavailable.</p>";
+    });
+  }
+</script>
 </div>
 
 {% endblock %}

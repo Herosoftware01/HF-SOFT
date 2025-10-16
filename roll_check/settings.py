@@ -29,19 +29,21 @@ DEBUG = True
 ALLOWED_HOSTS = ['app.herofashion.com','127.0.0.1']
 
 
-# CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = [
 
-#     'https://g5s2jh39-7004.inc1.devtunnels.ms/',
-#     'https://api.herofashion.com',
-#     'http://10.1.21.13:7006/'
-# ]
+    'https://g5s2jh39-7004.inc1.devtunnels.ms/',
+    'https://api.herofashion.com',
+    'http://10.1.21.13:7006/',
+    'http://127.0.0.1:8000/'
+]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://api.herofashion.com",
-#     "http://localhost:3000",
-   
-    
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "https://api.herofashion.com",
+    "http://localhost:3000",
+    "https://5569kpl4-5173.inc1.devtunnels.ms",
+    "https://b5t53rw9-7002.inc1.devtunnels.ms",
+    'http://127.0.0.1:8000'
+]
 
 
 # CORS_ALLOW_CREDENTIALS = True
@@ -98,6 +100,7 @@ TEMPLATES = [
                 
                 'django.template.context_processors.request',
                 'welcome.context_processors.user_permissions',
+                'roll.context_processors.break_times',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -256,7 +259,7 @@ PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_SCOPE = '/'
 # PWA_APP_ORIENTATION = 'portrait'
-PWA_APP_ORIENTATION = 'landscape'  # ✅ orientation direction
+PWA_APP_ORIENTATION = 'any'  # ✅ orientation direction
 PWA_APP_START_URL = '/'
 PWA_APP_STATUS_BAR_COLOR = 'default'
 

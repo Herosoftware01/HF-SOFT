@@ -56,6 +56,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 13</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 10</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">server 15</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill Report</th>
                     </tr>
                 </thead>
                 <!-- <tbody class="bg-white divide-y divide-gray-200">
@@ -167,6 +168,11 @@
                 <input type="checkbox" name="server15_{{ user.id }}"
                        {% if permission.server15 %}checked{% endif %}>
                 server15
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="checkbox" name="bill_{{ user.id }}"
+                       {% if permission.bill %}checked{% endif %}>
+                bill report
             </td>
            
         </tr>

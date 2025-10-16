@@ -34,6 +34,7 @@ urlpatterns = [
     path('testing_api/', views.testing_api, name='testing_api'),
     path('ordmatpen1/', views.ordmatpen1, name='ordmatpen'),
     path('ordmatpen/', views.ordmatpen, name='ordmatpen'),
+    path('iframe_report/', views.iframe_report, name='iframe_report'),
     path('res/', views.res, name='res'),
     path('fab/', views.fab, name='fab'),
     path('General/', views.General, name='General'),
@@ -52,6 +53,9 @@ urlpatterns = [
     path('server15/', views.server15, name='server15'),
     path('server10/', views.server10, name='server10'),
     path('api/login/', views.login_api, name='api_login'),
+    path('sample_data/', views.sample_data, name='sample_data'),
+    path('Ordsampst/', views.Ordsampst, name='Ordsampst'),
+    path('Ordsampst1/', views.Ordsampst1, name='Ordsampst'),
     
 ]
 

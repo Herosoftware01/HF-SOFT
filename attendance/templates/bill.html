@@ -1,16 +1,12 @@
+{% extends 'mains.html' %}
+
 {% load static %}
-{% load pwa %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aging Dashboard</title>
-    {% progressive_web_app_meta %}
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="{% static 'invoice.png' %}" type="image/x-icon">
-    
-    <!-- Export Libraries -->
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+
+
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -76,6 +72,10 @@
     </style>
 </head>
 <body class="bg-gray-200 min-h-screen">
+    <!-- Cell Navigation Indicator -->
+    <div id="navigationIndicator" class="cell-navigation-indicator">
+        Use ↑↓←→ arrow keys to navigate • Enter to focus • Esc to clear selection
+    </div>
 
     <!-- Header -->
     <div class="bg-dashboard-purple shadow-lg">
@@ -964,5 +964,6 @@
             }
         });
     </script>
-</body>
-</html>
+</div>
+
+{% endblock %}

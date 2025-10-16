@@ -21,12 +21,11 @@ class UserPermission(models.Model):
     server13 = models.BooleanField(default=False)
     server10 = models.BooleanField(default=False)
     server15 = models.BooleanField(default=False)
-
+    bill = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Permissions for {self.user.username}"
     
-
 
 class VueOverall1(models.Model):
     o_ordqty = models.IntegerField(blank=True, null=True)
@@ -48,7 +47,6 @@ class VueOverall1(models.Model):
     class Meta:
         managed = False
         db_table = 'vue_overall1'
-
 
 
 class OrdOrderOms(models.Model):
@@ -138,28 +136,28 @@ class OrdMaterialplanPen(models.Model):
         db_table = 'Ord_MaterialPlan_pen'
 
 
-class FabKnitprgvsrecd(models.Model):
-    no = models.IntegerField(db_column='No', primary_key=True)  # Set as primary key
-    hex = models.CharField(max_length=15, blank=True, null=True)
-    img_fpath = models.CharField(db_column='Img_Fpath', max_length=8000, blank=True, null=True)
-    date = models.DateTimeField(db_column='Date')
-    re_date = models.DateTimeField(db_column='[Re.date]', blank=True, null=True)  # ✅ Fixed
-    orderno = models.CharField(db_column='OrderNo', max_length=50, blank=True, null=True)
-    knitter = models.CharField(db_column='Knitter', max_length=35, blank=True, null=True)
-    process = models.CharField(db_column='Process', max_length=35, blank=True, null=True)
-    yarninfo = models.CharField(db_column='YarnInfo', max_length=971)
-    completed = models.SmallIntegerField(db_column='Completed')
-    colour = models.CharField(db_column='Colour', max_length=50)
-    dia = models.CharField(db_column='Dia', max_length=35, blank=True, null=True)
-    gsm = models.SmallIntegerField(db_column='GSM')
-    fabrictype = models.CharField(db_column='FabricType', max_length=35, blank=True, null=True)
-    fabric = models.CharField(db_column='Fabric', max_length=35, blank=True, null=True)
-    prg_weight = models.DecimalField(db_column='[Prg.Weight]', max_digits=38, decimal_places=4, blank=True, null=True)  # ✅ Fixed
-    rec_weight = models.DecimalField(db_column='[Rec.weight]', max_digits=38, decimal_places=4, blank=True, null=True)  # ✅ Fixed
+# class FabKnitprgvsrecd(models.Model):
+#     no = models.IntegerField(db_column='No', primary_key=True)  # Set as primary key
+#     hex = models.CharField(max_length=15, blank=True, null=True)
+#     img_fpath = models.CharField(db_column='Img_Fpath', max_length=8000, blank=True, null=True)
+#     date = models.DateTimeField(db_column='Date')
+#     re_date = models.DateTimeField(db_column='[Re.date]', blank=True, null=True)  # ✅ Fixed
+#     orderno = models.CharField(db_column='OrderNo', max_length=50, blank=True, null=True)
+#     knitter = models.CharField(db_column='Knitter', max_length=35, blank=True, null=True)
+#     process = models.CharField(db_column='Process', max_length=35, blank=True, null=True)
+#     yarninfo = models.CharField(db_column='YarnInfo', max_length=971)
+#     completed = models.SmallIntegerField(db_column='Completed')
+#     colour = models.CharField(db_column='Colour', max_length=50)
+#     dia = models.CharField(db_column='Dia', max_length=35, blank=True, null=True)
+#     gsm = models.SmallIntegerField(db_column='GSM')
+#     fabrictype = models.CharField(db_column='FabricType', max_length=35, blank=True, null=True)
+#     fabric = models.CharField(db_column='Fabric', max_length=35, blank=True, null=True)
+#     prg_weight = models.DecimalField(db_column='[Prg.Weight]', max_digits=38, decimal_places=4, blank=True, null=True)  # ✅ Fixed
+#     rec_weight = models.DecimalField(db_column='[Rec.weight]', max_digits=38, decimal_places=4, blank=True, null=True)  # ✅ Fixed
 
-    class Meta:
-        managed = False
-        db_table = 'Fab_KnitPrgVsRecd'
+#     class Meta:
+#         managed = False
+#         db_table = 'Fab_KnitPrgVsRecd'
 
 
 class OrdStk(models.Model):
@@ -447,3 +445,34 @@ class AllotPen(models.Model):
         db_table = 'Allot_pen'
 
 
+
+class OrdSampleStatus(models.Model):
+    print = models.CharField(db_column='Print', max_length=750)  # Field name made lowercase.
+    emb = models.CharField(db_column='Emb', max_length=750)  # Field name made lowercase.
+    img = models.CharField(max_length=82, blank=True, null=True)
+    date = models.DateTimeField(db_column='DATE', blank=True, null=True)  # Field name made lowercase.
+    status = models.CharField(db_column='Status', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    image = models.CharField(db_column='Image', max_length=8000, blank=True, null=True)  # Field name made lowercase.
+    img1 = models.CharField(max_length=1550, blank=True, null=True)
+    topbottomimg = models.CharField(db_column='TopBottomImg', max_length=8000, blank=True, null=True)  # Field name made lowercase.
+    remarks = models.CharField(db_column='Remarks', max_length=150)  # Field name made lowercase.
+    stock = models.IntegerField(db_column='Stock')  # Field name made lowercase.
+    cutqty = models.IntegerField(db_column='CutQty')  # Field name made lowercase.
+    active = models.CharField(db_column='Active', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    o_finaldelvdate = models.DateField(db_column='o_FinalDelvdate', blank=True, null=True)  # Field name made lowercase.
+    jobno = models.CharField(db_column='Jobno', max_length=50,primary_key=True)  # Field name made lowercase.
+    merch = models.CharField(db_column='Merch', max_length=35, blank=True, null=True)  # Field name made lowercase.
+    buy = models.CharField(db_column='Buy', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    buyer = models.CharField(db_column='Buyer', max_length=40, blank=True, null=True)  # Field name made lowercase.
+    sample_status = models.CharField(db_column='Sample Status', max_length=15, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    unitname = models.CharField(db_column='Unitname', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    topbottom_des = models.CharField(db_column='TopBottom_des', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    colour = models.CharField(db_column='Colour', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    sampletype = models.CharField(db_column='Sampletype', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    send_dt = models.DateTimeField(db_column='SEND_DT', blank=True, null=True)  # Field name made lowercase.
+    apr_dt = models.DateTimeField(db_column='APR_DT', blank=True, null=True)  # Field name made lowercase.
+    rej_dt = models.DateTimeField(db_column='REJ_DT', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'Ord_Sample_status'

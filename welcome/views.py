@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
 import json
 import pandas as pd
 import numpy as np
@@ -108,6 +108,7 @@ def user_list(request):
             perm.server13 = bool(request.POST.get(f'server13_{user.id}', False))
             perm.server10 = bool(request.POST.get(f'server10_{user.id}', False))
             perm.server15 = bool(request.POST.get(f'server15_{user.id}', False))
+            perm.bill = bool(request.POST.get(f'bill_{user.id}', False))
             perm.save()
         messages.success(request, "Permissions updated successfully.")
         return redirect('user_list')
@@ -133,11 +134,15 @@ def server13(request):
 
 @xframe_options_exempt
 def server15(request):
-    return render(request, 'powerbi/server13.html')
+    return render(request, 'powerbi/bala10.html')
+
+@xframe_options_exempt
+def iframe_report(request):
+    return render(request, 'powerbi/bala_iframe.html')
 
 @xframe_options_exempt
 def server10(request):
-    return render(request, 'powerbi/server13.html')
+    return render(request, 'powerbi/karthi10.html')
 
 def fab_table(request):
     return render(request, 'powerbi/fab.html')
@@ -150,6 +155,9 @@ def empatt(request):
 
 def fabmatpen1(request):
     return render(request, 'powerbi/Fabmatpen.html')
+
+def sample_data(request):
+    return render(request, 'powerbi/sample_data.html')
 
 # def Allot(request):
 #     return render(request, 'powerbi/Allotpen.html')
@@ -449,3 +457,23 @@ def Allotpen(request):
 
 def Allotpen1(request):
     return render(request, "powerbi/Allotpen.html")
+
+
+def Ordsampst(request):
+    queryset = OrdSampleStatus.objects.using('demo1').values()
+
+    for obj in queryset:
+        raw_path = obj['image'] if obj.get('image') else None
+        if raw_path:
+            filename = raw_path.split('\\')[-1]
+            obj['image'] = f"https://app.herofashion.com/all_image/{filename}"
+        else:
+            obj['image'] = ""
+
+    df = pd.DataFrame.from_records(queryset)
+    data = df.to_dict(orient='records')
+    return JsonResponse(data, safe=False)
+
+
+def Ordsampst1(request):
+    return render(request, "powerbi/ordsamst.html")
