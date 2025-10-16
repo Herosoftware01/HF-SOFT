@@ -229,7 +229,7 @@ from django.utils import timezone
 
 def bill(request):
     # Get all BillAge objects from the mssql database
-    datas = BillAge.objects.using('mssql').all()
+    datas = BillAge.objects.using('demo1').all()
     
     # Get filter parameters from GET request
     employee_filter = request.GET.get('employees', '')
