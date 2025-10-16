@@ -14,7 +14,7 @@
   <style>
 
     .ag-theme-alpine .ag-cell[col-id="img_fpath"] {
-        display: flex !important;
+        /* display: flex !important; */
         justify-content: center !important;
         align-items: center !important;
         padding: 0 !important;
@@ -127,6 +127,28 @@
       }
 
       const columnDefs = [
+        {
+            headerName: 'jobno_joint',
+            field: 'jobno_joint', // ✅ Needed for filtering base
+            valueGetter: (params) => {
+              // ✅ Return combined string for filtering
+              const type = params.data.jobno_joint ?? '';
+              const weight = params.data.print_type ?? '';
+              const rf_tot_qty = params.data.print_description ?? '';
+              return `${type} ${weight}`;
+            },
+            cellRenderer: (params) => {
+              const type = highlightRenderer({ ...params, value: params.data.jobno_joint });
+              const weight = highlightRenderer({ ...params, value: params.data.print_type });
+              const rf_tot_qty = highlightRenderer({ ...params, value: params.data.print_description });
+              return `<div class="multi-line-cell"><strong>${type}</strong><br><span>${weight}</span><br><span>${rf_tot_qty}</span></div>`;
+            },
+            filter: 'agTextColumnFilter',
+            floatingFilter: true,
+            autoHeight: true,
+            flex: 1,
+            minWidth: 150,
+          },
         
         {
           headerName: 'jobno_joint',
@@ -139,7 +161,7 @@
         },
         {
           headerName: 'Image',
-          field: 'img_fpath',
+          field: 'prnfile1',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,

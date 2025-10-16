@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Machine Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+
+  <div style="max-width: 100%; margin: 0 auto; padding: 10px;">
+    <div style="background-color: #ffffff; padding: 20px; border-radius: 8px;">
+
+      <h2 style="text-align: center; color: #003366;">
+        📋 Roll Checking Machine Reports — {{ datefilter }}
+      </h2>
+
+      {% for machine in machines %}
+      <div style="margin-top: 30px;">
+        <h3 style="color: #005580;">🛠 Machine {{ machine.machine_id }}</h3>
+        <p><strong>Total Rolls:</strong> {{ machine.total_count }}</p>
+        <p style="color: green;"><strong>Good Rolls:</strong> {{ machine.good_count }}</p>
+        <p style="color: red;"><strong>Bad Rolls:</strong> {{ machine.bad_count }}</p>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; table-layout: auto;">
+          <thead>
+            <tr style="background-color: #e6f2ff;">
+              <th style="border: 1px solid #ccc; padding: 6px;">Roll No</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">DC No</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">Job No</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">Type</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">F. Dia</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">GSM</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">Remarks</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">Mistakes</th>
+              <th style="border: 1px solid #ccc; padding: 6px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for data in machine.mistakes %}
+            <tr style="background-color: {% cycle '#ffffff' '#f9f9f9' %};">
+              <td style="border: 1px solid #ddd; padding: 6px; word-wrap: break-word;">{{ data.roll_no }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.dc_no }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.job_no }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.types }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.finish_dia }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.act_gsm }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">{{ data.remarks }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; white-space: pre-line;">{{ data.mistakes_str }}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: {% if data.status == 'Bad Roll' %}red{% else %}green{% endif %};">
+                {{ data.status }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+
+      <p style="margin-top: 40px; font-size: 13px; color: #777; text-align: center;">
+        📧 This is an automated report generated on {{ datefilter }}.
+      </p>
+
+    </div>
+  </div>
+
+</body>
+</html>

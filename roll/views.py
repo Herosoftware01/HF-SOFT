@@ -169,24 +169,39 @@ def machine_jobs(request, machine_id):
     })
 
 def check_roll_exists(request):
-    rollno = request.GET.get("rollno", "").strip()
+    rollno = request.GET.get('rollno', '').strip()
+    print("checking roll no", rollno)
     exists = master_roll_update.objects.filter(roll_no__iexact=rollno).exists()
-    return JsonResponse({ "exists": exists })
+    return JsonResponse({'exists': exists})
 
 @csrf_exempt
 def validate_user(request):
-    if request.method == "POST":
+    if request.method != 'POST':
+        return JsonResponse({'valid': False, 'error': 'Invalid method'})
+
+    try:
         data = json.loads(request.body)
-        emp_id = data.get("emp_id")
-        password = data.get("password")
+    except json.JSONDecodeError:
+        return JsonResponse({'valid': False, 'error': 'Bad JSON'})
 
-        try:
-            user = back_permissions.objects.get(Emp_id=emp_id, Password=password)
-            return JsonResponse({ "valid": True, "emp_name": f"Emp_{emp_id}" })  # You can fetch actual name if available
-        except back_permissions.DoesNotExist:
-            return JsonResponse({ "valid": False })
+    emp_id = data.get('emp_id')
+    password = data.get('password')
+    if emp_id is None or password is None:
+        return JsonResponse({'valid': False, 'error': 'Missing credentials'})
 
-    return JsonResponse({ "valid": False })
+    try:
+        emp_id_int = int(emp_id)
+    except ValueError:
+        return JsonResponse({'valid': False, 'error': 'Invalid emp_id'})
+
+    # ⚠️ Case-sensitive fix here
+    user = back_permissions.objects.filter(Emp_id=emp_id_int, Password=password).first()
+
+    if user:
+        emp_name = f"{user.Emp_id}"  # Or another field like user.Name if available
+        return JsonResponse({'valid': True, 'emp_name': emp_name})
+    else:
+        return JsonResponse({'valid': False})
 
 # def fetch_roll_details(request):
 #     roll_no = request.GET.get('rollno')
@@ -294,6 +309,13 @@ def fetch_roll_details(request):
     group_id = request.GET.get('machine_id')
     emp_name = request.GET.get('employee_name')
 
+    if master_roll_update.objects.filter(roll_no__iexact=roll_no).exists():
+        if not emp_name:
+            # No emp_name passed → they didn't do login flow
+            messages.error(request, "This roll no already exists. Please scan and enter employee credentials.")
+            # Redirect back or to a page where user can try again
+            return redirect('home/{group_id}/')
+
     now = datetime.now().time()
     bt = BreakTime.objects.filter(is_active=True).first()
 
@@ -313,7 +335,7 @@ def fetch_roll_details(request):
             return redirect('home', machine_id=group_id)
         else:
             messages.error(request, "Machine ID is missing for redirect.")
-            return redirect('lay_spreading')  # 🔁 Replace with a safe default view name
+            return redirect('/roll/')  # 🔁 Replace with a safe default view name
 
     # Step 1: Validate roll number
     if not roll_no:
@@ -1067,6 +1089,7 @@ def machine_report(request, machine_id):
                 except (ValueError, TypeError):
                     continue  
 
+        # item.status = "Bad Roll" if is_bad else "Good Roll"
         item.status = "Bad Roll" if is_bad else "Good Roll"
 
         mistakes_list = []
@@ -1107,11 +1130,16 @@ def break_screen(request):
     now = datetime.now().time()
     bt = BreakTime.objects.filter(is_active=True).first()
 
+    # ✅ Store the original_url from GET into session
+    original_url = request.GET.get('original_url')
+    if original_url:
+        request.session['original_url'] = original_url
+
     if bt:
         if now > bt.end_time:
-            original = request.session.pop('original_url', None)  # ✅ Don't default yet
+            original = request.session.pop('original_url', None)
             if original:
-                print("Redirecting to saved original_url:", original)  # Optional
+                print("Redirecting to saved original_url:", original)
                 return redirect(original)
             else:
                 print("No original_url in session, redirecting to default.")

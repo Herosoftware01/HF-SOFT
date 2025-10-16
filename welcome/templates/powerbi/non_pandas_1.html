@@ -2,6 +2,7 @@
 {% load static %}
 {% block content %}
 
+  <!-- AG Grid CSS -->
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
@@ -12,18 +13,17 @@
   />
 
   <style>
+
     .ag-theme-alpine .ag-cell[col-id="img_fpath"] {
-        /* display: flex !important; */
-        justify-content: center !important;
-        align-items: center !important;
-        padding: 0 !important;
-    }
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
     /* Row selected */
     .ag-row-selected .ag-cell {
       background-color: #bfdbfe !important; /* Tailwind blue-200 */
     }
- 
-
 
     /* Cell focused (selected cell) */
     .ag-cell-focus {
@@ -60,9 +60,9 @@
     }
   </style>
 
-<div class="bg-gray-100 p-6 container mx-auto justify-center">
+<div class="bg-gray-100 p-6 justify-center">
 
-  <h1 class="text-2xl font-semibold mb-4 text-end">Fabric Data Table</h1>
+  <h1 class="text-2xl font-semibold mb-4">Without pandas Data Table</h1>
 
   <!-- Global filter input -->
   <input
@@ -72,9 +72,12 @@
     class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"
   />
 
+<div id="rowCount" class="py-2 text-gray-700 font-semibold text-end"></div>
+
   <div class="overflow-x-auto w-full">
       <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg min-w-[640px]"></div>
-  </div>
+    </div>
+
 
 
   <!-- AG Grid JS -->
@@ -124,14 +127,22 @@
 
       function imageCellRenderer(params) {
         if (!params.value) return '';
-        return `<img src="${params.value}" alt="image" style="width: 50px; height: 60px; object-fit: contain;" />`;
+        return `<img src="${params.value}" alt="image" style="width: 50px; height: 40px; object-fit: contain;" />`;
       }
 
       const columnDefs = [
-        
         {
-          headerName: 'orderno',
-          field: 'orderno',
+          headerName: 'No',
+          field: 'no',
+          filter: 'agNumberColumnFilter',
+          checkboxSelection: true,
+          maxWidth: 80,
+          flex: 0,
+          cellRenderer: highlightRenderer
+        },
+        {
+          headerName: 'Emp code',
+          field: 'code_emb_attendance_fact',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -140,7 +151,7 @@
         },
         {
           headerName: 'Image',
-          field: 'img_fpath',
+          field: 'img',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -150,8 +161,8 @@
           filterParams: { suppressFilterButton: true } // optional, images may not need filtering UI
         },
         {
-          headerName: 'date',
-          field: 'date',
+          headerName: 'name',
+          field: 'name',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -159,8 +170,8 @@
           cellRenderer: highlightRenderer
         },
         {
-          headerName: 'knitter',
-          field: 'knitter',
+          headerName: 'intime',
+          field: 'intime',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -168,8 +179,8 @@
           cellRenderer: highlightRenderer
         },
         {
-          headerName: 'process',
-          field: 'process',
+          headerName: 'outtime',
+          field: 'outtime',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -177,8 +188,8 @@
           cellRenderer: highlightRenderer
         },
         {
-          headerName: 'yarninfo',
-          field: 'yarninfo',
+          headerName: 'con_code_name_in_out',
+          field: 'con_code_name_in_out',
           filter: 'agNumberColumnFilter',
           floatingFilter: true,
           maxWidth: 100,
@@ -186,48 +197,8 @@
           cellRenderer: highlightRenderer
         },
         {
-          headerName: 'prg_weight',
-          field: 'prg_weight',
-          filter: 'agTextColumnFilter',
-          floatingFilter: true,
-          flex: 1,
-          minWidth: 150,
-          cellRenderer: highlightRenderer
-        },
-          {
-          headerName: 'rec_weight',
-          field: 'rec_weight',
-          filter: 'agTextColumnFilter',
-          floatingFilter: true,
-          flex: 1,
-          minWidth: 150,
-          cellRenderer: highlightRenderer
-        },
-          {
-            headerName: 'Fabric Type + Weight',
-            field: 'fabrictype', // ✅ Needed for filtering base
-            valueGetter: (params) => {
-              // ✅ Return combined string for filtering
-              const type = params.data.fabrictype ?? '';
-              const weight = params.data.rec_weight ?? '';
-              const rf_tot_qty = params.data.prg_weight ?? '';
-              return `${type} ${weight}`;
-            },
-            cellRenderer: (params) => {
-              const type = highlightRenderer({ ...params, value: params.data.fabrictype });
-              const weight = highlightRenderer({ ...params, value: params.data.rec_weight });
-              const rf_tot_qty = highlightRenderer({ ...params, value: params.data.prg_weight });
-              return `<div class="multi-line-cell"><strong>${type}</strong><br><span>${weight}</span><br><span>${rf_tot_qty}</span></div>`;
-            },
-            filter: 'agTextColumnFilter',
-            floatingFilter: true,
-            autoHeight: true,
-            flex: 1,
-            minWidth: 150,
-          },
-           {
-          headerName: 'rf_tot_qty',
-          field: 'rf_tot_qty',
+          headerName: 'rel_code_name',
+          field: 'rel_code_name',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
           flex: 1,
@@ -258,11 +229,13 @@
       new agGrid.Grid(gridDiv, gridOptions);
 
       try {
-        const response = await fetch('https://app.herofashion.com/fabKnitprgvsrec/');
+        const response = await fetch('https://app.herofashion.com/non_pandas/');
         if (!response.ok) throw new Error('Network response was not ok');
 
         const data = await response.json();
         gridOptions.api.setRowData(data);
+
+        document.getElementById('rowCount').innerText = `Total Rows: ${data.length}`;
 
         // Auto-size columns to fit grid width initially
         gridOptions.api.sizeColumnsToFit();
@@ -272,6 +245,7 @@
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
+      
 
       // Filter changed listener for highlighting text
       gridOptions.api.addEventListener('filterChanged', () => {

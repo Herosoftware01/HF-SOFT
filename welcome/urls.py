@@ -54,10 +54,13 @@ urlpatterns = [
     path('server10/', views.server10, name='server10'),
     path('api/login/', views.login_api, name='api_login'),
     path('sample_data/', views.sample_data, name='sample_data'),
+    path('non_pandas/', views.non_pandas, name='non_pandas'),
+    path('non_pandas_1/', views.non_pandas_1, name='non_pandas_1'),
     
 ]
 
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 
     urlpatterns += static(settings.STAFF_IMAGES_URL, document_root=settings.STAFF_IMAGES_ROOT)
     urlpatterns += static(settings.ORDER_IMAGES_URL, document_root=settings.ORDER_IMAGES_ROOT)
