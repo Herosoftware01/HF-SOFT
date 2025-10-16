@@ -30,223 +30,186 @@
 
     <!-- Custom Styles for Cell Selection -->
     <style>
+        /* Custom CSS */
+        .bg-dashboard-purple { background-color: #6366f1; }
+        .bg-card-blue { background-color: #3b82f6; }
+        .bg-card-green { background-color: #10b981; }
+        .bg-card-orange { background-color: #f59e0b; }
+        .bg-card-red { background-color: #ef4444; }
+        
         .table-cell-selected {
-            background-color: #3b82f6 !important;
-            color: white !important;
-            box-shadow: inset 0 0 0 2px #1d4ed8;
-        }
-        
-        .table-cell-selected .rounded-full {
-            background-color: rgba(255, 255, 255, 0.2) !important;
-            color: white !important;
-            border-color: white !important;
-        }
-        
-        .table-navigable:focus {
-            outline: none;
+            background-color: #6eadff !important;
+            outline: 2px solid #3b82f6;
         }
         
         .cell-navigation-indicator {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 8px 12px;
+            padding: 10px 15px;
             border-radius: 8px;
             font-size: 12px;
             z-index: 1000;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
         }
         
         .cell-navigation-indicator.show {
             opacity: 1;
+            transform: translateY(0);
         }
-
-        @media (max-width: 1024px) {
-            .cell-navigation-indicator {
-                display: none;
-            }
+        
+        .table-navigable {
+            outline: none;
+        }
+        
+        .table-navigable:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
         }
     </style>
-
-<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6">
-    <!-- Cell Navigation Indicator -->
-    <div id="navigationIndicator" class="cell-navigation-indicator">
-        Use ↑↓←→ arrow keys to navigate • Enter to focus • Esc to clear selection
-    </div>
-
-    <!-- Header -->
+</head>
+<body class="bg-gray-200 min-h-screen">
+                   <!-- Header -->
     <div class="bg-dashboard-purple shadow-lg">
         <div class="container mx-auto px-4 lg:px-6 py-4">
-            <!-- Mobile Header -->
-            <div class="flex items-center justify-between mb-4 lg:mb-0">
-                <div class="flex items-center space-x-2 lg:space-x-3">
+             <!-- Title and Single Line Filters -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                        <!-- Title Section -->
+                <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                     <div class="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-full flex items-center justify-center">
                         <svg class="w-4 h-4 lg:w-6 lg:h-6 text-dashboard-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
-                    </div>
-                    <h1 class="text-lg lg:text-2xl font-bold text-white">AGING DASHBOARD</h1>
-                </div>
-                
-                <!-- Mobile Filter Toggle -->
-                <button 
-                    id="filterToggle" 
-                    class="lg:hidden p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
-                    onclick="toggleFilters()"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Filters - Mobile Collapsible, Desktop Always Visible -->
-            <div id="filtersContainer" class="hidden lg:block">
-                <form method="get" class="space-y-4 lg:space-y-0 lg:flex lg:gap-3 lg:items-end justify-end" id="filterForm">
-                    <!-- Row 1 - Module and Employee (Mobile: Full width, Desktop: Inline) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3 lg:gap-3">
-                        <!-- Module Filter -->
-                        <div class="flex flex-col">
-                            <label class="text-white text-sm font-medium mb-1">Module:</label>
-                            <select name="module" class="px-3 py-2 rounded-lg border-0 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-300 text-sm" onchange="submitForm()">
-                                <option value="">ALL</option>
-                                {% for module_item in module_datas %}
-                                    {% if module_item %}
-                                        <option value="{{ module_item }}" {% if request.GET.module == module_item %}selected{% endif %}>
-                                            {{ module_item }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
+                        </div>
+                            <h1 class="text-sm sm:text-lg lg:text-2xl font-bold text-white whitespace-nowrap">AGING DASHBOARD</h1>
                         </div>
                         
-                        <!-- Employee Filter -->
-                        <div class="flex flex-col">
-                            <label class="text-white text-sm font-medium mb-1">Incharge:</label>
-                            <select name="employees" class="px-3 py-2 rounded-lg border-0 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-300 text-sm" onchange="submitForm()">
-                                <option value="ALL" {% if request.GET.employees == "ALL" or not request.GET.employees %}selected{% endif %}>ALL</option>
-                                {% for emp in employees %}
-                                    <option value="{{ emp.id }}" {% if request.GET.employees == emp.id|stringformat:"s" %}selected{% endif %}>
-                                        {{ emp.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                        <!-- Single Line Filters with Horizontal Scroll -->
+                        <div class="flex-1 overflow-x-auto">
+                            <form method="get" class="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-max justify-end pb-1" id="filterForm">
+                                <!-- Bill Type Filter -->
+                                <div class="flex flex-col">
+                                    <label class="text-white text-[12px] sm:text-xs font-medium mb-1 whitespace-nowrap text-center">Bill Type</label>
+                                    <select name="module" class="w-20 sm:w-24 lg:w-24 px-2 sm:px-3 lg:px-4 p-2 rounded-xl border-2 border-black bg-white text-gray-500 font-bold text-[10px] sm:text-xs" onchange="submitForm()">
+                                        <option value="">ALL</option>
+                                        {% for module_item in module_datas %}
+                                            {% if module_item %}
+                                                <option value="{{ module_item }}" {% if request.GET.module == module_item %}selected{% endif %}>
+                                                    {{ module_item }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <!-- Incharge Filter -->
+                                <div class="flex flex-col min-w-0">
+                                    <label class="text-white text-[10px] sm:text-xs font-medium mb-1 whitespace-nowrap text-center">Incharge</label>
+                                    <select name="employees" class="w-16 sm:w-20 lg:w-24 px-2 sm:px-3 lg:px-4 p-2 rounded-xl border-2 border-black bg-white font-bold text-gray-500 text-[10px] sm:text-xs" onchange="submitForm()">
+                                        <option value="ALL" {% if request.GET.employees == "ALL" or not request.GET.employees %}selected{% endif %}>ALL</option>
+                                        {% for emp in employees %}
+                                            <option value="{{ emp.id }}" {% if request.GET.employees == emp.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ emp.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <!-- From Date -->
+                                <div class="flex flex-col min-w-0">
+                                    <label class="text-white text-[10px] sm:text-xs font-medium mb-1 whitespace-nowrap text-center">From</label>
+                                    <input type="date" name="from_date" value="{{ request.GET.from_date }}" 
+                                        class="w-20 sm:w-24 lg:w-28 px-1 sm:px-2 lg:px-3 p-2 rounded-xl border-2 border-black bg-white text-gray-500 font-bold text-[10px] sm:text-xs" onchange="submitForm()">
+                                </div>
+                                
+                                <!-- To Date -->
+                                <div class="flex flex-col min-w-0">
+                                    <label class="text-white text-[10px] sm:text-xs font-medium mb-1 whitespace-nowrap text-center">To</label>
+                                    <input type="date" name="to_date" value="{{ request.GET.to_date }}" 
+                                        class="w-20 sm:w-24 lg:w-28 px-1 sm:px-2 lg:px-3 p-2 rounded-xl border-2 border-black bg-white text-gray-500 font-bold text-[10px] sm:text-xs" onchange="submitForm()">
+                                </div>
+                                
+                                <!-- Min Aging Filter -->
+                                <div class="flex flex-col min-w-0">
+                                    <label class="text-white text-[10px] sm:text-xs font-medium mb-1 whitespace-nowrap text-center">Min Age</label>
+                                    <select name="min_aging" class="w-14 sm:w-16 lg:w-20 px-1 sm:px-2 lg:px-3 p-2 rounded-xl border-2 border-black bg-white font-bold text-gray-500 text-[10px] sm:text-xs" onchange="submitForm()">
+                                        <option value="">All</option>
+                                        <option value="7" {% if request.GET.min_aging == "7" %}selected{% endif %}>7+</option>
+                                        <option value="15" {% if request.GET.min_aging == "15" %}selected{% endif %}>15+</option>
+                                        <option value="30" {% if request.GET.min_aging == "30" %}selected{% endif %}>30+</option>
+                                        <option value="60" {% if request.GET.min_aging == "60" %}selected{% endif %}>60+</option>
+                                        <option value="90" {% if request.GET.min_aging == "90" %}selected{% endif %}>90+</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Clear Button -->
+                                <div class="flex flex-col justify-end mt-4">
+                                    <button type="button" onclick="clearFilters()" class="px-4 p-2 bg-[#77BEF0] text-white rounded-xl hover:bg-[#5BA8D4] transition-colors text-sm font-medium w-full lg:w-auto">
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </div>
-                    
-                    <!-- Row 2 - Date Filters (Mobile: Full width, Desktop: Inline) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3 lg:gap-3">
-                        <div class="flex flex-col">
-                            <label class="text-white text-sm font-medium mb-1">From:</label>
-                            <input type="date" name="from_date" value="{{ request.GET.from_date }}" 
-                                   class="px-3 py-2 rounded-lg border-0 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-300 text-sm" onchange="submitForm()">
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-white text-sm font-medium mb-1">To:</label>
-                            <input type="date" name="to_date" value="{{ request.GET.to_date }}" 
-                                   class="px-3 py-2 rounded-lg border-0 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-300 text-sm" onchange="submitForm()">
-                        </div>
-                    </div>
-                    
-                    <!-- Row 3 - Aging Filter and Actions (Mobile: Full width, Desktop: Inline) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3 lg:gap-3 lg:items-end">
-                        <div class="flex flex-col">
-                            <label class="text-white text-sm font-medium mb-1">Min Aging:</label>
-                            <select name="min_aging"
-                                    class="px-3 py-2 rounded-lg border-0 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-300 text-sm"
-                                    onchange="submitForm()">
-                                <option value="">Show All</option>
-                                <option value="7" {% if request.GET.min_aging == "7" %}selected{% endif %}>7+ Days</option>
-                                <option value="15" {% if request.GET.min_aging == "15" %}selected{% endif %}>15+ Days</option>
-                                <option value="30" {% if request.GET.min_aging == "30" %}selected{% endif %}>30+ Days</option>
-                                <option value="60" {% if request.GET.min_aging == "60" %}selected{% endif %}>60+ Days</option>
-                                <option value="90" {% if request.GET.min_aging == "90" %}selected{% endif %}>90+ Days</option>
-                            </select>
-                        </div>
-                    </div>
-
-
-                        <!-- Action Button -->
-                        <div class="flex flex-col lg:flex-row lg:items-end">
-                            <button type="button" onclick="clearFilters()" class="px-4 py-2 bg-[#77BEF0] text-white rounded-lg hover:bg-[#5BA8D4] transition-colors text-sm font-medium w-full lg:w-auto">
-                                Clear Filters
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 lg:px-6 py-6 lg:py-8">
-        <!-- KPI Cards - Mobile: 2 columns, Tablet+: 4 columns -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
+        <!-- KPI Cards - Mobile: 1 column, Desktop: 2 columns with reduced size -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 lg:mb-8 max-w-2xl mx-auto">
             <!-- Total Bills Card -->
-            <div class="bg-white rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-card-blue">
+            <div class="bg-white rounded-lg shadow-md p-3 lg:p-4 border-l-4 border-card-blue">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div class="mb-2 lg:mb-0">
-                        <p class="text-xs lg:text-sm font-medium text-gray-600 mb-1">Total Bills</p>
-                        <p class="text-xl lg:text-3xl font-bold text-gray-800" id="totalBillsCount">{{ data_count }}</p>
-                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Active Records</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Total Bills</p>
+                        <p class="text-lg lg:text-2xl font-bold text-gray-800" id="totalBillsCount">{{ data_count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Active Records</p>
                     </div>
-                    <div class="w-8 h-8 lg:w-12 lg:h-12 bg-card-blue rounded-lg flex items-center justify-center lg:ml-2">
-                        <svg class="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-6 h-6 lg:w-8 lg:h-8 bg-card-blue rounded-lg flex items-center justify-center lg:ml-2">
+                        <svg class="w-3 h-3 lg:w-4 lg:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <!-- Total Amount Card -->
-            <div class="bg-white rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-card-green">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div class="mb-2 lg:mb-0">
-                        <p class="text-xs lg:text-sm font-medium text-gray-600 mb-1">Total Amount</p>
-                        <p class="text-xl lg:text-3xl font-bold text-gray-800" id="totalAmountDisplay">₹0</p>
-                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Outstanding Bills</p>
+            <!-- Risk Assessment Card with Clickable Filters -->
+            <div class="bg-white rounded-lg shadow-md p-3 lg:p-4 border-l-4 border-card-red">
+                <div class="flex flex-col space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-lg font-bold text-gray-800 mb-1 ">Risk Assessment</p>
+                        </div>
+                        <div class="w-6 h-6 lg:w-8 lg:h-8 bg-card-red rounded-lg flex items-center justify-center">
+                            <svg class="w-3 h-3 lg:w-4 lg:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="w-8 h-8 lg:w-12 lg:h-12 bg-card-green rounded-lg flex items-center justify-center lg:ml-2">
-                        <svg class="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Average Aging Card -->
-            <div class="bg-white rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-card-orange">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div class="mb-2 lg:mb-0">
-                        <p class="text-xs lg:text-sm font-medium text-gray-600 mb-1">Avg. Aging</p>
-                        <p class="text-xl lg:text-3xl font-bold text-gray-800" id="avgAgingDisplay">0 days</p>
-                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Average Days</p>
-                    </div>
-                    <div class="w-8 h-8 lg:w-12 lg:h-12 bg-card-orange rounded-lg flex items-center justify-center lg:ml-2">
-                        <svg class="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                    <!-- Clickable Risk Statistics Filters -->
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-[#BADFDB] p-2 rounded cursor-pointer hover:bg-green-400 transition" onclick="filterRiskData('normal')">
+                            <p class="text-lg lg:text-xl font-bold text-green-700" id="normalCount">0</p>
+                            <p class="text-xs text-green-600">Normal</p>
+                        </div>
+                        <div class="bg-[#FFDE63]  p-2 rounded cursor-pointer hover:bg-yellow-400 transition" onclick="filterRiskData('risk')">
+                            <p class="text-lg lg:text-xl font-bold text-yellow-700" id="riskCount">0</p>
+                            <p class="text-xs text-yellow-600">Risk</p>
+                        </div>
+                        <div class="bg-[#FF8989]  p-2 rounded cursor-pointer hover:bg-red-400 transition" onclick="filterRiskData('high_risk')">
+                            <p class="text-lg lg:text-xl font-bold text-[#F75270]" id="highRiskCount">0</p>
+                            <p class="text-xs text-red-600">High Risk</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- High Risk Card -->
-            <div class="bg-white rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-card-red">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div class="mb-2 lg:mb-0">
-                        <p class="text-xs lg:text-sm font-medium text-gray-600 mb-1">High Risk</p>
-                        <p class="text-xl lg:text-3xl font-bold text-gray-800" id="highRiskCount">0</p>
-                        <p class="text-xs lg:text-sm text-gray-500 mt-1">30+ Days Aging</p>
-                    </div>
-                    <div class="w-8 h-8 lg:w-12 lg:h-12 bg-card-red rounded-lg flex items-center justify-center lg:ml-2">
-                        <svg class="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -271,7 +234,7 @@
             <!-- Mobile Card View (Hidden on Desktop) -->
             <div class="block lg:hidden max-h-[500px] overflow-y-auto">
                 {% for item in datas %}
-                <div class="border-b border-gray-200 p-4 hover:bg-gray-50 transition-colors">
+                <div class="border-b border-gray-200 p-4 hover:bg-gray-50 transition-colors" data-aging="{{ item.calculated_aging|default:0 }}">
                     <div class="space-y-3">
                         <!-- Row 1: Bill Info -->
                         <div class="flex justify-between items-start">
@@ -297,16 +260,16 @@
                             </div>
                             <div class="text-center">
                                 {% if item.calculated_aging is not None %}
-                                    {% if item.calculated_aging >= 30 %}
-                                        <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
+                                    {% if item.calculated_aging <= 2 %}
+                                        <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-200">
                                             {{ item.calculated_aging }} days
                                         </span>
-                                    {% elif item.calculated_aging >= 15 %}
+                                    {% elif item.calculated_aging <= 5 %}
                                         <span class="px-3 py-1 text-xs font-bold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
                                             {{ item.calculated_aging }} days
                                         </span>
                                     {% else %}
-                                        <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-200">
+                                        <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
                                             {{ item.calculated_aging }} days
                                         </span>
                                     {% endif %}
@@ -342,21 +305,43 @@
                     <thead class="bg-gray-50 sticky top-0">
                         <tr class="border-b border-gray-400">
                             <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">SL NO</th>
-                            <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">DATE</th>
+                            <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">BILL DATE</th>
+                            <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">ENTRY DATE</th>
+                            <th class="px-4 py-3 text-center font-semibold text-white bg-dashboard-purple text-white border border-gray-400">AGEING (DAYS)</th>
                             <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">BILL TYPE</th>
                             <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">SUPPLIER</th>
                             <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">INCHARGE</th>
                             <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">BILL NO</th>
-                            <th class="px-4 py-3 text-left font-semibold text-white bg-dashboard-purple text-white border border-gray-400">BILL DATE</th>
                             <th class="px-4 py-3 text-right font-semibold text-white bg-dashboard-purple text-white border border-gray-400">BILL AMOUNT</th>
-                            <th class="px-4 py-3 text-center font-semibold text-white bg-dashboard-purple text-white border border-gray-400">AGING</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white">
                         {% for item in datas %}
-                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-300" data-row="{{ forloop.counter0 }}">
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-300" data-row="{{ forloop.counter0 }}" data-aging="{{ item.calculated_aging|default:0 }}">
                             <td class="px-4 py-3 border border-gray-300" data-col="0">{{ item.no }}</td>
+                            <td class="px-4 py-3 border border-gray-300" data-col="6">{{ item.billdate|date:"d/m/Y"|default:"-" }}</td>
                             <td class="px-4 py-3 border border-gray-300" data-col="1">{{ item.edate|date:"d/m/Y"|default:"-" }}</td>
+                            <td class="px-4 py-3 text-center border border-gray-300" data-col="8">
+                                {% if item.calculated_aging is not None %}
+                                    {% if item.calculated_aging <= 2 %}
+                                        <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-200">
+                                            {{ item.calculated_aging }}
+                                        </span>
+                                    {% elif item.calculated_aging <= 5 %}
+                                        <span class="px-3 py-1 text-xs font-bold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+                                            {{ item.calculated_aging }}
+                                        </span>
+                                    {% else %}
+                                        <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
+                                            {{ item.calculated_aging }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="px-3 py-1 text-xs font-bold bg-gray-100 text-gray-800 rounded-full border border-gray-200">
+                                        
+                                    </span>
+                                {% endif %}
+                            </td>
                             <td class="px-4 py-3 border border-gray-300" data-col="2">
                                 <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                                     {{ item.module|default:"-" }}
@@ -365,30 +350,8 @@
                             <td class="px-4 py-3 font-medium text-gray-900 border border-gray-300" data-col="3">{{ item.suppliers|default:"-" }}</td>
                             <td class="px-4 py-3 border border-gray-300" data-col="4">{{ item.employees|default:"-" }}</td>
                             <td class="px-4 py-3 font-mono text-sm border border-gray-300" data-col="5">{{ item.billno|default:"-" }}</td>
-                            <td class="px-4 py-3 border border-gray-300" data-col="6">{{ item.billdate|date:"d/m/Y"|default:"-" }}</td>
                             <td class="px-4 py-3 text-right font-semibold text-gray-900 border border-gray-300" data-col="7">
                                 {% if item.amount %}₹{{ item.amount|floatformat:"2g" }}{% else %}-{% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-center border border-gray-300" data-col="8">
-                                {% if item.calculated_aging is not None %}
-                                    {% if item.calculated_aging >= 30 %}
-                                        <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
-                                            {{ item.calculated_aging }} days
-                                        </span>
-                                    {% elif item.calculated_aging >= 15 %}
-                                        <span class="px-3 py-1 text-xs font-bold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
-                                            {{ item.calculated_aging }} days
-                                        </span>
-                                    {% else %}
-                                        <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-200">
-                                            {{ item.calculated_aging }} days
-                                        </span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="px-3 py-1 text-xs font-bold bg-gray-100 text-gray-800 rounded-full border border-gray-200">
-                                        - days
-                                    </span>
-                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -410,560 +373,516 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
-    <script>
-        // Table Navigation Variables
-        let currentRow = -1;
-        let currentCol = -1;
-        let maxRows = 0;
-        let maxCols = 9;
-        let navigationActive = false;
+  <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const table = document.getElementById("ageingTable");
+        const headers = table.querySelectorAll("thead th");
 
-        // Mobile filter toggle function
-        function toggleFilters() {
-            const filtersContainer = document.getElementById('filtersContainer');
-            const filterToggle = document.getElementById('filterToggle');
-            
-            if (filtersContainer.classList.contains('hidden')) {
-                filtersContainer.classList.remove('hidden');
-                filtersContainer.classList.add('block');
-                filterToggle.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                `;
+        // ✅ Only make Bill Type, Supplier, Incharge sortable
+        const sortableColumns = [4, 5, 6]; // Index based on your table order
+
+        // Keep track of sort direction for each column
+        let sortDirection = {};
+
+        headers.forEach((header, index) => {
+            if (sortableColumns.includes(index)) {
+                // Add icon next to header text
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-sort ml-2 text-gray-300 sort-icon";
+                header.appendChild(icon);
+
+                // Add click event for sorting
+                header.classList.add("cursor-pointer", "select-none", "transition");
+                header.addEventListener("click", () => sortTable(index, header));
+            }
+        });
+
+        function sortTable(index, header) {
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const currentDir = sortDirection[index] === "asc" ? "desc" : "asc";
+            sortDirection[index] = currentDir;
+
+            // Reset all icons
+            headers.forEach((h, i) => {
+                const icon = h.querySelector(".sort-icon");
+                if (icon) icon.className = "fa-solid fa-sort ml-2 text-gray-300 sort-icon";
+            });
+
+            // Update icon for current sort direction
+            const icon = header.querySelector(".sort-icon");
+            if (currentDir === "asc") {
+                icon.className = "fa-solid fa-sort-up ml-2 text-purple-600 sort-icon";
             } else {
-                filtersContainer.classList.add('hidden');
-                filtersContainer.classList.remove('block');
-                filterToggle.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                    </svg>
-                `;
+                icon.className = "fa-solid fa-sort-down ml-2 text-purple-600 sort-icon";
             }
-        }
 
-        // Submit form function for filters
-        function submitForm() {
-            document.getElementById('filterForm').submit();
-        }
+            // Sort rows based on column text
+            rows.sort((a, b) => {
+                const valA = a.cells[index].innerText.trim().toLowerCase();
+                const valB = b.cells[index].innerText.trim().toLowerCase();
 
-        // Clear filters function
-        function clearFilters() {
-            const form = document.getElementById('filterForm');
-            const inputs = form.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                if (input.type === 'date') {
-                    input.value = '';
-                } else {
-                    input.selectedIndex = 0;
-                }
-            });
-            form.submit();
-        }
-
-        // Cell Navigation Functions
-        function initializeTableNavigation() {
-            const table = document.getElementById('ageingTable');
-            if (!table) return;
-
-            const tbody = table.querySelector('tbody');
-            const rows = tbody.querySelectorAll('tr');
-            
-            // Count actual data rows (excluding empty state)
-            maxRows = 0;
-            rows.forEach(row => {
-                if (row.cells && row.cells.length > 1 && !row.cells[0].textContent.includes('No records found')) {
-                    maxRows++;
-                }
+                if (valA < valB) return currentDir === "asc" ? -1 : 1;
+                if (valA > valB) return currentDir === "asc" ? 1 : -1;
+                return 0;
             });
 
-            // Add keyboard event listeners
-            table.addEventListener('keydown', handleTableKeyNavigation);
-            table.addEventListener('click', handleTableClick);
-            table.addEventListener('focus', handleTableFocus);
-            
-            // Add cell click listeners
-            rows.forEach((row, rowIndex) => {
-                if (row.cells && row.cells.length > 1 && !row.cells[0].textContent.includes('No records found')) {
-                    Array.from(row.cells).forEach((cell, colIndex) => {
-                        cell.addEventListener('click', () => {
-                            selectCell(rowIndex, colIndex);
-                        });
-                    });
-                }
-            });
+            // Reattach sorted rows
+            tbody.append(...rows);
         }
-
-        function handleTableFocus() {
-            showNavigationIndicator();
-            if (currentRow === -1 && currentCol === -1 && maxRows > 0) {
-                selectCell(0, 0); // Start at first cell when table gets focus
-            }
-        }
-
-        function handleTableClick(e) {
-            if (e.target.tagName === 'TD') {
-                const row = e.target.parentElement;
-                const rowIndex = parseInt(row.getAttribute('data-row'));
-                const colIndex = parseInt(e.target.getAttribute('data-col'));
-                
-                if (!isNaN(rowIndex) && !isNaN(colIndex)) {
-                    selectCell(rowIndex, colIndex);
-                }
-            }
-        }
-
-        function handleTableKeyNavigation(e) {
-            if (!navigationActive && maxRows === 0) return;
-
-            const keyCode = e.keyCode || e.which;
-            
-            switch(keyCode) {
-                case 37: // Left Arrow
-                    e.preventDefault();
-                    navigateLeft();
-                    break;
-                case 38: // Up Arrow  
-                    e.preventDefault();
-                    navigateUp();
-                    break;
-                case 39: // Right Arrow
-                    e.preventDefault();
-                    navigateRight();
-                    break;
-                case 40: // Down Arrow
-                    e.preventDefault();
-                    navigateDown();
-                    break;
-                case 13: // Enter
-                    e.preventDefault();
-                    if (currentRow === -1 && currentCol === -1) {
-                        selectCell(0, 0);
-                    } else {
-                        focusCurrentCell();
-                    }
-                    break;
-                case 27: // Escape
-                    e.preventDefault();
-                    clearCellSelection();
-                    break;
-                case 9: // Tab
-                    if (!navigationActive) {
-                        return; // Allow normal tab behavior when not in navigation mode
-                    }
-                    e.preventDefault();
-                    if (e.shiftKey) {
-                        navigateLeft();
-                    } else {
-                        navigateRight();
-                    }
-                    break;
-            }
-        }
-
-        function selectCell(row, col) {
-            if (row < 0 || row >= maxRows || col < 0 || col >= maxCols) {
-                return;
-            }
-
-            // Clear previous selection
-            clearCellSelection();
-
-            currentRow = row;
-            currentCol = col;
-            navigationActive = true;
-
-            // Add selection class to current cell
-            const cell = getCellElement(row, col);
-            if (cell) {
-                cell.classList.add('table-cell-selected');
-                scrollToCellIfNeeded(cell);
-                showNavigationIndicator();
-            }
-        }
-
-        function clearCellSelection() {
-            const table = document.getElementById('ageingTable');
-            if (table) {
-                const selectedCells = table.querySelectorAll('.table-cell-selected');
-                selectedCells.forEach(cell => {
-                    cell.classList.remove('table-cell-selected');
-                });
-            }
-            currentRow = -1;
-            currentCol = -1;
-            navigationActive = false;
-            hideNavigationIndicator();
-        }
-
-        function getCellElement(row, col) {
-            const table = document.getElementById('ageingTable');
-            if (!table) return null;
-
-            const tbody = table.querySelector('tbody');
-            const rows = tbody.querySelectorAll('tr');
-            
-            let actualRowIndex = 0;
-            for (let i = 0; i < rows.length; i++) {
-                const currentRow = rows[i];
-                if (currentRow.cells && currentRow.cells.length > 1 && !currentRow.cells[0].textContent.includes('No records found')) {
-                    if (actualRowIndex === row) {
-                        return currentRow.cells[col];
-                    }
-                    actualRowIndex++;
-                }
-            }
-            return null;
-        }
-
-        function navigateUp() {
-            if (currentRow > 0) {
-                selectCell(currentRow - 1, currentCol);
-            }
-        }
-
-        function navigateDown() {
-            if (currentRow < maxRows - 1) {
-                selectCell(currentRow + 1, currentCol);
-            }
-        }
-
-        function navigateLeft() {
-            if (currentCol > 0) {
-                selectCell(currentRow, currentCol - 1);
-            } else if (currentRow > 0) {
-                // Wrap to end of previous row
-                selectCell(currentRow - 1, maxCols - 1);
-            }
-        }
-
-        function navigateRight() {
-            if (currentCol < maxCols - 1) {
-                selectCell(currentRow, currentCol + 1);
-            } else if (currentRow < maxRows - 1) {
-                // Wrap to beginning of next row
-                selectCell(currentRow + 1, 0);
-            }
-        }
-
-        function focusCurrentCell() {
-            const cell = getCellElement(currentRow, currentCol);
-            if (cell) {
-                cell.focus();
-            }
-        }
-
-        function scrollToCellIfNeeded(cell) {
-            const tableContainer = cell.closest('.overflow-x-auto');
-            if (!tableContainer) return;
-
-            const containerRect = tableContainer.getBoundingClientRect();
-            const cellRect = cell.getBoundingClientRect();
-
-            // Check if cell is outside visible area
-            if (cellRect.top < containerRect.top || cellRect.bottom > containerRect.bottom) {
-                cell.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center',
-                    inline: 'nearest'
-                });
-            }
-
-            if (cellRect.left < containerRect.left || cellRect.right > containerRect.right) {
-                cell.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest',
-                    inline: 'center'
-                });
-            }
-        }
-
-        function showNavigationIndicator() {
-            const indicator = document.getElementById('navigationIndicator');
-            if (indicator && window.innerWidth >= 1024) {
-                indicator.classList.add('show');
-                
-                // Auto hide after 3 seconds
-                clearTimeout(window.indicatorTimeout);
-                window.indicatorTimeout = setTimeout(() => {
-                    hideNavigationIndicator();
-                }, 3000);
-            }
-        }
-
-        function hideNavigationIndicator() {
-            const indicator = document.getElementById('navigationIndicator');
-            if (indicator) {
-                indicator.classList.remove('show');
-                clearTimeout(window.indicatorTimeout);
-            }
-        }
-        
-        // Format date in Indian format (DD/MM/YYYY)
-        function formatIndianDate(date) {
-            if (!date) return '';
-            
-            let day, month, year;
-            
-            if (date instanceof Date) {
-                day = date.getDate().toString().padStart(2, '0');
-                month = (date.getMonth() + 1).toString().padStart(2, '0');
-                year = date.getFullYear();
-            } else {
-                const dateStr = date.toString();
-                
-                if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                    return dateStr;
-                }
-                
-                const parsedDate = new Date(dateStr);
-                if (!isNaN(parsedDate.getTime())) {
-                    day = parsedDate.getDate().toString().padStart(2, '0');
-                    month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
-                    year = parsedDate.getFullYear();
-                } else {
-                    return dateStr;
-                }
-            }
-            
-            return `${day}/${month}/${year}`;
-        }
-
-        function getCurrentIndianDate() {
-            const today = new Date();
-            return formatIndianDate(today);
-        }
-
-        function calculateStats() {
-            const table = document.getElementById('ageingTable');
-            let totalAmount = 0;
-            let validRows = 0;
-            let totalAging = 0;
-            let highRiskCount = 0;
-            let agingCount = 0;
-            
-            // For mobile cards
-            const mobileCards = document.querySelectorAll('.block.lg\\:hidden > div');
-            
-            // Count from mobile view if table is hidden
-            if (window.innerWidth < 1024) {
-                mobileCards.forEach(card => {
-                    if (card.querySelector('.font-semibold.text-gray-900.text-sm')) {
-                        validRows++;
-                        
-                        // Calculate total amount from mobile cards
-                        const amountDiv = card.querySelector('.font-bold.text-gray-900');
-                        if (amountDiv) {
-                            const amount = amountDiv.textContent.replace(/[₹,]/g, '').trim();
-                            if (amount !== '-' && !isNaN(amount)) {
-                                totalAmount += parseFloat(amount) || 0;
-                            }
-                        }
-                        
-                        // Calculate aging stats from mobile cards
-                        const agingSpan = card.querySelector('span[class*="rounded-full"]');
-                        if (agingSpan) {
-                            const agingText = agingSpan.textContent.trim();
-                            const agingMatch = agingText.match(/(\d+)\s*days/);
-                            if (agingMatch) {
-                                const aging = parseInt(agingMatch[1]);
-                                totalAging += aging;
-                                agingCount++;
-                                if (aging >= 30) {
-                                    highRiskCount++;
-                                }
-                            }
-                        }
-                    }
-                });
-            } else if (table) {
-                // Calculate from table for desktop
-                const rows = table.querySelectorAll('tbody tr:not(:last-child)');
-                rows.forEach(row => {
-                    if (row.cells && row.cells.length > 8 && !row.cells[0].textContent.includes('No records found')) {
-                        validRows++;
-                        
-                        // Calculate total amount
-                        const amountCell = row.cells[7];
-                        if (amountCell) {
-                            const amount = amountCell.textContent.replace(/[₹,]/g, '').trim();
-                            if (amount !== '-' && !isNaN(amount)) {
-                                totalAmount += parseFloat(amount) || 0;
-                            }
-                        }
-                        
-                        // Calculate aging stats
-                        const agingCell = row.cells[8];
-                        if (agingCell) {
-                            const agingText = agingCell.textContent.trim();
-                            const agingMatch = agingText.match(/(\d+)\s*days/);
-                            if (agingMatch) {
-                                const aging = parseInt(agingMatch[1]);
-                                totalAging += aging;
-                                agingCount++;
-                                if (aging >= 30) {
-                                    highRiskCount++;
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Update KPI cards
-            document.getElementById('totalBillsCount').textContent = validRows || {{ data_count }};
-            document.getElementById('totalAmountDisplay').textContent = '₹' + totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 0});
-            document.getElementById('avgAgingDisplay').textContent = agingCount > 0 ? Math.round(totalAging / agingCount) + ' days' : '0 days';
-            document.getElementById('highRiskCount').textContent = highRiskCount;
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            calculateStats();
-            document.getElementById('currentDate').textContent = getCurrentIndianDate();
-            initializeTableNavigation();
-        });
-
-        // Recalculate stats on window resize
-        window.addEventListener('resize', function() {
-            calculateStats();
-            clearCellSelection(); // Clear selection on resize
-        });
-
-        // Clear selection when clicking outside the table
-        document.addEventListener('click', function(e) {
-            const table = document.getElementById('ageingTable');
-            if (table && !table.contains(e.target)) {
-                clearCellSelection();
-            }
-        });
-
-        // Export to Excel function (keeping your existing implementation)
-        function exportToExcel() {
-            try {
-                const table = document.getElementById('ageingTable');
-                const tableClone = table.cloneNode(true);
-                
-                // Remove selection classes from cloned table
-                const selectedCells = tableClone.querySelectorAll('.table-cell-selected');
-                selectedCells.forEach(cell => {
-                    cell.classList.remove('table-cell-selected');
-                });
-                
-                const rows = tableClone.querySelectorAll('tr');
-                rows.forEach((row, rowIndex) => {
-                    const cells = row.cells;
-                    if (cells.length > 0) {
-                        if (cells[1]) {
-                            const dateValue = cells[1].textContent.trim();
-                            cells[1].textContent = formatIndianDate(dateValue);
-                        }
-                        if (cells[6]) {
-                            const billDateValue = cells[6].textContent.trim();
-                            cells[6].textContent = formatIndianDate(billDateValue);
-                        }
-                    }
-                });
-
-                const wb = XLSX.utils.table_to_book(tableClone, {
-                    sheet: "Aging Report",
-                    raw: false,
-                    cellDates: false
-                });
-                
-                const ws = wb.Sheets["Aging Report"];
-                
-                ws['!cols'] = [
-                    {wch: 8}, {wch: 12}, {wch: 15}, {wch: 25}, {wch: 20},
-                    {wch: 15}, {wch: 12}, {wch: 18}, {wch: 12}
-                ];
-
-                const range = XLSX.utils.decode_range(ws['!ref']);
-                for (let row = range.s.r + 1; row <= range.e.r; row++) {
-                    const amountCell = XLSX.utils.encode_cell({r: row, c: 7});
-                    if (ws[amountCell] && ws[amountCell].t === 's') {
-                        const value = ws[amountCell].v.replace(/[₹,]/g, '').trim();
-                        if (!isNaN(value) && value !== '' && value !== '-') {
-                            ws[amountCell].v = parseFloat(value);
-                            ws[amountCell].t = 'n';
-                            ws[amountCell].z = '₹#,##0';
-                        }
-                    }
-                    
-                    const dateCell = XLSX.utils.encode_cell({r: row, c: 1});
-                    const billDateCell = XLSX.utils.encode_cell({r: row, c: 6});
-                    
-                    if (ws[dateCell]) ws[dateCell].z = '@';
-                    if (ws[billDateCell]) ws[billDateCell].z = '@';
-                }
-
-                const title = 'AGING DASHBOARD REPORT';
-                const currentDate = getCurrentIndianDate();
-                
-                XLSX.utils.sheet_add_aoa(ws, [[title]], {origin: 'A1'});
-                XLSX.utils.sheet_add_aoa(ws, [['Generated on: ' + currentDate]], {origin: 'A2'});
-                XLSX.utils.sheet_add_aoa(ws, [['']], {origin: 'A3'});
-                
-                const newRange = XLSX.utils.decode_range(ws['!ref']);
-                newRange.e.r += 3;
-                ws['!ref'] = XLSX.utils.encode_range(newRange);
-
-                const fileName = `Aging_Dashboard_${getCurrentIndianDate().replace(/\//g, '-')}.xlsx`;
-                XLSX.writeFile(wb, fileName);
-                
-                showNotification('Excel file exported successfully', 'success');
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                showNotification('Error exporting Excel file. Please try again.', 'error');
-            }
-        }
-
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg z-50 transition-all duration-300 ${bgColor} text-white`;
-            notification.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width-2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path>
-                    </svg>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
-            }, 4000);
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Excel export shortcut
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-                e.preventDefault();
-                exportToExcel();
-            }
-            
-            // Table focus shortcut
-            if ((e.ctrlKey || e.metaKey) && e.key === 't') {
-                e.preventDefault();
-                const table = document.getElementById('ageingTable');
-                if (table && window.innerWidth >= 1024) {
-                    table.focus();
-                }
-            }
         });
     </script>
+
+
+    <script>
+    // Table Navigation Variables
+    let currentRow = -1;
+    let currentCol = -1;
+    let maxRows = 0;
+    let maxCols = 9;
+    let navigationActive = false;
+
+    // Mobile filter toggle function
+    function toggleFilters() {
+        const filtersContainer = document.getElementById('filtersContainer');
+        const filterToggle = document.getElementById('filterToggle');
+        
+        if (filtersContainer.classList.contains('hidden')) {
+            filtersContainer.classList.remove('hidden');
+            filtersContainer.classList.add('block');
+            filterToggle.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            `;
+        } else {
+            filtersContainer.classList.add('hidden');
+            filtersContainer.classList.remove('block');
+            filterToggle.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                </svg>
+            `;
+        }
+    }
+
+    // Submit form function for filters
+    function submitForm() {
+        document.getElementById('filterForm').submit();
+    }
+
+    // Clear filters function
+    function clearFilters() {
+        const form = document.getElementById('filterForm');
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (input.type === 'date') {
+                input.value = '';
+            } else {
+                input.selectedIndex = 0;
+            }
+        });
+        form.submit();
+    }
+
+    // ✅ Updated Risk filtering function (for clickable cards)
+    function filterRiskData(type) {
+        const tableRows = document.querySelectorAll('#ageingTable tbody tr[data-aging]');
+        const mobileCards = document.querySelectorAll('.block.lg\\:hidden > div[data-aging]');
+        
+        // Remove highlight ring from all
+        document.querySelectorAll('.grid > div').forEach(div => div.classList.remove('ring', 'ring-offset-2', 'ring-blue-400'));
+        
+        // Highlight selected filter
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('ring', 'ring-offset-2', 'ring-blue-400');
+        }
+
+        // Apply filtering logic
+        tableRows.forEach(row => {
+            const aging = parseInt(row.getAttribute('data-aging')) || 0;
+            let show = false;
+            
+            switch(type) {
+                case 'normal':
+                    show = aging <= 2;
+                    break;
+                case 'risk':
+                    show = aging >= 3 && aging <= 5;
+                    break;
+                case 'high_risk':
+                    show = aging > 5;
+                    break;
+                default:
+                    show = true;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+
+        mobileCards.forEach(card => {
+            const aging = parseInt(card.getAttribute('data-aging')) || 0;
+            let show = false;
+            
+            switch(type) {
+                case 'normal':
+                    show = aging <= 2;
+                    break;
+                case 'risk':
+                    show = aging >= 3 && aging <= 5;
+                    break;
+                case 'high_risk':
+                    show = aging > 5;
+                    break;
+                default:
+                    show = true;
+            }
+            
+            card.style.display = show ? '' : 'none';
+        });
+    }
+
+    // Cell Navigation Functions
+    function initializeTableNavigation() {
+        const table = document.getElementById('ageingTable');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        maxRows = 0;
+        rows.forEach(row => {
+            if (row.cells && row.cells.length > 1 && !row.cells[0].textContent.includes('No records found')) {
+                maxRows++;
+            }
+        });
+
+        table.addEventListener('keydown', handleTableKeyNavigation);
+        table.addEventListener('click', handleTableClick);
+        table.addEventListener('focus', handleTableFocus);
+        
+        rows.forEach((row, rowIndex) => {
+            if (row.cells && row.cells.length > 1 && !row.cells[0].textContent.includes('No records found')) {
+                Array.from(row.cells).forEach((cell, colIndex) => {
+                    cell.addEventListener('click', () => {
+                        selectCell(rowIndex, colIndex);
+                    });
+                });
+            }
+        });
+    }
+
+    function handleTableFocus() {
+        showNavigationIndicator();
+        if (currentRow === -1 && currentCol === -1 && maxRows > 0) {
+            selectCell(0, 0);
+        }
+    }
+
+    function handleTableClick(e) {
+        if (e.target.tagName === 'TD') {
+            const row = e.target.parentElement;
+            const rowIndex = parseInt(row.getAttribute('data-row'));
+            const colIndex = parseInt(e.target.getAttribute('data-col'));
+            
+            if (!isNaN(rowIndex) && !isNaN(colIndex)) {
+                selectCell(rowIndex, colIndex);
+            }
+        }
+    }
+
+    function handleTableKeyNavigation(e) {
+        if (!navigationActive && maxRows === 0) return;
+
+        const keyCode = e.keyCode || e.which;
+        
+        switch(keyCode) {
+            case 37: e.preventDefault(); navigateLeft(); break;
+            case 38: e.preventDefault(); navigateUp(); break;
+            case 39: e.preventDefault(); navigateRight(); break;
+            case 40: e.preventDefault(); navigateDown(); break;
+            case 13: e.preventDefault();
+                if (currentRow === -1 && currentCol === -1) selectCell(0, 0);
+                else focusCurrentCell();
+                break;
+            case 27: e.preventDefault(); clearCellSelection(); break;
+            case 9:
+                if (!navigationActive) return;
+                e.preventDefault();
+                e.shiftKey ? navigateLeft() : navigateRight();
+                break;
+        }
+    }
+
+    function selectCell(row, col) {
+        if (row < 0 || row >= maxRows || col < 0 || col >= maxCols) return;
+
+        clearCellSelection();
+
+        currentRow = row;
+        currentCol = col;
+        navigationActive = true;
+
+        const cell = getCellElement(row, col);
+        if (cell) {
+            cell.classList.add('table-cell-selected');
+            scrollToCellIfNeeded(cell);
+            showNavigationIndicator();
+        }
+    }
+
+    function clearCellSelection() {
+        const table = document.getElementById('ageingTable');
+        if (table) {
+            const selectedCells = table.querySelectorAll('.table-cell-selected');
+            selectedCells.forEach(cell => cell.classList.remove('table-cell-selected'));
+        }
+        currentRow = -1;
+        currentCol = -1;
+        navigationActive = false;
+        hideNavigationIndicator();
+    }
+
+    function getCellElement(row, col) {
+        const table = document.getElementById('ageingTable');
+        if (!table) return null;
+
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        let actualRowIndex = 0;
+        for (let i = 0; i < rows.length; i++) {
+            const currentRow = rows[i];
+            if (currentRow.cells && currentRow.cells.length > 1 && !currentRow.cells[0].textContent.includes('No records found')) {
+                if (actualRowIndex === row) {
+                    return currentRow.cells[col];
+                }
+                actualRowIndex++;
+            }
+        }
+        return null;
+    }
+
+    function navigateUp() { if (currentRow > 0) selectCell(currentRow - 1, currentCol); }
+    function navigateDown() { if (currentRow < maxRows - 1) selectCell(currentRow + 1, currentCol); }
+    function navigateLeft() {
+        if (currentCol > 0) selectCell(currentRow, currentCol - 1);
+        else if (currentRow > 0) selectCell(currentRow - 1, maxCols - 1);
+    }
+    function navigateRight() {
+        if (currentCol < maxCols - 1) selectCell(currentRow, currentCol + 1);
+        else if (currentRow < maxRows - 1) selectCell(currentRow + 1, 0);
+    }
+
+    function focusCurrentCell() {
+        const cell = getCellElement(currentRow, currentCol);
+        if (cell) cell.focus();
+    }
+
+    function scrollToCellIfNeeded(cell) {
+        const tableContainer = cell.closest('.overflow-x-auto');
+        if (!tableContainer) return;
+
+        const containerRect = tableContainer.getBoundingClientRect();
+        const cellRect = cell.getBoundingClientRect();
+
+        if (cellRect.top < containerRect.top || cellRect.bottom > containerRect.bottom) {
+            cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }
+
+        if (cellRect.left < containerRect.left || cellRect.right > containerRect.right) {
+            cell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+
+    function showNavigationIndicator() {
+        const indicator = document.getElementById('navigationIndicator');
+        if (indicator && window.innerWidth >= 1024) {
+            indicator.classList.add('show');
+            clearTimeout(window.indicatorTimeout);
+            window.indicatorTimeout = setTimeout(() => hideNavigationIndicator(), 3000);
+        }
+    }
+
+    function hideNavigationIndicator() {
+        const indicator = document.getElementById('navigationIndicator');
+        if (indicator) {
+            indicator.classList.remove('show');
+            clearTimeout(window.indicatorTimeout);
+        }
+    }
+
+    // Format date in Indian format (DD/MM/YYYY)
+    function formatIndianDate(date) {
+        if (!date) return '';
+        
+        let day, month, year;
+        if (date instanceof Date) {
+            day = date.getDate().toString().padStart(2, '0');
+            month = (date.getMonth() + 1).toString().padStart(2, '0');
+            year = date.getFullYear();
+        } else {
+            const dateStr = date.toString();
+            if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) return dateStr;
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) {
+                day = parsedDate.getDate().toString().padStart(2, '0');
+                month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+                year = parsedDate.getFullYear();
+            } else return dateStr;
+        }
+        return `${day}/${month}/${year}`;
+    }
+
+    function getCurrentIndianDate() {
+        const today = new Date();
+        return formatIndianDate(today);
+    }
+
+    function calculateStats() {
+        const table = document.getElementById('ageingTable');
+        let validRows = 0;
+        let normalCount = 0;
+        let riskCount = 0;
+        let highRiskCount = 0;
+        
+        const mobileCards = document.querySelectorAll('.block.lg\\:hidden > div[data-aging]');
+        
+        if (window.innerWidth < 1024) {
+            mobileCards.forEach(card => {
+                if (card.querySelector('.font-semibold.text-gray-900.text-sm')) {
+                    validRows++;
+                    const aging = parseInt(card.getAttribute('data-aging')) || 0;
+                    if (aging <= 2) normalCount++;
+                    else if (aging <= 5) riskCount++;
+                    else highRiskCount++;
+                }
+            });
+        } else if (table) {
+            const rows = table.querySelectorAll('tbody tr[data-aging]');
+            rows.forEach(row => {
+                if (row.cells && row.cells.length > 8 && !row.cells[0].textContent.includes('No records found')) {
+                    validRows++;
+                    const aging = parseInt(row.getAttribute('data-aging')) || 0;
+                    if (aging <= 2) normalCount++;
+                    else if (aging <= 5) riskCount++;
+                    else highRiskCount++;
+                }
+            });
+        }
+
+        document.getElementById('totalBillsCount').textContent = validRows;
+        document.getElementById('normalCount').textContent = normalCount;
+        document.getElementById('riskCount').textContent = riskCount;
+        document.getElementById('highRiskCount').textContent = highRiskCount;
+    }
+
+    // Export to Excel function
+    function exportToExcel() {
+        try {
+            const table = document.getElementById('ageingTable');
+            const tableClone = table.cloneNode(true);
+            const selectedCells = tableClone.querySelectorAll('.table-cell-selected');
+            selectedCells.forEach(cell => cell.classList.remove('table-cell-selected'));
+            
+            const rows = tableClone.querySelectorAll('tr');
+            rows.forEach((row) => {
+                const cells = row.cells;
+                if (cells.length > 0) {
+                    if (cells[1]) cells[1].textContent = formatIndianDate(cells[1].textContent.trim());
+                    if (cells[6]) cells[6].textContent = formatIndianDate(cells[6].textContent.trim());
+                }
+            });
+
+            const wb = XLSX.utils.table_to_book(tableClone, { sheet: "Aging Report", raw: false });
+            const ws = wb.Sheets["Aging Report"];
+            ws['!cols'] = [
+                {wch: 8}, {wch: 12}, {wch: 15}, {wch: 25}, {wch: 20},
+                {wch: 15}, {wch: 12}, {wch: 18}, {wch: 12}
+            ];
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let row = range.s.r + 1; row <= range.e.r; row++) {
+                const amountCell = XLSX.utils.encode_cell({r: row, c: 7});
+                if (ws[amountCell] && ws[amountCell].t === 's') {
+                    const value = ws[amountCell].v.replace(/[₹,]/g, '').trim();
+                    if (!isNaN(value) && value !== '' && value !== '-') {
+                        ws[amountCell].v = parseFloat(value);
+                        ws[amountCell].t = 'n';
+                        ws[amountCell].z = '₹#,##0';
+                    }
+                }
+            }
+
+            XLSX.utils.sheet_add_aoa(ws, [['AGING DASHBOARD REPORT']], {origin: 'A1'});
+            XLSX.utils.sheet_add_aoa(ws, [['Generated on: ' + getCurrentIndianDate()]], {origin: 'A2'});
+            XLSX.utils.sheet_add_aoa(ws, [['']], {origin: 'A3'});
+
+            const newRange = XLSX.utils.decode_range(ws['!ref']);
+            newRange.e.r += 3;
+            ws['!ref'] = XLSX.utils.encode_range(newRange);
+
+            const fileName = `Aging_Dashboard_${getCurrentIndianDate().replace(/\//g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            showNotification('Excel file exported successfully', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            showNotification('Error exporting Excel file. Please try again.', 'error');
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg z-50 transition-all duration-300 ${bgColor} text-white`;
+        notification.innerHTML = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path>
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateStats();
+        document.getElementById('currentDate').textContent = getCurrentIndianDate();
+        initializeTableNavigation();
+        filterRiskData('all'); // Show all by default
+    });
+
+    // Recalculate stats on window resize
+    window.addEventListener('resize', function() {
+        calculateStats();
+        clearCellSelection();
+    });
+
+    document.addEventListener('click', function(e) {
+        const table = document.getElementById('ageingTable');
+        if (table && !table.contains(e.target)) clearCellSelection();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            e.preventDefault();
+            exportToExcel();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+            e.preventDefault();
+            const table = document.getElementById('ageingTable');
+            if (table && window.innerWidth >= 1024) table.focus();
+        }
+    });
+</script>
 </div>
 
 {% endblock %}

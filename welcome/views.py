@@ -6,7 +6,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+<<<<<<< HEAD
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
+=======
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a
 import json
 import pandas as pd
 import numpy as np
@@ -496,6 +500,7 @@ def Allotpen1(request):
     return render(request, "powerbi/Allotpen.html")
 
 
+<<<<<<< HEAD
 def non_pandas(request):
     queryset = EmpAttendanceFact.objects.using('demo1').values()
     # Modify image paths
@@ -513,3 +518,23 @@ def non_pandas(request):
 
 def non_pandas_1(request):
     return render(request, "powerbi/non_pandas_1.html")
+=======
+def Ordsampst(request):
+    queryset = OrdSampleStatus.objects.using('demo1').values()
+
+    for obj in queryset:
+        raw_path = obj['image'] if obj.get('image') else None
+        if raw_path:
+            filename = raw_path.split('\\')[-1]
+            obj['image'] = f"https://app.herofashion.com/all_image/{filename}"
+        else:
+            obj['image'] = ""
+
+    df = pd.DataFrame.from_records(queryset)
+    data = df.to_dict(orient='records')
+    return JsonResponse(data, safe=False)
+
+
+def Ordsampst1(request):
+    return render(request, "powerbi/ordsamst.html")
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a

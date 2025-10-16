@@ -54,8 +54,13 @@ urlpatterns = [
     path('server10/', views.server10, name='server10'),
     path('api/login/', views.login_api, name='api_login'),
     path('sample_data/', views.sample_data, name='sample_data'),
+<<<<<<< HEAD
     path('non_pandas/', views.non_pandas, name='non_pandas'),
     path('non_pandas_1/', views.non_pandas_1, name='non_pandas_1'),
+=======
+    path('Ordsampst/', views.Ordsampst, name='Ordsampst'),
+    path('Ordsampst1/', views.Ordsampst1, name='Ordsampst'),
+>>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a
     
 ]
 
