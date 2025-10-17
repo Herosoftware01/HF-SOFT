@@ -446,6 +446,10 @@ class AllotPen(models.Model):
 
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8
 class PrintNew(models.Model):
     jobno_joint = models.CharField(db_column='Jobno Joint', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS',primary_key=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     prnclr = models.CharField(max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
@@ -535,6 +539,8 @@ class OrdSampleStatus(models.Model):
     class Meta:
         managed = False
         db_table = 'Ord_Sample_status'
+<<<<<<< HEAD
+=======
 
 
 
@@ -640,3 +646,4 @@ class OrdSampleStatus1(models.Model):
 
 
 
+>>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8
