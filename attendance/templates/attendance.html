@@ -8,6 +8,15 @@
 {% block content %}
 
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inder&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&family=Play:wght@400;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
   <style>
     .sunday-row {
       background-color: #fee2e2 !important; /* Light red background */
@@ -27,7 +36,7 @@
       <h1 class="text-2xl font-bold text-gray-500">📊 ATTENDANCE DASHBOARD</h1>
  
       <form method="get" class="flex gap-3 items-center" id="filterForm">
-        <label>UNIT:</label>
+        <label for="unitSelect" class="font-semibold whitespace-nowrap">UNIT:</label>
         <select name="dept" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
           <option value="ALL" {% if unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
           <option value="CUTTING" {% if unit == 'CUTTING' %}selected{% endif %}>CUTTING</option>
@@ -35,32 +44,29 @@
           <option value="UNIT-2" {% if unit == 'UNIT-2' %}selected{% endif %}>UNIT 2</option>
           <option value="UNIT-3" {% if unit == 'UNIT-3' %}selected{% endif %}>UNIT 3</option>
           <option value="UNIT-4" {% if unit == 'UNIT-4' %}selected{% endif %}>UNIT 4</option>
-          <option value="Training Instutite" {% if unit == 'Training Instutite' %}selected{% endif %}>UNIT 5</option>
+          <option value="Training Instutite" {% if unit == 'UNIT-5' %}selected{% endif %}>UNIT 5</option>
         </select>
 
-        <label>From:</label>
+        <label class="font-semibold">From:</label>
         <input type="date" name="startDate" value="{{ default_start }}" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
 
-        <label>To:</label>
+        <label class="font-semibold">To:</label>
         <input type="date" name="endDate" value="{{ default_end }}" class="p-2 rounded-lg border-2 border-gray-700" onchange="submitForm()">
 
-        <button type="button" onclick="setDateRange(1)" class="bg-green-500 text-white px-3 py-2 rounded-lg text-sm">1</button>
-        <button type="button" onclick="setDateRange(6)" class="bg-orange-500 text-white px-3 py-2 rounded-lg text-sm">6</button>
-        <button type="button" onclick="clearFilters()" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm">Clear</button>
-        <a href="{% url 'attendance:oneday' %}" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm">One</a>
-        
-        
-        
+        <button type="button" onclick="setDateRange(1)" class="bg-[#696FC7] text-white px-3 py-2 rounded-lg shadow-xl shadow-gray-400 text-sm">1 M</button>
+        <button type="button" onclick="setDateRange(6)" class="bg-[#0BA6DF] text-white px-3 py-2 rounded-lg shadow-xl shadow-gray-400 text-sm">6 M</button>
+        <button type="button" onclick="clearFilters()" class="bg-red-500 text-white px-3 py-2 rounded-lg shadow-xl shadow-gray-400 text-sm">Clear</button>        
+        <a href="{% url 'oneday' %}" class="bg-blue-500 text-white px-3 py-2 rounded-lg shadow-xl shadow-gray-400 text-sm">TODAY</a>
       </form>
     </div>
 
-    <!-- Table + Chart -->
-    <div class="grid grid-cols-2 gap-6">
-      <div class="p-4 shadow-lg rounded-2xl bg-white">
+    <!-- Table + Chart Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="p-4 shadow-lg rounded-2xl bg-white flex flex-col min-h-[400px] shadow-xl shadow-gray-400">
         <h2 class="text-lg font-bold mb-2 font-[Orbitron] text-center" id="tableTitle">ATTENDANCE {{ unit }}</h2>
         <div class="overflow-y-auto max-h-96">
           <table class="table-auto border-collapse border border-separate border-spacing-0 w-full text-sm text-center" id="attendanceTable">
-            <thead class="sticky top-0 ">
+            <thead class="sticky top-0">
               <tr class="bg-[#D9EAF7]">
                 <th rowspan="2" class="border border-gray-700 px-4 py-2">DATE</th>
                 <th rowspan="2" class="border border-gray-700 px-4 py-2">ONROLL EMP</th>
@@ -80,13 +86,9 @@
                 <td class="border border-gray-300 px-4 py-2 font-semibold date-cell">{{ row.date }}</td>
                 <td class="border border-gray-300 px-4 py-2 font-semibold text-blue-600">{{ row.total }}</td>
                 <td class="border border-gray-300 px-4 py-2 text-green-600 font-semibold">{{ row.present }}</td>
-                <td class="border border-gray-300 px-4 py-2 text-green-600">
-                  {{ row.present_pct }} %
-                </td>
+                <td class="border border-gray-300 px-4 py-2 text-green-600">{{ row.present_pct }}%</td>
                 <td class="border border-gray-300 px-4 py-2 text-red-600 font-semibold">{{ row.absent }}</td>
-                <td class="border border-gray-300 px-4 py-2 text-red-600">
-                  {{ row.absent_pct }} %
-                </td>
+                <td class="border border-gray-300 px-4 py-2 text-red-600">{{ row.absent_pct }}%</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -95,49 +97,272 @@
       </div>
 
       <!-- total Chart -->
-      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter] flex flex-col justify-center min-h-[400px] shadow-xl shadow-gray-400">
         <h2 class="text-lg font-bold mb-2 text-center">ONROLL</h2>
-        <div class="relative w-full h-[300px]">
+        <div class="flex justify-center items-center w-full h-[300px]">
           <canvas id="totalChart"></canvas>
+        </div>
+        <!-- Chart Controls -->
+        <div class="mt-4 flex flex-wrap justify-center gap-2" id="totalChartControls">
+          <button onclick="toggleDataset('totalChart', 0)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="0">
+            <span class="w-3 h-3 bg-blue-500 rounded mr-2"></span>Total
+          </button>
+          <button onclick="toggleDataset('totalChart', 1)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="1">
+            <span class="w-3 h-3 bg-blue-600 rounded mr-2"></span>Total Line
+          </button>
+          <button onclick="toggleDataset('totalChart', 2)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="2">
+            <span class="w-3 h-3 bg-orange-500 rounded mr-2"></span>Tailor
+          </button>
+          <button onclick="toggleDataset('totalChart', 3)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="3">
+            <span class="w-3 h-3 bg-purple-500 rounded mr-2"></span>Non Tailor
+          </button>
+          <button onclick="toggleDataset('totalChart', 4)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="4">
+            <span class="w-3 h-3 bg-orange-600 rounded mr-2"></span>Tailor Line
+          </button>
+          <button onclick="toggleDataset('totalChart', 5)" class="chart-toggle-btn" data-chart="totalChart" data-dataset="5">
+            <span class="w-3 h-3 bg-purple-600 rounded mr-2"></span>Non Tailor Line
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Present & Absent Graphs -->
-    <div class="grid grid-cols-2 gap-6">
-      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
+    <!-- Present & Absent Graph Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter] flex flex-col justify-center min-h-[400px] shadow-xl shadow-gray-400">
         <h2 class="text-lg font-bold mb-2 text-center">PRESENT</h2>
-        <div class="relative w-full h-[300px]">
+        <div class="flex justify-center items-center w-full h-[300px]">
           <canvas id="presentChart"></canvas>
         </div>
+        <!-- Chart Controls -->
+        <div class="mt-4 flex flex-wrap justify-center gap-2" id="presentChartControls">
+          <button onclick="toggleDataset('presentChart', 0)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="0">
+            <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>Present
+          </button>
+          <button onclick="toggleDataset('presentChart', 1)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="1">
+            <span class="w-3 h-3 bg-green-600 rounded mr-2"></span>Present Line
+          </button>
+          <button onclick="toggleDataset('presentChart', 2)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="2">
+            <span class="w-3 h-3 bg-orange-500 rounded mr-2"></span>Tailor
+          </button>
+          <button onclick="toggleDataset('presentChart', 3)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="3">
+            <span class="w-3 h-3 bg-purple-500 rounded mr-2"></span>Non Tailor
+          </button>
+          <button onclick="toggleDataset('presentChart', 4)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="4">
+            <span class="w-3 h-3 bg-orange-600 rounded mr-2"></span>Tailor Line
+          </button>
+          <button onclick="toggleDataset('presentChart', 5)" class="chart-toggle-btn" data-chart="presentChart" data-dataset="5">
+            <span class="w-3 h-3 bg-purple-600 rounded mr-2"></span>Non Tailor Line
+          </button>
+        </div>
       </div>
-      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter]">
-        <h2 class="text-lg font-bold mb-2 text-center ">ABSENT</h2>
-        <div class="relative w-full h-[300px]">
+      
+      <div class="p-4 shadow-lg rounded-2xl bg-white font-[Inter] flex flex-col justify-center min-h-[400px] shadow-xl shadow-gray-400">
+        <h2 class="text-lg font-bold mb-2 text-center">ABSENT</h2>
+        <div class="flex justify-center items-center w-full h-[300px]">
           <canvas id="absentChart"></canvas>
+        </div>
+        <!-- Chart Controls -->
+        <div class="mt-4 flex flex-wrap justify-center gap-2" id="absentChartControls">
+          <button onclick="toggleDataset('absentChart', 0)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="0">
+            <span class="w-3 h-3 bg-red-500 rounded mr-2"></span>Absent
+          </button>
+          <button onclick="toggleDataset('absentChart', 1)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="1">
+            <span class="w-3 h-3 bg-red-600 rounded mr-2"></span>Absent Line
+          </button>
+          <button onclick="toggleDataset('absentChart', 2)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="2">
+            <span class="w-3 h-3 bg-orange-500 rounded mr-2"></span>Tailor
+          </button>
+          <button onclick="toggleDataset('absentChart', 3)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="3">
+            <span class="w-3 h-3 bg-purple-500 rounded mr-2"></span>Non Tailor
+          </button>
+          <button onclick="toggleDataset('absentChart', 4)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="4">
+            <span class="w-3 h-3 bg-orange-600 rounded mr-2"></span>Tailor Line
+          </button>
+          <button onclick="toggleDataset('absentChart', 5)" class="chart-toggle-btn" data-chart="absentChart" data-dataset="5">
+            <span class="w-3 h-3 bg-purple-600 rounded mr-2"></span>Non Tailor Line
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Combined Graph -->
-    <div class="p-4 mt-4 shadow-lg rounded-2xl bg-white font-[Inter]">
-      <h2 class="text-lg font-bold mb-2 text-center">COMBINED ATTENDANCE</h2>
-      <div class="relative w-full h-[400px]">
+    <div class="p-4 mt-4 shadow-lg rounded-2xl bg-white font-[Inter] shadow-xl shadow-gray-400">
+      <h2 class="text-lg font-bold mb-2 text-center">COMBINED ATTENDANCE WITH TRENDS</h2>
+      <div class="flex justify-center items-center w-full h-[400px]">
         <canvas id="combinedChart"></canvas>
+      </div>
+      <!-- Chart Controls -->
+      <div class="mt-4 flex flex-wrap justify-center gap-2" id="combinedChartControls">
+        <button onclick="toggleDataset('combinedChart', 0)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="0">
+          <span class="w-3 h-3 bg-blue-500 rounded mr-2"></span>Total
+        </button>
+        <button onclick="toggleDataset('combinedChart', 1)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="1">
+          <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>Present
+        </button>
+        <button onclick="toggleDataset('combinedChart', 2)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="2">
+          <span class="w-3 h-3 bg-red-500 rounded mr-2"></span>Absent
+        </button>
+        <button onclick="toggleDataset('combinedChart', 3)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="3">
+          <span class="w-3 h-3 bg-orange-500 rounded mr-2"></span>Tailor
+        </button>
+        <button onclick="toggleDataset('combinedChart', 4)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="4">
+          <span class="w-3 h-3 bg-purple-500 rounded mr-2"></span>Non Tailor
+        </button>
+        <button onclick="toggleDataset('combinedChart', 5)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="5">
+          <span class="w-3 h-3 bg-blue-600 rounded mr-2"></span>Total Trend
+        </button>
+        <button onclick="toggleDataset('combinedChart', 6)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="6">
+          <span class="w-3 h-3 bg-green-600 rounded mr-2"></span>Present Trend
+        </button>
+        <button onclick="toggleDataset('combinedChart', 7)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="7">
+          <span class="w-3 h-3 bg-red-600 rounded mr-2"></span>Absent Trend
+        </button>
+        <button onclick="toggleDataset('combinedChart', 8)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="8">
+          <span class="w-3 h-3 bg-orange-600 rounded mr-2"></span>Tailor Trend
+        </button>
+        <button onclick="toggleDataset('combinedChart', 9)" class="chart-toggle-btn" data-chart="combinedChart" data-dataset="9">
+          <span class="w-3 h-3 bg-purple-600 rounded mr-2"></span>Non Tailor Trend
+        </button>
       </div>
     </div>
   </div>
 
 <script>
-  // Helper function to format date properly
-  function formatDate(date) {
+  // Store chart instances globally
+  let chartInstances = {};
+
+  // ===== HOLIDAY SYSTEM =====
+  // Indian Government Holidays 2025 - Gazetted (Mandatory) Holidays
+  const INDIAN_HOLIDAYS_2025 = {
+    // Format: 'YYYY-MM-DD': 'Holiday Name'
+    '2025-01-26': 'Republic Day',
+    '2025-02-26': 'Maha Shivaratri',
+    '2025-03-14': 'Holi',
+    '2025-03-31': 'Eid-ul-Fitr (Ramzan Id)',
+    '2025-04-10': 'Mahavir Jayanti',
+    '2025-04-14': 'Dr. B.R. Ambedkar Jayanti / Vaisakhi',
+    '2025-04-18': 'Good Friday',
+    '2025-05-01': 'May Day / Maharashtra Day',
+    '2025-05-12': 'Buddha Purnima',
+    '2025-06-07': 'Eid al-Adha (Bakrid)',
+    '2025-07-06': 'Muharram',
+    '2025-08-15': 'Independence Day',
+    '2025-08-16': 'Janmashtami',
+    '2025-09-05': 'Milad-un-Nabi',
+    '2025-10-02': 'Mahatma Gandhi Jayanti',
+    '2025-10-20': 'Diwali / Deepavali',
+    '2025-11-05': 'Guru Nanak Jayanti',
+    '2025-12-25': 'Christmas Day'
+  };
+
+  // Optional/Restricted Holidays (you can enable these if needed)
+  const INDIAN_RESTRICTED_HOLIDAYS_2025 = {
+    '2025-01-01': 'New Year\'s Day',
+    '2025-01-06': 'Guru Gobind Singh\'s Birthday',
+    '2025-01-14': 'Makar Sankranti / Pongal',
+    '2025-02-02': 'Basant Panchami',
+    '2025-02-12': 'Guru Ravi Das\'s Birthday',
+    '2025-02-19': 'Shivaji Jayanti',
+    '2025-03-13': 'Holika Dahan',
+    '2025-04-06': 'Ram Navami',
+    '2025-04-20': 'Easter Sunday',
+    '2025-05-09': 'Rabindranath Tagore\'s Birthday',
+    '2025-06-27': 'Rath Yatra',
+    '2025-08-09': 'Raksha Bandhan',
+    '2025-08-27': 'Ganesh Chaturthi',
+    '2025-09-05': 'Onam',
+    '2025-10-07': 'Maharishi Valmiki\'s Birthday',
+    '2025-10-10': 'Karva Chauth',
+    '2025-10-22': 'Govardhan Puja',
+    '2025-10-23': 'Bhai Duj',
+    '2025-10-28': 'Chhath Puja',
+    '2025-11-24': 'Guru Tegh Bahadur\'s Martyrdom Day',
+    '2025-12-24': 'Christmas Eve'
+  };
+
+  // Holiday utility functions
+  function isHoliday(dateString) {
+    const date = normalizeDate(dateString);
+    return INDIAN_HOLIDAYS_2025.hasOwnProperty(date);
+  }
+
+  function isRestrictedHoliday(dateString) {
+    const date = normalizeDate(dateString);
+    return INDIAN_RESTRICTED_HOLIDAYS_2025.hasOwnProperty(date);
+  }
+
+  function getHolidayName(dateString) {
+    const date = normalizeDate(dateString);
+    return INDIAN_HOLIDAYS_2025[date] || INDIAN_RESTRICTED_HOLIDAYS_2025[date] || null;
+  }
+
+  function normalizeDate(dateString) {
+    // Convert various date formats to YYYY-MM-DD
+    const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
-  // Convert date to Indian format (DD-MM-YYYY)
+  function isSunday(dateString) {
+    const date = new Date(dateString);
+    return date.getDay() === 0;
+  }
+
+  function isNonWorkingDay(dateString) {
+    return isSunday(dateString) || isHoliday(dateString);
+  }
+
+  // Toggle dataset visibility - FIXED VERSION
+  function toggleDataset(chartId, datasetIndex) {
+    const chart = chartInstances[chartId];
+    if (chart) {
+      // Use Chart.js API methods for proper visibility management
+      const isVisible = chart.isDatasetVisible(datasetIndex);
+      chart.setDatasetVisibility(datasetIndex, !isVisible);
+      chart.update();
+      
+      // Update button state based on actual chart state
+      const button = document.querySelector(`button[data-chart="${chartId}"][data-dataset="${datasetIndex}"]`);
+      if (button) {
+        if (!isVisible) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+      }
+    }
+  }
+
+  // Initialize button states based on chart dataset visibility
+  function initializeButtonStates() {
+    Object.keys(chartInstances).forEach(chartId => {
+      const chart = chartInstances[chartId];
+      if (chart) {
+        chart.data.datasets.forEach((dataset, index) => {
+          const button = document.querySelector(`button[data-chart="${chartId}"][data-dataset="${index}"]`);
+          if (button) {
+            const isVisible = chart.isDatasetVisible(index);
+            if (isVisible) {
+              button.classList.add('active');
+            } else {
+              button.classList.remove('active');
+            }
+          }
+        });
+      }
+    });
+  }
+
+  // Helper functions
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
   function formatDateToIndian(dateString) {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
@@ -145,305 +370,933 @@
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   }
-
-  // Check if a date is Sunday
-  function isSunday(dateString) {
-    const date = new Date(dateString);
-    return date.getDay() === 0; // Sunday = 0
-  }
-
-  // Calculate default Friday to Thursday range
+  
   function setDefaultDates() {
     const today = new Date();
-    const currentWeekday = today.getDay(); // Sunday=0, Monday=1, ..., Saturday=6
-    
-    // Calculate last Friday
+    const currentWeekday = today.getDay();
     let daysSinceLastFriday;
-    if (currentWeekday >= 5) { // Friday(5) or Saturday(6)
+    if (currentWeekday >= 5) {
       daysSinceLastFriday = currentWeekday - 5;
-    } else { // Sunday(0) to Thursday(4)
+    } else {
       daysSinceLastFriday = currentWeekday + 2;
     }
-    
     const lastFriday = new Date(today);
     lastFriday.setDate(today.getDate() - daysSinceLastFriday);
-    
-    // Calculate this Thursday
     let daysUntilThursday;
-    if (currentWeekday <= 4) { // Sunday(0) to Thursday(4)
+    if (currentWeekday <= 4) {
       daysUntilThursday = 4 - currentWeekday;
-    } else { // Friday(5) or Saturday(6)
-      daysUntilThursday = 11 - currentWeekday; // Next week's Thursday
+    } else {
+      daysUntilThursday = 11 - currentWeekday;
     }
-    
     const thisThursday = new Date(today);
     thisThursday.setDate(today.getDate() + daysUntilThursday);
-    
     return {
       startDate: formatDate(lastFriday),
       endDate: formatDate(thisThursday)
     };
   }
-
-  // Auto-submit form function
+  
   function submitForm() {
     document.getElementById('filterForm').submit();
   }
-
-  // Set date range function for 1 month and 6 months buttons
+  
   function setDateRange(months) {
     const today = new Date();
     const startDate = new Date(today);
     startDate.setMonth(today.getMonth() - months);
-    
     document.querySelector('input[name="startDate"]').value = formatDate(startDate);
     document.querySelector('input[name="endDate"]').value = formatDate(today);
-    
-    // Auto-submit after setting dates
     submitForm();
   }
-
-  // Clear filters function - Reset to Friday-Thursday range
+  
   function clearFilters() {
-    // Reset dropdown to first option (ALL)
     document.querySelector('select[name="dept"]').value = 'ALL';
-    
-    // Reset dates to default Friday-Thursday range
     const defaultDates = setDefaultDates();
     document.querySelector('input[name="startDate"]').value = defaultDates.startDate;
     document.querySelector('input[name="endDate"]').value = defaultDates.endDate;
-    
-    // Auto-submit after clearing
     submitForm();
   }
-
-  // Highlight Sunday rows in table
-  function highlightSundayRows() {
+  
+  // ENHANCED: Highlight both Sundays AND Holidays
+  function highlightSpecialRows() {
     const tableRows = document.querySelectorAll('#attendanceTable tbody tr');
     tableRows.forEach(row => {
       const dateCell = row.querySelector('.date-cell');
       if (dateCell) {
         const originalDate = dateCell.getAttribute('data-original-date');
-        if (originalDate && isSunday(originalDate)) {
-          row.classList.add('sunday-row');
+        if (originalDate) {
+          // Add Sunday highlighting
+          if (isSunday(originalDate)) {
+            row.classList.add('sunday-row');
+          }
+          
+          // Add Holiday highlighting
+          if (isHoliday(originalDate)) {
+            row.classList.add('holiday-row');
+            // Add holiday name as tooltip or additional info
+            const holidayName = getHolidayName(originalDate);
+            dateCell.setAttribute('title', `Holiday: ${holidayName}`);
+            dateCell.setAttribute('data-holiday', holidayName);
+          }
+          
+          // Add Restricted Holiday highlighting (optional)
+          if (isRestrictedHoliday(originalDate)) {
+            row.classList.add('restricted-holiday-row');
+            const holidayName = getHolidayName(originalDate);
+            dateCell.setAttribute('title', `Restricted Holiday: ${holidayName}`);
+          }
         }
       }
     });
   }
 
-  // Page load functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    // Set default dates if no dates are provided from backend
-    const startDateInput = document.querySelector('input[name="startDate"]');
-    const endDateInput = document.querySelector('input[name="endDate"]');
-    
-    // If backend doesn't provide dates, set Friday-Thursday defaults
-    if (!startDateInput.value || !endDateInput.value) {
-      const defaultDates = setDefaultDates();
-      startDateInput.value = defaultDates.startDate;
-      endDateInput.value = defaultDates.endDate;
-      submitForm(); // Auto-submit to load data
-    }
-    
-    // Convert table dates to Indian format and store original date
-    const dateCells = document.querySelectorAll('.date-cell');
-    dateCells.forEach(cell => {
-      const originalDate = cell.textContent.trim();
-      if (originalDate) {
-        cell.setAttribute('data-original-date', originalDate); // Store original date
-        cell.textContent = formatDateToIndian(originalDate);
-      }
-    });
+  const datalabelsConfig = {
+    color: "#000",
+    anchor: "end",
+    align: "top",
+    offset: 6,
+    font: { weight: "bold", size: 9 },
+    rotation: -90,
+    formatter: v => v
+  };
 
-    // Highlight Sunday rows
-    highlightSundayRows();
-
-    // Initialize charts after DOM is ready
-    initializeCharts();
-  });
-
-  // Initialize all charts with Sunday highlighting
-  function initializeCharts() {
-    const serverData = {{ data|safe }};
-    
-    // Handle empty data case
-    if (!serverData || serverData.length === 0) {
-      return;
-    }
-
-    const labels = serverData.map(item => formatDateToIndian(item.date));
-    const present = serverData.map(item => item.present);
-    const absent = serverData.map(item => item.absent);
-    const total = serverData.map(item => item.total);
-
-    // Create background colors array - red for Sundays, default for others
-    const backgroundColors = serverData.map(item => 
-      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(59,130,246,0.3)'
-    );
-    
-    const presentBackgroundColors = serverData.map(item => 
-      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(34,197,94,0.3)'
-    );
-    
-    const absentBackgroundColors = serverData.map(item => 
-      isSunday(item.date) ? 'rgba(239,68,68,0.7)' : 'rgba(239,68,68,0.3)'
-    );
-
-    // Create x-axis label colors - red for Sundays, default for others
-    const labelColors = serverData.map(item => 
-      isSunday(item.date) ? '#903794' : '#374151'
-    );
-
-    const datalabelsConfig = {
-      color: "#000", 
-      anchor: "end", 
-      align: "top",
-      offset: 6, 
-      font: { weight: "bold" }, 
-      formatter: v => v
-    };
-
-    // Common chart options with Sunday date label highlighting
-    const getChartOptions = () => ({
-      responsive: true, 
-      maintainAspectRatio: false, 
-      plugins: { datalabels: datalabelsConfig },
-      scales: {
-        x: {
-          ticks: {
-            color: function(context) {
-              return labelColors[context.index];
-            },
-            font: {
-              weight: function(context) {
-                return labelColors[context.index] === '#dc2626' ? 'bold' : 'normal';
+  // ENHANCED: Chart options with holiday highlighting
+  const getChartOptions = (serverData) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { 
+      datalabels: datalabelsConfig,
+      legend: {
+        display: false  // Hide legend since we have custom controls
+      },
+      tooltip: {
+        callbacks: {
+          // Add holiday information to tooltips
+          afterLabel: function(context) {
+            const dataIndex = context.dataIndex;
+            if (serverData && serverData[dataIndex]) {
+              const dateStr = serverData[dataIndex].date;
+              const holidayName = getHolidayName(dateStr);
+              if (holidayName) {
+                return `🎉 Holiday: ${holidayName}`;
+              }
+              if (isSunday(dateStr)) {
+                return '📅 Sunday';
               }
             }
-          }
-        },
-        y: {
-          ticks: {
-            color: '#374151'
+            return '';
           }
         }
       }
-    });
-
-    // Total Chart with Sunday highlighting (dates + data)
-    const totalChart = new Chart(document.getElementById("totalChart"), {
-      type: "line",
-      data: { 
-        labels, 
-        datasets: [{ 
-          label: "Total", 
-          data: total, 
-          borderColor: "blue", 
-          backgroundColor: backgroundColors,
-          pointBackgroundColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#3b82f6'
-          ),
-          pointBorderColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#3b82f6'
-          ),
-          pointRadius: 6,
-          fill: true 
-        }] 
+    },
+    scales: {
+      x: {
+        ticks: {
+          beginAtZero: true,
+          offset: 0,
+          color: function(context) {
+            // Highlight holiday and Sunday dates on x-axis
+            if (serverData && serverData[context.index]) {
+              const dateStr = serverData[context.index].date;
+              if (isHoliday(dateStr)) {
+                return '#EF7722'; // Red for holidays
+              }
+              if (isSunday(dateStr)) {
+                return '#9333ea'; // Purple for Sundays
+              }
+            }
+            return '#374151'; // Default color
+          },
+          font: { weight: "bold", size: 10, family: 'Poppins' }
+        },
+        grid: {
+          display: true,
+          color: function(context) {
+            // Highlight grid lines for holidays and Sundays
+            if (serverData && serverData[context.index]) {
+              const dateStr = serverData[context.index].date;
+              if (isHoliday(dateStr)) {
+                return '#fca5a5'; // Light red for holidays
+              }
+              if (isSunday(dateStr)) {
+                return '#c084fc'; // Light purple for Sundays
+              }
+            }
+            return '#F3F4F6'; // Default color
+          }
+        }
       },
-      options: getChartOptions(),
-      plugins: [ChartDataLabels]
-    });
+      y: { 
+        ticks: { 
+          color: '#374151', 
+          font: { size: 10 } 
+        },
+        grid: {
+          display: true,
+          color: '#F3F4F6'
+        }
+      }
+    }
+  });
 
-    // Present Chart with Sunday highlighting (dates + data)
-    const presentChart = new Chart(document.getElementById("presentChart"), {
-      type: "line",
-      data: { 
-        labels, 
-        datasets: [{ 
-          label: "Present", 
-          data: present, 
-          borderColor: "green", 
-          backgroundColor: presentBackgroundColors,
-          pointBackgroundColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#22c55e'
-          ),
-          pointBorderColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#22c55e'
-          ),
-          pointRadius: 6,
-          fill: true 
-        }] 
-      },
-      options: getChartOptions(),
-      plugins: [ChartDataLabels]
+  // ENHANCED: Dynamic background colors based on holidays
+  function getBackgroundColors(baseColor, filteredData) {
+    return filteredData.map((item, index) => {
+      if (isHoliday(item.date)) {
+        return 'rgba(239,68,68,0.6)'; // Red tint for holidays
+      }
+      return baseColor;
     });
+  }
 
-    // Absent Chart with Sunday highlighting (dates + data)
-    const absentChart = new Chart(document.getElementById("absentChart"), {
-      type: "line",
-      data: { 
-        labels, 
-        datasets: [{ 
-          label: "Absent", 
-          data: absent, 
-          borderColor: "red", 
-          backgroundColor: absentBackgroundColors,
-          pointBackgroundColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#ef4444'
-          ),
-          pointBorderColor: serverData.map(item => 
-            isSunday(item.date) ? '#903794' : '#ef4444'
-          ),
-          pointRadius: 6,
-          fill: true 
-        }] 
-      },
-      options: getChartOptions(),
-      plugins: [ChartDataLabels]
-    });
+  function initializeCharts() {
+    const serverData = {{ data|safe }};
+    console.log("Server data:", serverData);
+    
+    if (!serverData || serverData.length === 0) {
+      console.warn("No data available for charts");
+      return;
+    }
+    
+    const filteredData = serverData.filter(item => !isSunday(item.date));
+    const labels = filteredData.map(item => formatDateToIndian(item.date));
+    const total = filteredData.map(item => item.total || 0);
+    const tai_onr = filteredData.map(item => item.tail_onr || 0);
+    const ntail_onr = filteredData.map(item => item.ntail_onr || 0);  
+    const present = filteredData.map(item => item.present || 0);
+    const pre_tai = filteredData.map(item => item.tailor || 0);
+    const pre_ntai = filteredData.map(item => item.n_tailor || 0);
+    const absent = filteredData.map(item => item.absent || 0);
+    const abs_tai = filteredData.map(item => item.tabsent || 0);
+    const abs_ntai = filteredData.map(item => item.ntabsent || 0);  
+    const tailor = filteredData.map(item => item.tailor || 0);
+    const n_tailor = filteredData.map(item => item.n_tailor || 0);
 
-    // Combined Chart with Sunday highlighting (dates + data)
-    const combinedChart = new Chart(document.getElementById("combinedChart"), {
+    // ENHANCED: Dynamic background colors based on holidays
+    const backgroundColors = getBackgroundColors('rgba(59,130,246,0.4)', filteredData);
+    const presentBackgroundColors = getBackgroundColors('rgba(34,197,94,0.4)', filteredData);
+    const absentBackgroundColors = getBackgroundColors('rgba(239,68,68,0.4)', filteredData);
+    const tailorBackgroundColors = getBackgroundColors('rgba(249,115,22,0.4)', filteredData);
+    const nonTailorBackgroundColors = getBackgroundColors('rgba(168,85,247,0.4)', filteredData);
+
+    // Total Chart - only show Total by default
+    chartInstances.totalChart = new Chart(document.getElementById("totalChart"), {
       type: "bar",
       data: {
         labels,
         datasets: [
-          { 
-            label: "Total", 
-            data: total, 
-            backgroundColor: serverData.map(item => 
-              isSunday(item.date) ? 'rgb(185, 102, 131)' : 'rgba(59,130,246,0.5)'
-            ),
-            borderColor: serverData.map(item => 
-              isSunday(item.date) ? '#637AB9' : 'blue'
-            )
+          // Bar datasets
+          {
+            type: 'bar',
+            label: "Total",
+            data: total,
+            backgroundColor: backgroundColors,
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+            order: 4,
+            hidden: false,  // Show by default
+            datalabels:{
+              color: '#476EAE',
+              font: { weight: "bold", size: 10, family: 'Poppins' }
+            }
           },
-          { 
-            label: "Present", 
-            data: present, 
-            backgroundColor: serverData.map(item => 
-              isSunday(item.date) ? 'rgba(239,68,68,0.6)' : 'rgba(34,197,94,0.5)'
-            ),
-            borderColor: serverData.map(item => 
-              isSunday(item.date) ? '#637AB9' : 'green'
-            )
+          {
+            type: 'line',
+            label: "Total Line",
+            data: total,
+            borderColor: "#1e40af",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#1e40af',
+            pointBorderColor: '#1e40af',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 1,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
           },
-          { 
-            label: "Absent", 
-            data: absent, 
-            backgroundColor: serverData.map(item => 
-              isSunday(item.date) ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.5)'
-            ),
-            borderColor: serverData.map(item => 
-              isSunday(item.date) ? '#637AB9' : 'red'
-            )
+          {
+            type: 'bar',
+            label: "Tailor",
+            data: tai_onr,
+            backgroundColor: tailorBackgroundColors,
+            borderColor: '#f97316',
+            borderWidth: 1,
+            order: 5,
+             hidden: true,  // Hide by default
+            datalabels: { display: false }
           },
+          {
+            type: 'bar',
+            label: "Non Tailor",
+            data: ntail_onr,
+            backgroundColor: nonTailorBackgroundColors,
+            borderColor: '#a855f7',
+            borderWidth: 1,
+            order: 6,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'line',
+            label: "Tailor Line",
+            data: tai_onr,
+            borderColor: "#ea580c",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#ea580c',
+            pointBorderColor: '#ea580c',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 2,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#FF9013'
+            }
+          },
+          {
+            type: 'line',
+            label: "Non Tailor Line",
+            data: ntail_onr,
+            borderColor: "#7c3aed",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#7c3aed',
+            pointBorderColor: '#7c3aed',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 3,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#6E8CFB'
+            }
+          }
         ]
       },
-      options: getChartOptions(),
+      options: getChartOptions(filteredData),
       plugins: [ChartDataLabels]
     });
-}
+
+    // Present Chart - only show Present by default
+    chartInstances.presentChart = new Chart(document.getElementById("presentChart"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          // Bar datasets
+          {
+            type: 'bar',
+            label: "Present",
+            data: present,
+            backgroundColor: presentBackgroundColors,
+            borderColor: '#22c55e',
+            borderWidth: 1,
+            order: 4,
+            hidden: false , // Show by default
+            datalabels:{
+              color: '#3B9797',
+              font: { weight: "bold", size: 10, family: 'Poppins' }
+            }
+          },
+          {
+            type: 'line',
+            label: "Present Line",
+            data: present,
+            borderColor: "#15803d",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#15803d',
+            pointBorderColor: '#15803d',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 1,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'bar',
+            label: "Tailor",
+            data: pre_tai,
+            backgroundColor: tailorBackgroundColors,
+            borderColor: '#f97316',
+            borderWidth: 1,
+            order: 5,
+             hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'bar',
+            label: "Non Tailor",
+            data: pre_ntai,
+            backgroundColor: nonTailorBackgroundColors,
+            borderColor: '#a855f7',
+            borderWidth: 1,
+            order: 6,
+             hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'line',
+            label: "Tailor Line",
+            data: pre_tai,
+            borderColor: "#ea580c",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#ea580c',
+            pointBorderColor: '#ea580c',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 2,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#FF9013'
+            }
+          },
+          {
+            type: 'line',
+            label: "Non Tailor Line",
+            data: pre_ntai,
+            borderColor: "#7c3aed",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#7c3aed',
+            pointBorderColor: '#7c3aed',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 3,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#6E8CFB'
+            }
+          }
+        ]
+      },
+      options: getChartOptions(filteredData),
+      plugins: [ChartDataLabels]
+    });
+
+    // Absent Chart - only show Absent by default
+    chartInstances.absentChart = new Chart(document.getElementById("absentChart"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          // Bar datasets
+          {
+            type: 'bar',
+            label: "Absent",
+            data: absent,
+            backgroundColor: absentBackgroundColors,
+            borderColor: '#ef4444',
+            borderWidth: 1,
+            order: 4,
+            hidden: false,  // Show by default
+            datalabels:{
+              color: '#BF092F',
+              font: { weight: "bold", size: 10, family: 'Poppins' }
+            }
+          },
+          {
+            type: 'line',
+            label: "Absent Line",
+            data: absent,
+            borderColor: "#dc2626",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#dc2626',
+            pointBorderColor: '#dc2626',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 1,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'bar',
+            label: "Tailor",
+            data: abs_tai,
+            backgroundColor: tailorBackgroundColors,
+            borderColor: '#f97316',
+            borderWidth: 1,
+            order: 5,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'bar',
+            label: "Non Tailor",
+            data: abs_ntai,
+            backgroundColor: nonTailorBackgroundColors,
+            borderColor: '#a855f7',
+            borderWidth: 1,
+            order: 6,
+            hidden: true,  // Hide by default
+            datalabels: { display: false }
+          },
+          {
+            type: 'line',
+            label: "Tailor Line",
+            data: abs_tai,
+            borderColor: "#ea580c",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#ea580c',
+            pointBorderColor: '#ea580c',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 2,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#FF9013'
+            }
+          },
+          {
+            type: 'line',
+            label: "Non Tailor Line",
+            data: abs_ntai,
+            borderColor: "#7c3aed",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#7c3aed',
+            pointBorderColor: '#7c3aed',
+            pointRadius: 3,
+            borderWidth: 2,
+            fill: false,
+            order: 3,
+            tension: 0.4,
+            hidden: true,
+            datalabels:{
+              color: '#6E8CFB'
+            }
+          }
+        ]
+      },
+      options: getChartOptions(filteredData),
+      plugins: [ChartDataLabels]
+    });
+
+    // Combined Chart - only show Total by default
+    chartInstances.combinedChart = new Chart(document.getElementById("combinedChart"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          // Bar datasets
+          {
+            type: 'bar',
+            label: "Total",
+            data: total,
+            backgroundColor: backgroundColors,
+            borderColor: 'blue',
+            borderWidth: 1,
+            order: 8,
+            hidden: false,  // Show by default
+            datalabels: {
+              display: true,
+              color: "#80A1BA",
+              anchor: "end",
+              align: "top",
+              offset: 6,
+              font: { weight: "bold", size: 10, family: 'Poppins' },
+              rotation: -90,
+              formatter: function(value) { return value; }
+            }
+          },
+          {
+            type: 'bar',
+            label: "Present",
+            data: present,
+            backgroundColor: presentBackgroundColors,
+            borderColor: 'green',
+            borderWidth: 1,
+            order: 9,
+            hidden: true,  // Hide by default
+            datalabels: {
+              display: false,
+              color: "#000",
+              anchor: "end",
+              align: "top",
+              offset: 6,
+              font: { weight: "bold", size: 10, family: 'Poppins' },
+              rotation: -90,
+              formatter: function(value) { return value; }
+            }
+          },
+          {
+            type: 'bar',
+            label: "Absent",
+            data: absent,
+            backgroundColor: absentBackgroundColors,
+            borderColor: 'red',
+            borderWidth: 1,
+            order: 10,
+            hidden: true,  // Hide by default
+            datalabels: {
+              display: false,
+              color: "#000",
+              anchor: "end",
+              align: "top",
+              offset: 6,
+              font: { weight: "bold", size: 10, family: 'Poppins' },
+              rotation: -90,
+              formatter: function(value) { return value; }
+            }
+          },
+          {
+            type: 'bar',
+            label: "Tailor",
+            data: tailor,
+            backgroundColor: tailorBackgroundColors,
+            borderColor: 'orange',
+            borderWidth: 1,
+            order: 11,
+            hidden: true,  // Hide by default
+            datalabels: {
+              display: false,
+              color: "#000",
+              anchor: "end",
+              align: "top",
+              offset: 6,
+              font: { weight: "bold", size: 10, family: 'Poppins' },
+              rotation: -90,
+              formatter: function(value) { return value; }
+            }
+          },
+          {
+            type: 'bar',
+            label: "Non Tailor",
+            data: n_tailor,
+            backgroundColor: nonTailorBackgroundColors,
+            borderColor: 'purple',
+            borderWidth: 1,
+            order: 12,
+            hidden: true,  // Hide by default
+            datalabels: {
+              display: false,
+              color: "#000",
+              anchor: "end",
+              align: "top",
+              offset: 6,
+              font: { weight: "bold", size: 10, family: 'Poppins' },
+              rotation: -90,
+              formatter: function(value) { return value; }
+            }
+          },
+          // ALL Trend line datasets - all hidden by default
+          {
+            type: 'line',
+            label: "Total Trend",
+            data: total,
+            borderColor: "#1e40af",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#1e40af',
+            pointBorderColor: '#1e40af',
+            pointRadius: 3,
+            borderWidth: 3,
+            fill: false,
+            order: 1,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { 
+              display: false,
+
+             }
+          },
+          {
+            type: 'line',
+            label: "Present Trend",
+            data: present,
+            borderColor: "#15803d",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#15803d',
+            pointBorderColor: '#15803d',
+            pointRadius: 3,
+            borderWidth: 3,
+            fill: false,
+            order: 2,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: true }
+          },
+          {
+            type: 'line',
+            label: "Absent Trend",
+            data: absent,
+            borderColor: "#dc2626",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#dc2626',
+            pointBorderColor: '#dc2626',
+            pointRadius: 3,
+            borderWidth: 3,
+            fill: false,
+            order: 3,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: true }
+          },
+          {
+            type: 'line',
+            label: "Tailor Trend",
+            data: tailor,
+            borderColor: "#ea580c",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#ea580c',
+            pointBorderColor: '#ea580c',
+            pointRadius: 3,
+            borderWidth: 3,
+            fill: false,
+            order: 4,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: true }
+          },
+          {
+            type: 'line',
+            label: "Non Tailor Trend",
+            data: n_tailor,
+            borderColor: "#7c3aed",
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#7c3aed',
+            pointBorderColor: '#7c3aed',
+            pointRadius: 3,
+            borderWidth: 3,
+            fill: false,
+            order: 5,
+            tension: 0.4,
+            hidden: true,  // Hide by default
+            datalabels: { display: true }
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          datalabels: { display: false },
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const dataIndex = context.dataIndex;
+                if (filteredData && filteredData[dataIndex]) {
+                  const dateStr = filteredData[dataIndex].date;
+                  const holidayName = getHolidayName(dateStr);
+                  if (holidayName) {
+                    return `🎉 Holiday: ${holidayName}`;
+                  }
+                  if (isSunday(dateStr)) {
+                    return '📅 Sunday';
+                  }
+                }
+                return '';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: function(context) {
+                if (filteredData && filteredData[context.index]) {
+                  const dateStr = filteredData[context.index].date;
+                  if (isHoliday(dateStr)) {
+                    return '#dc2626';
+                  }
+                  if (isSunday(dateStr)) {
+                    return '#9333ea';
+                  }
+                }
+                return '#374151';
+              },
+              font: { weight: "bold", size: 9 }
+            },
+            grid: {
+              display: true,
+              color: function(context) {
+                if (filteredData && filteredData[context.index]) {
+                  const dateStr = filteredData[context.index].date;
+                  if (isHoliday(dateStr)) {
+                    return '#fca5a5';
+                  }
+                  if (isSunday(dateStr)) {
+                    return '#c084fc';
+                  }
+                }
+                return '#F3F4F6';
+              }
+            }
+          },
+          y: { 
+            ticks: { 
+              color: '#374151', 
+              font: { size: 10 } 
+            },
+            grid: {
+              display: true,
+              color: '#F3F4F6'
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // IMPORTANT: Initialize button states after all charts are created
+    setTimeout(() => {
+      initializeButtonStates();
+    }, 100);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const endDateInput = document.querySelector('input[name="endDate"]');
+    if (!startDateInput.value || !endDateInput.value) {
+      const defaultDates = setDefaultDates();
+      startDateInput.value = defaultDates.startDate;
+      endDateInput.value = defaultDates.endDate;
+      submitForm();
+    }
+    
+    const dateCells = document.querySelectorAll('.date-cell');
+    dateCells.forEach(cell => {
+      const originalDate = cell.textContent.trim();
+      if (originalDate) {
+        cell.setAttribute('data-original-date', originalDate);
+        cell.textContent = formatDateToIndian(originalDate);
+      }
+    });
+    
+    // ENHANCED: Highlight both Sundays and Holidays
+    highlightSpecialRows();
+    initializeCharts();
+  });
 </script>
+
+<style>
+  /* Existing Sunday highlighting */
+  .sunday-row {
+    background-color: #f3e8ff !important; /* Light purple */
+    border-left: 4px solid #9333ea;
+  }
+  
+  
+  .holiday-row .date-cell {
+    color: #dc2626;
+    font-weight: bold;
+  }
+
+  .restricted-holiday-row .date-cell {
+    color: #eab308;
+    font-style: italic;
+  }
+  
+  /* Holiday tooltip styling */
+  .date-cell[data-holiday] {
+    position: relative;
+    cursor: help;
+  }
+  
+  .date-cell[data-holiday]:hover::after {
+    content: attr(data-holiday);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  
+  /* Chart container enhancements */
+  .chart-container {
+    position: relative;
+  }
+  
+  /* Holiday indicator for mobile */
+  @media (max-width: 768px) {
+    .holiday-row::before {
+      content: "🎉";
+      position: absolute;
+      left: 10px;
+      font-size: 14px;
+    }
+    
+    .restricted-holiday-row::before {
+      content: "📅";
+      position: absolute;
+      left: 10px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<style>
+  canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
+  #combinedChart {
+    height: 400px !important;
+  }
+  .sunday-row {
+    background-color: #ffe4e6 !important;
+    color: #903794 !important;
+  }
+
+  /* Chart toggle buttons styling */
+  .chart-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    margin: 2px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .chart-toggle-btn:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  .chart-toggle-btn.active {
+    background-color: #bad4ff;
+    border-color: #bad4ff;
+    color: rgb(0, 0, 0);
+  }
+
+  .chart-toggle-btn.active:hover {
+    background-color: #bad4ff;
+    border-color: #bad4ff;
+  }
+
+  .chart-toggle-btn span {
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .chart-toggle-btn.active span {
+    background-color: white !important;
+  }
+</style>
 
 
 </div>

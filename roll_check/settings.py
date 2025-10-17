@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-4&o2i$3avzqw1m3ski&5ts5*zn!i+%(v_$#%y9)ad=$(oyfp5q
 DEBUG = True
 
 # ALLOWED_HOSTS = ['10.1.21.13', 'localhost', 'g5s2jh39-7004.inc1.devtunnels.ms', 'api.herofashion.com']
-ALLOWED_HOSTS = ['app.herofashion.com','127.0.0.1']
+ALLOWED_HOSTS = ['app.herofashion.com','127.0.0.1', 'localhost', '10.1.21.73']
 
 
 CSRF_TRUSTED_ORIGINS = [
