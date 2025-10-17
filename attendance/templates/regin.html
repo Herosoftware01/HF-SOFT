@@ -4,7 +4,122 @@
 
 {% block title %}Attendance{% endblock %}
 
-{% block content %}   
+{% block content %}  
+ 
+ <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .header-bg {
+            background: linear-gradient(135deg, #f6f9fc 0%, #e9ecef 100%);
+        }
+        
+        .summary-card {
+            transition: all 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-table-row {
+                display: block;
+                background: white;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                padding: 16px;
+            }
+            
+            .mobile-table-row td {
+                display: block;
+                text-align: left !important;
+                padding: 4px 0;
+                border: none;
+            }
+            
+            .mobile-table-row td:before {
+                content: attr(data-label) ": ";
+                font-weight: bold;
+                color: #374151;
+            }
+            
+            .desktop-table {
+                display: none;
+            }
+            
+            .mobile-table {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-table {
+                display: none;
+            }
+            
+            .desktop-table {
+                display: table;
+            }
+        }
+        
+        .loading-state {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Print-specific CSS for table-only output */
+        @media print {
+            .dashboard-header,
+            .summary-card,
+            .footer-summary,
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                margin: 0;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+            
+            th, td {
+                border: 1px solid #333;
+                padding: 6px;
+                text-align: left;
+            }
+            
+            th {
+                background-color: #f0f0f0 !important;
+                font-weight: bold;
+            }
+        }
+    </style>
 
 <div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6"></div>
    
@@ -486,7 +601,7 @@
             }
             
             clearFilters() {
-                window.location.href = '{% url "resign_report" %}';
+                window.location.href = '{% url "attendance:resign_report" %}';
             }
             
             // UPDATED: Export Excel function - Table data only

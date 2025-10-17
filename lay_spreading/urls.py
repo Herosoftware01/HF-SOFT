@@ -3,6 +3,7 @@ from django.urls import path
 from .import views
 from django.conf import settings
 from django.conf.urls.static import static
+from roll.views import break_screen ,get_current_break
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -25,6 +26,8 @@ urlpatterns = [
     path('save-roll-data/', views.save_roll_data, name='save_roll_data'),
     path('get-roll-data-on-load/', views.get_roll_data_on_load, name='get-roll-data-on-load'),
     path('save_final_plan', views.save_final_plan, name='save_final_plan'),
+    path('api/break-status/', get_current_break, name='break_status'),
+    path('break/', break_screen, name='lay_spreading_break'),  # ✅ required!
 ]
 
     

@@ -341,7 +341,7 @@
     </a>
   {% endif %}
 
-  {% if permission.can_access_attendance %}
+  <!-- {% if permission.can_access_attendance %}
   <a href="/attendance/"
      class="flex items-center space-x-2 px-3 py-2 rounded hover:bg-sky-500 hover:text-white
      {% if request.path == '/attendance/' %}
@@ -352,7 +352,54 @@
     <img src="{% static 'images/business.png' %}" alt="Attendance" class="w-6 h-6">
     <span class="font-medium">Attendance</span>
   </a>
+{% endif %} -->
+
+
+{% if permission.can_access_attendance %}
+  <div x-data="{ isOpen: false }" class="relative" @click.away="isOpen = false">
+  <!-- Main Button -->
+  <button
+    @click="isOpen = !isOpen"
+    class="flex items-center justify-between w-full px-3 py-2 rounded cursor-pointer text-sky-600 hover:bg-sky-500 hover:text-white {% if '/attendance/' in request.path or '/attendance/resign_report/' in request.path %}
+         bg-sky-600 text-white font-bold
+       {% else %}
+         text-sky-600 hover:bg-sky-100
+       {% endif %}"
+  >
+    <div class="flex items-center space-x-2 ">
+      <img src="{% static 'images/business.png' %}" alt="Admin" class="w-6 h-6">
+      <span class="font-medium">HR Control</span>
+    </div>
+    <svg
+      class="w-4 h-4 ml-auto transform transition-transform duration-200"
+      :class="{ 'rotate-180': isOpen }"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    x-show="isOpen"
+    x-transition
+    class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
+  >
+    <a href="/attendance/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/attendance/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      attendance
+    </a>
+    <a href="/attendance/resign_report/"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
+       {% if '/attendance/resign_report/' in request.path %} bg-sky-100 font-semibold {% endif %}">
+      Resign Report
+    </a>
+  </div>
+</div>
 {% endif %}
+
 
 {% if permission.production_data %}
   <a href="/attendance/report/"
@@ -900,36 +947,7 @@
     </script>
 
 
-
 <!-- {% if '/roll/' in request.path and '/roll/break/' not in request.path %}
-<script>
-function checkBreakRedirect() {
-    fetch('/roll/api/break-status/')
-        .then(res => res.json())
-        .then(data => {
-            if (data.in_break) {
-                const isOnBreakPage = window.location.pathname.includes('/roll/break/');
-                const isInRollApp = window.location.pathname.startsWith('/roll/');
-
-                if (isInRollApp && !isOnBreakPage) {
-                    const originalUrl = window.location.href;
-                    console.log("🚨 Break time active, redirecting to break screen...");
-                    window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
-                }
-            }
-        })
-        .catch(err => {
-            console.error("Failed to check break status:", err);
-        });
-}
-
-setInterval(checkBreakRedirect, 5000);
-checkBreakRedirect();
-</script>
-{% endif %} -->
-
-
-{% if '/roll/' in request.path and '/roll/break/' not in request.path %}
 <script>
 function checkBreakRedirect() {
     fetch('/roll/api/break-status/')
@@ -958,6 +976,42 @@ function checkBreakRedirect() {
 setInterval(checkBreakRedirect, 5000);
 checkBreakRedirect();
 </script>
+{% endif %} -->
+
+
+{% if '/roll/' in request.path or '/lay_spreading/' in request.path %}
+    {% if '/roll/break/' not in request.path and '/lay_spreading/break/' not in request.path %}
+        <script>
+        function checkBreakRedirect() {
+            fetch('/roll/api/break-status/')  // ✅ We will fix this too in step 2
+                .then(res => res.json())
+                .then(data => {
+                    if (data.in_break) {
+                        const isOnBreakPage = window.location.pathname.includes('/roll/break/') || window.location.pathname.includes('/lay_spreading/break/');
+                        const isInApp = window.location.pathname.startsWith('/roll/') || window.location.pathname.startsWith('/lay_spreading/');
+
+                        if (isInApp && !isOnBreakPage) {
+                            const originalUrl = window.location.href;
+                            sessionStorage.setItem('original_url', originalUrl);
+
+                            // ✅ Redirect to correct break screen depending on app
+                            if (window.location.pathname.startsWith('/roll/')) {
+                                window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
+                            } else if (window.location.pathname.startsWith('/lay_spreading/')) {
+                                window.location.href = '/lay_spreading/break/?original_url=' + encodeURIComponent(originalUrl);
+                            }
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to check break status", err);
+                });
+        }
+
+        setInterval(checkBreakRedirect, 5000);
+        checkBreakRedirect();
+        </script>
+    {% endif %}
 {% endif %}
 
 </body>

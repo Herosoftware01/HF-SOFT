@@ -156,6 +156,7 @@
       <input type="hidden" name="roll_no" value="{{ roll_no }}">
       <input type="hidden" name="machine_id" value="{{ group_id }}">
       <input type="hidden" name="color" value="{{ tybe }}">
+      <input type="hidden" name="fdia" id="fdia" value="{{ f_dia }}">
 
       <!-- Previews -->
       <div id="previewContainer" class="grid grid-cols-2 gap-4 min-h-[180px] mb-4">
@@ -501,7 +502,8 @@
 
 <script>
   // Example value of f_dia, replace with your actual dynamic value
-  const f_dia = 60.00;
+  const f_dia = parseFloat(document.getElementById('fdia').value);
+  // const f_dia = 60;
   const allowedDifference = 2; // ±2 allowed
 
   const finishDiaInput = document.getElementById('finishDia');
@@ -522,13 +524,13 @@
       <!-- Total Mtrs -->
       <div class="flex flex-col w-full md:w-[23%]">
         <label for="totalMtrs" class="text-gray-700 font-medium mb-1">Total Mtrs:</label>
-        <input type="text" id="totalMtrs" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
+        <input type="number" id="totalMtrs" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
       </div>
 
       <!-- Act. GSM -->
       <div class="flex flex-col w-full md:w-[23%]">
         <label for="actGSM" class="text-gray-700 font-medium mb-1">Act. GSM:</label>
-        <input type="text" id="actGSM" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
+        <input type="number" id="actGSM" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
       </div>
 
     <!-- Review -->

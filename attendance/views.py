@@ -8,7 +8,7 @@ from .models import BillAge
 from datetime import datetime, date
 from django.db.models import Q
 from django.utils import timezone
-from .models import VueOverall1
+from .models import VueOverall1,ResignDtls
 from django.conf import settings
 import os
 
@@ -205,7 +205,7 @@ def report(request):
     for order in datas:
         if order.Image:
             filename = os.path.basename(order.Image)
-            order.Image = f"https://g5s2jh39-7004.inc1.devtunnels.ms/pro_image/{filename}"
+            order.Image = f"https://app.herofashion.com/pro_image/{filename}"
         else:
             order.Image = None
   
@@ -405,7 +405,7 @@ def resign_report(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
-    resign = ResignDtls.objects.using('test').all()
+    resign = ResignDtls.objects.using('main').all()
 
     if unit_filter and unit_filter != 'ALL':
         resign = resign.filter(dept=unit_filter)
@@ -439,7 +439,7 @@ def resign_report(request):
         if getattr(order, 'photo', None):
             filename = os.path.basename(order.photo)
             if settings.DEBUG:
-                order.photo = f"http://10.1.21.13:7100/images/{filename}"
+                order.photo = f"http://app.herofashion.com/staff_images/{filename}"
         else:
             order.photo = None
 
@@ -451,11 +451,11 @@ def resign_report(request):
         avg_days = int(total_days / total_resignations) if total_days > 0 else 0
 
     # This month count (based on calendar month regardless of filters)
-    this_month_count = ResignDtls.objects.using('default') \
+    this_month_count = ResignDtls.objects.using('main') \
         .filter(resigndt__date__gte=first_day_of_month, resigndt__date__lte=today) \
         .count()
 
-    departments = ResignDtls.objects.using('default') \
+    departments = ResignDtls.objects.using('main') \
         .values_list('dept', flat=True).distinct().order_by('dept')
 
     context = {
@@ -469,4 +469,4 @@ def resign_report(request):
         'this_month_count': this_month_count,
     }
 
-    return render(request, 'resign.html', context)
+    return render(request, 'regin.html', context)

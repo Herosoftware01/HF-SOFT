@@ -36,7 +36,8 @@
             console.log("✅ Break ended. Redirecting...");
 
             // Redirect to original URL stored in sessionStorage or fallback
-            const originalUrl = sessionStorage.getItem('original_url') || '/roll/';
+            // const originalUrl = sessionStorage.getItem('original_url') || '/roll/';
+            const originalUrl = sessionStorage.getItem('original_url') || '/';
             window.location.href = originalUrl;
         } else {
             const mins = Math.floor((timeLeft / 1000 / 60) % 60);

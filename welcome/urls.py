@@ -57,11 +57,8 @@ urlpatterns = [
     path('non_pandas/', views.non_pandas, name='non_pandas'),
     path('non_pandas_1/', views.non_pandas_1, name='non_pandas_1'),
     path('Ordsampst/', views.Ordsampst, name='Ordsampst'),
-<<<<<<< HEAD
     path('Ordsampst1/', views.Ordsampst1, name='Ordsampst'),
-=======
     path('Ordsampst1/', views.Ordsampst1, name='Ordsampst1'),
->>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8
     
 ]
 

@@ -6,13 +6,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-<<<<<<< HEAD
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
-=======
-# from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
+
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1
->>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8
 import json
 import pandas as pd
 import numpy as np
@@ -537,8 +532,6 @@ def Ordsampst(request):
 
 def Ordsampst1(request):
     return render(request, "powerbi/ordsamst.html")
-<<<<<<< HEAD
-=======
   # Make sure to import your model
 
 # def Ordsampst(request):
@@ -574,4 +567,3 @@ def Ordsampst1(request):
 #     Renders the HTML page that will display the AG Grid.
 #     """
 #     return render(request, "powerbi/ordsamst.html")
->>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8

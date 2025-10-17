@@ -1328,31 +1328,6 @@ def break_times(request):
     }
 
 
-# def break_screen(request):
-#     now = datetime.now().time()
-#     breaks = BreakTime.objects.filter(is_active=True)
-
-#     original_url = request.GET.get('original_url')
-#     if original_url:
-#         request.session['original_url'] = original_url
-
-#     for bt in breaks:
-#         if bt.start_time <= now <= bt.end_time:
-#             # Convert to full datetime and get timestamp in milliseconds
-#             break_end_dt = datetime.combine(date.today(), bt.end_time)
-#             break_end_ts = int(break_end_dt.timestamp() * 1000)
-
-#             return render(request, 'break.html', {
-#                 'break_end_ts': break_end_ts
-#             })
-
-#     original = request.session.pop('original_url', None)
-#     if original:
-#         return redirect(original)
-
-#     return redirect('/roll/')  # fallback
-
-
 def break_screen(request):
     now = datetime.now()
     breaks = BreakTime.objects.filter(is_active=True)
