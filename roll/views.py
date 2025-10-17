@@ -1066,7 +1066,6 @@ def save_final_data(request):
                 'machine_id': data.get('machine_id', '')
             })
             
-            
             # return JsonResponse({'status': 'success', 'id': instance.id, 'machine_id': data.get('machine_id', '')})
 
         except Exception as e:
@@ -1093,7 +1092,6 @@ def delete_roll(request):
         master_roll_update.objects.filter(roll_no__iexact=roll_no).delete()
 
     return redirect('roll_report')
-
 
 
 
@@ -1178,7 +1176,6 @@ def delete_roll(request):
 #         'roll_status': roll_status,
 #         'machine_id': machine_id
 #     })
-
 
 
 def machine_report(request, machine_id):
