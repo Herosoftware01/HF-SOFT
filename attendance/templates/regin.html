@@ -1,0 +1,909 @@
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}   
+
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] bg-cover bg-center bg-no-repeat p-6"></div>
+   
+   <!-- Dashboard Header -->
+    <div class="dashboard-header shadow-lg no-print">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+                <!-- Left side - Title with icon -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3h2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 10-4.9 0H8.5zM12 9a1 1 0 100-2 1 1 0 000 2zm-2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-white text-xl sm:text-2xl font-bold">RESIGNING DASHBOARD</h1>
+                </div>
+                
+                <!-- Mobile Filter Toggle -->
+                <button 
+                    id="filterToggle"
+                    class="lg:hidden bg-white/20 text-white px-4 py-2 rounded-lg backdrop-blur-sm"
+                    onclick="toggleFilters()"
+                    aria-label="Toggle filters"
+                >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+                    </svg>
+                    Filters
+                </button>
+                
+                <!-- Filters -->
+                <form 
+                    id="filterForm" 
+                    method="get"
+                    class="flex-col lg:flex-row items-center gap-3 w-full lg:w-auto hidden lg:flex"
+                    role="search"
+                    aria-label="Dashboard filters"
+                >
+                    <!-- Unit Selection -->
+                    <div class="flex items-center gap-2">
+                        <label for="unitSelect" class="text-white font-semibold text-sm whitespace-nowrap">UNIT:</label>
+                        <select
+                            id="unitSelect"
+                            name="unit"
+                            class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px] bg-white"
+                            aria-label="Select unit filter"
+                        >
+                            <option value="ALL" {% if unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if unit == dept %}selected{% endif %}>{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- From Date -->
+                    <div class="flex items-center gap-2">
+                        <label for="fromDate" class="text-white font-semibold text-sm whitespace-nowrap">From:</label>
+                        <input
+                            type="date"
+                            id="fromDate"
+                            name="from_date"
+                            value="{{ from_date|default:'' }}"
+                            class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            aria-label="Start date filter"
+                        />
+                    </div>
+                    
+                    <!-- To Date -->
+                    <div class="flex items-center gap-2">
+                        <label for="toDate" class="text-white font-semibold text-sm whitespace-nowrap">To:</label>
+                        <input
+                            type="date"
+                            id="toDate"
+                            name="to_date"
+                            value="{{ to_date|default:'' }}"
+                            class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            aria-label="End date filter"
+                        />
+                    </div>
+                    
+                    <!-- Quick Filter Buttons -->
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            onclick="setDateRange(1)"
+                            class="px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]"
+                            aria-label="Filter last 1 month"
+                        >
+                            1 M
+                        </button>
+                        <button
+                            type="button"
+                            onclick="setDateRange(3)"
+                            class="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]"
+                            aria-label="Filter last 3 months"
+                        >
+                            3 M
+                        </button>
+                        <button
+                            type="button"
+                            onclick="setToday()"
+                            class="px-4 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]"
+                            aria-label="Filter today only"
+                        >
+                            Today
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]"
+                            aria-label="Apply filters"
+                        >
+                            Apply
+                        </button>
+                        <button
+                            type="button"
+                            onclick="clearFilters()"
+                            class="px-4 py-3 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]"
+                            aria-label="Clear all filters"
+                        >
+                            Clear
+                        </button>
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in no-print">
+            <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-red-600">{{ total_resignations }}</h3>
+                        <p class="text-sm text-gray-600">Total Resignations</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-blue-600">{{ avg_days }}</h3>
+                        <p class="text-sm text-gray-600">Avg. Working Days</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-green-600">{{ this_month_count }}</h3>
+                        <p class="text-sm text-gray-600">This Month</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-orange-600">{{ unit }}</h3>
+                        <p class="text-sm text-gray-600">Selected Unit</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-4 lg:px-6 py-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-lg mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Resignation List - {{ unit }}</h2>
+                
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button 
+                        onclick="exportExcel()"
+                        class="px-4 py-3 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2 min-h-[44px]"
+                        aria-label="Export to Excel"
+                        >
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                             Export Excel
+                            </button>
+                            <button 
+                                onclick="printReport()"
+                                class="px-4 py-3 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2 min-h-[44px]"
+                                aria-label="Print report"
+                            >
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-2h1v2zm1 0v2h8v-2H6zM4 9h12v3H4V9z" clip-rule="evenodd"/>
+                                </svg>
+                                Print Report
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                <!-- Table Container --><!-- Scroll container -->
+                <div class="bg-white rounded-xl shadow-lg hidden lg:block">
+                <div class="p-4 sm:p-6">
+                    <div class="overflow-y-auto h-[500px]"> 
+                    <table id="resignationTable" class="w-full table-fixed border-collapse rounded-2xl border-separate border-spacing-0"> 
+                        <thead class="sticky top-0">
+                        <tr>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">
+                            SL NO
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">
+                            ID
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">
+                            IMAGE
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">
+                            NAME
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden lg:table-cell bg-[#DCDCDC]">
+                            DESIGNATION
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden md:table-cell bg-[#BDE3C3]">
+                            JOINING DATE
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#F49BAB]">
+                            RESIGN DATE
+                            </th>
+                            <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden sm:table-cell bg-[#94B4C1]">
+                            WORKING DAYS
+                            </th>
+                            <th colspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#ADB2D4]">
+                            REASON
+                            </th>
+                        </tr>
+                        <tr>
+                            <th class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#ADB2D4]">
+                            INCHARGE
+                            </th>
+                            <th class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#ADB2D4]">
+                            HR
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            {% for employee in resign %}
+                            <tr class="hover:bg-gray-50 transition-colors" data-row-id="{{ employee.slno }}">
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium">{{ forloop.counter }}</td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium text-blue-600">{{ employee.code }}</td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400">
+                                    {% if employee.photo %}
+                                        <img src="{{ employee.photo }}" alt="{{ employee.name }}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full mx-auto object-cover shadow-md" />
+                                    {% else %}
+                                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto flex items-center justify-center shadow-md">
+                                            <span class="text-xs text-white font-semibold">{{ employee.name|slice:":2"|upper }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium">{{ employee.name|default:"-" }}</td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden lg:table-cell">{{ employee.category|default:"-" }}</td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden md:table-cell">
+                                    {% if employee.joindt %}
+                                        {{ employee.joindt|date:"d-m-Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400">
+                                    {% if employee.resigndt %}
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">{{ employee.resigndt|date:"d-m-Y" }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden sm:table-cell font-semibold">{{ employee.days_worked|default:"-" }}</td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hover:bg-gray-100 focus:bg-yellow-50" 
+                                    contenteditable="true" 
+                                    onblur="saveCell(this, 'incharge_{{ employee.slno }}')" 
+                                    onkeypress="if(event.key==='Enter') this.blur()">
+                                    -
+                                </td>
+                                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hover:bg-gray-100 focus:bg-yellow-50" 
+                                    contenteditable="true" 
+                                    onblur="saveCell(this, 'hr_{{ employee.slno }}')" 
+                                    onkeypress="if(event.key==='Enter') this.blur()">
+                                    -
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="px-6 py-8 text-center text-gray-500">
+                                    No resignation records found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile Card View -->
+                <div class="mobile-table">
+                    <div class="space-y-3 sm:space-y-4">
+                        {% for employee in resign %}
+                        <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <!-- Card Header - Profile Section -->
+                            <div class="flex items-center space-x-3 sm:space-x-4 mb-3">
+                                {% if employee.photo %}
+                                    <img src="{{ employee.photo }}" alt="{{ employee.name }}" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-md flex-shrink-0" />
+                                {% else %}
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                                        <span class="text-xs sm:text-sm text-white font-semibold">{{ employee.name|slice:":2"|upper }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{ employee.name|default:"-" }}</h3>
+                                    <p class="text-xs sm:text-sm text-blue-600 font-medium">{{ employee.code }}</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    {% if employee.resigndt %}
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap">{{ employee.resigndt|date:"d-m-Y" }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Card Details -->
+                            <div class="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                <div class="flex flex-col xs:flex-row xs:items-center">
+                                    <span class="text-gray-600 font-medium">Designation:</span>
+                                    <span class="text-gray-900 xs:ml-1 truncate">{{ employee.category|default:"-" }}</span>
+                                </div>
+                                <div class="flex flex-col xs:flex-row xs:items-center">
+                                    <span class="text-gray-600 font-medium">Working Days:</span>
+                                    <span class="font-semibold text-gray-900 xs:ml-1">{{ employee.days_worked|default:"-" }}</span>
+                                </div>
+                                <div class="flex flex-col xs:flex-row xs:items-center">
+                                    <span class="text-gray-600 font-medium">Join Date:</span>
+                                    <span class="text-gray-900 xs:ml-1">
+                                        {% if employee.joindt %}
+                                            {{ employee.joindt|date:"d-m-Y" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex flex-col xs:flex-row xs:items-center">
+                                    <span class="text-gray-600 font-medium">Department:</span>
+                                    <span class="text-gray-900 xs:ml-1">{{ employee.dept|default:"-" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+                            No resignation records found
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard Controller Class for better organization
+        class DashboardController {
+            constructor() {
+                this.form = document.getElementById('filterForm');
+                this.loadingIndicator = document.getElementById('loadingIndicator');
+                this.tableBody = document.getElementById('tableBody');
+                this.submitTimer = null;
+                
+                this.bindEvents();
+                this.initializeDateInputs();
+            }
+            
+            bindEvents() {
+                // Event delegation for better performance
+                if (this.form) {
+                    // Listen to unit select changes
+                    const unitSelect = document.getElementById('unitSelect');
+                    if (unitSelect) {
+                        unitSelect.addEventListener('change', () => {
+                            this.form.submit();
+                        });
+                    }
+                }
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', this.handleKeyNavigation.bind(this));
+            }
+            
+            handleFormChange(event) {
+                // Debounced form submission to prevent excessive API calls
+                this.showLoading();
+                clearTimeout(this.submitTimer);
+                this.submitTimer = setTimeout(() => {
+                    this.submitForm();
+                }, 300);
+            }
+            
+            handleKeyNavigation(event) {
+                // Add keyboard shortcuts for common actions
+                if (event.ctrlKey || event.metaKey) {
+                    switch(event.key) {
+                        case 'p':
+                            event.preventDefault();
+                            this.printReport();
+                            break;
+                        case 'e':
+                            event.preventDefault();
+                            this.exportExcel();
+                            break;
+                    }
+                }
+            }
+            
+            submitForm() {
+                if (this.form) {
+                    this.showLoading();
+                    this.form.submit();
+                }
+            }
+            
+            initializeDateInputs() {
+                // Set max date to today for both inputs
+                const today = new Date().toISOString().split('T')[0];
+                const fromDate = document.getElementById('fromDate');
+                const toDate = document.getElementById('toDate');
+                
+                if (fromDate) fromDate.max = today;
+                if (toDate) toDate.max = today;
+            }
+            
+            setDateRange(months) {
+                const today = new Date();
+                const toDate = today.toISOString().split('T')[0];
+                const fromDate = new Date(today.setMonth(today.getMonth() - months)).toISOString().split('T')[0];
+                
+                const fromInput = document.getElementById('fromDate');
+                const toInput = document.getElementById('toDate');
+                
+                if (fromInput && toInput) {
+                    fromInput.value = fromDate;
+                    toInput.value = toDate;
+                    
+                    // Submit form
+                    requestAnimationFrame(() => this.submitForm());
+                }
+            }
+            
+            setToday() {
+                const today = new Date().toISOString().split('T')[0];
+                const fromInput = document.getElementById('fromDate');
+                const toInput = document.getElementById('toDate');
+                
+                if (fromInput && toInput) {
+                    fromInput.value = today;
+                    toInput.value = today;
+                    
+                    requestAnimationFrame(() => this.submitForm());
+                }
+            }
+            
+            clearFilters() {
+                window.location.href = '{% url "resign_report" %}';
+            }
+            
+            // UPDATED: Export Excel function - Table data only
+            exportExcel() {
+                try {
+                    const table = document.getElementById('resignationTable');
+                    if (!table) {
+                        this.showNotification('No table found to export', 'error');
+                        return;
+                    }
+
+                    // Create a clean data array from table rows
+                    const tableData = [];
+                    const tbody = table.querySelector('tbody');
+                    const rows = tbody.querySelectorAll('tr');
+                    
+                    // Check if there's data
+                    if (rows.length === 0 || rows[0].cells.length === 1) {
+                        this.showNotification('No data to export', 'error');
+                        return;
+                    }
+                    
+                    // Add header row first
+                    tableData.push([
+                        'SL NO', 'ID', 'NAME', 'DESIGNATION', 'JOINING DATE', 
+                        'RESIGN DATE', 'WORKING DAYS', 'INCHARGE REASON', 'HR REASON'
+                    ]);
+                    
+                    // Extract data from each row
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length > 1) { // Skip empty state rows
+                            const rowData = [];
+                            
+                            cells.forEach((cell, index) => {
+                                // Skip image column (index 2)
+                                if (index === 2) return;
+                                
+                                let cellText = cell.textContent.trim();
+                                
+                                // Clean up resign date - remove span styling
+                                if (index === 6) { // Resign date column
+                                    const span = cell.querySelector('span');
+                                    if (span) {
+                                        cellText = span.textContent.trim();
+                                    }
+                                }
+                                
+                                rowData.push(cellText);
+                            });
+                            
+                            if (rowData.length > 0) {
+                                tableData.push(rowData);
+                            }
+                        }
+                    });
+
+                    // Create worksheet and workbook
+                    const worksheet = XLSX.utils.aoa_to_sheet(tableData);
+                    
+                    // Set column widths
+                    worksheet['!cols'] = [
+                        {wch: 8},  // SL NO
+                        {wch: 10}, // ID
+                        {wch: 25}, // NAME
+                        {wch: 20}, // DESIGNATION
+                        {wch: 15}, // JOINING DATE
+                        {wch: 15}, // RESIGN DATE
+                        {wch: 15}, // WORKING DAYS
+                        {wch: 20}, // INCHARGE REASON
+                        {wch: 20}  // HR REASON
+                    ];
+                    
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resignation Data');
+
+                    // Generate filename with current date and unit filter
+                    const today = new Date().toISOString().split('T')[0];
+                    const unit = document.getElementById('unitSelect').value || 'ALL';
+                    const filename = `resignation_report_${unit}_${today}.xlsx`;
+
+                    // Export file
+                    XLSX.writeFile(workbook, filename);
+                    
+                    this.showNotification('Excel export completed successfully', 'success');
+                    
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    this.showNotification('Export failed. Please try again.', 'error');
+                }
+            }
+            
+            // UPDATED: Print Report function - Table only
+            printReport() {
+                try {
+                    // Get only the table element
+                    const table = document.getElementById('resignationTable');
+                    if (!table) {
+                        this.showNotification('No table found to print', 'error');
+                        return;
+                    }
+
+                    // Create a clean version of the table for printing
+                    const printTable = table.cloneNode(true);
+                    
+                    // Remove image columns from print version
+                    const imageHeaders = printTable.querySelectorAll('th:nth-child(3)');
+                    const imageCells = printTable.querySelectorAll('td:nth-child(3)');
+                    
+                    imageHeaders.forEach(header => header.remove());
+                    imageCells.forEach(cell => cell.remove());
+
+                    // Get filter information
+                    const unit = document.getElementById('unitSelect').value || 'ALL';
+                    const fromDate = document.getElementById('fromDate').value || 'N/A';
+                    const toDate = document.getElementById('toDate').value || 'N/A';
+
+                    // Create print window
+                    const printWindow = window.open('', '_blank');
+                    
+                    printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Resignation Report - ${new Date().toLocaleDateString()}</title>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    margin: 20px;
+                                    font-size: 12px;
+                                }
+                                .header {
+                                    text-align: center;
+                                    margin-bottom: 20px;
+                                }
+                                h1 {
+                                    margin: 0;
+                                    color: #333;
+                                    font-size: 18px;
+                                }
+                                .filter-info {
+                                    text-align: center;
+                                    margin: 10px 0 20px 0;
+                                    font-size: 11px;
+                                    color: #666;
+                                }
+                                table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    margin: 0 auto;
+                                }
+                                th, td {
+                                    border: 1px solid #333;
+                                    padding: 6px;
+                                    text-align: center;
+                                    vertical-align: middle;
+                                }
+                                th {
+                                    background-color: #f0f0f0 !important;
+                                    font-weight: bold;
+                                    font-size: 10px;
+                                }
+                                td {
+                                    font-size: 9px;
+                                }
+                                tr:nth-child(even) {
+                                    background-color: #f9f9f9;
+                                }
+                                .footer {
+                                    text-align: center;
+                                    margin-top: 20px;
+                                    font-size: 9px;
+                                    color: #666;
+                                }
+                                @media print {
+                                    body {
+                                        margin: 10px;
+                                    }
+                                    table {
+                                        font-size: 9px;
+                                    }
+                                    th, td {
+                                        padding: 4px;
+                                    }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>Resignation Report</h1>
+                                <div class="filter-info">
+                                    <strong>Unit:</strong> ${unit} | 
+                                    <strong>Date Range:</strong> ${fromDate} to ${toDate}
+                                </div>
+                            </div>
+                            ${printTable.outerHTML}
+                            <div class="footer">
+                                <p>Generated on: ${new Date().toLocaleString()}</p>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+
+                    printWindow.document.close();
+                    
+                    // Wait for content to load, then print
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                        
+                        // Close print window after printing
+                        setTimeout(() => {
+                            printWindow.close();
+                        }, 1000);
+                    }, 500);
+
+                    this.showNotification('Print dialog opened', 'info');
+                    
+                } catch (error) {
+                    console.error('Print failed:', error);
+                    this.showNotification('Print failed. Please try again.', 'error');
+                }
+            }
+            
+            showNotification(message, type = 'info') {
+                // Create toast notification
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full ${
+                    type === 'success' ? 'bg-green-500' : 
+                    type === 'error' ? 'bg-red-500' : 
+                    'bg-blue-500'
+                }`;
+                
+                // Add icon based on type
+                const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+                notification.innerHTML = `<span class="font-bold mr-2">${icon}</span>${message}`;
+                
+                document.body.appendChild(notification);
+                
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Animate out and remove
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+            
+            showLoading() {
+                if (this.loadingIndicator) {
+                    this.loadingIndicator.classList.remove('hidden');
+                }
+                // Add loading class to table
+                if (this.tableBody) {
+                    this.tableBody.classList.add('loading-state');
+                }
+            }
+            
+            hideLoading() {
+                if (this.loadingIndicator) {
+                    this.loadingIndicator.classList.add('hidden');
+                }
+                // Remove loading class from table
+                if (this.tableBody) {
+                    this.tableBody.classList.remove('loading-state');
+                }
+            }
+        }
+        
+        // Mobile filter toggle functionality
+        function toggleFilters() {
+            const form = document.getElementById('filterForm');
+            const button = document.getElementById('filterToggle');
+            
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                form.classList.add('flex', 'flex-col');
+                button.innerHTML = `
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Close
+                `;
+            } else {
+                form.classList.add('hidden');
+                form.classList.remove('flex', 'flex-col');
+                button.innerHTML = `
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+                    </svg>
+                    Filters
+                `;
+            }
+        }
+        
+        // Initialize dashboard when DOM is loaded
+        let dashboardController;
+        document.addEventListener('DOMContentLoaded', function() {
+            dashboardController = new DashboardController();
+            
+            // Show welcome notification
+            setTimeout(() => {
+                if (dashboardController) {
+                    dashboardController.showNotification('Dashboard loaded successfully', 'success');
+                }
+            }, 500);
+        });
+        
+        // Legacy function wrappers for backward compatibility
+        function submitForm() {
+            if (dashboardController) {
+                dashboardController.submitForm();
+            }
+        }
+        
+        function setDateRange(months) {
+            if (dashboardController) {
+                dashboardController.setDateRange(months);
+            }
+        }
+        
+        function setToday() {
+            if (dashboardController) {
+                dashboardController.setToday();
+            }
+        }
+        
+        function clearFilters() {
+            if (dashboardController) {
+                dashboardController.clearFilters();
+            }
+        }
+        
+        function exportExcel() {
+            if (dashboardController) {
+                dashboardController.exportExcel();
+            }
+        }
+        
+        function printReport() {
+            if (dashboardController) {
+                dashboardController.printReport();
+            }
+        }
+        
+        function saveCell(element, fieldName) {
+            const newValue = element.textContent.trim();
+            
+            // Visual feedback
+            element.style.backgroundColor = '#FEF3C7';
+            
+            // Save to server
+            fetch('/api/save-field/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    field: fieldName,
+                    value: newValue,
+                    row_id: element.closest('tr').dataset.rowId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.style.backgroundColor = '#D1FAE5'; // Light green
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                    }, 2000);
+                    
+                    if (dashboardController) {
+                        dashboardController.showNotification('Changes saved successfully', 'success');
+                    }
+                } else {
+                    throw new Error('Save failed');
+                }
+            })
+            .catch(error => {
+                console.error('Save failed:', error);
+                element.style.backgroundColor = '#FEE2E2'; // Light red
+                
+                if (dashboardController) {
+                    dashboardController.showNotification('Failed to save changes', 'error');
+                }
+                
+                setTimeout(() => {
+                    element.style.backgroundColor = '';
+                }, 2000);
+            });
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+</div>
+
+
+{% endblock %}

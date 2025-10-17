@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.contrib import messages
 from .models import JobAllocation,VueRl001,mastermistakes,VueOrdersinhand,master_roll_update,mistake_image,master_final_mistake,Lotsticker,Punchdtls1,VueFindia,back_permissions,BreakTime
 from django.db.models import Q
+
 import json
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -16,6 +17,8 @@ from datetime import datetime
 from django.utils.dateparse import parse_duration
 from django.db.models import Min
 from datetime import time
+from django.core.mail import EmailMessage
+from django.conf import settings
 
 
 # @login_required
@@ -104,16 +107,87 @@ from datetime import date
 from django.db.models import Min
 from .models import JobAllocation, Punchdtls1
 
+
+
+# def machine_jobs(request, machine_id):
+#     today = date.today()
+
+#     unique_emp_ids = Punchdtls1.objects.using('main').filter(
+#         unitname='CUTTING',
+#         dt=today
+#     ).values('id').annotate(min_id1=Min('id1')).values_list('min_id1', flat=True)
+
+#     employees = Punchdtls1.objects.using('main').filter(id1__in=unique_emp_ids)
+
+#     for emp in employees:
+#         raw_path = emp.id.photo if emp.id and emp.id.photo else None
+#         if raw_path:
+#             filename = raw_path.split('\\')[-1]
+#             emp.photo_url = f"https://app.herofashion.com/staff_images/{filename}"
+#         else:
+#             emp.photo_url = ""
+
+#     job = JobAllocation.objects.filter(machine_id=machine_id, date=today).order_by('-id').first()
+
+#     if job:
+#         for emp in employees:
+#             if emp.id.code == job.emp_id1:
+#                 job.emp_photo_1 = emp.photo_url
+#             if emp.id.code == job.emp_id2:
+#                 job.emp_photo_2 = emp.photo_url
+
+#     if request.method == 'POST':
+#         if 'move_user' in request.POST:
+#             emp_id1 = request.POST.get('emp_id1')
+#             emp_id2 = request.POST.get('emp_id2')
+
+#             if not emp_id1 or not emp_id2:
+#                 messages.error(request, "Both employee IDs are required before moving.")
+#                 return redirect('machine_jobs', machine_id=machine_id)
+
+#             request.session['emp_data'] = {
+#                 'emp_name_1': request.POST.get('emp_name_1'),
+#                 'emp_id1': emp_id1,
+#                 'emp_name_2': request.POST.get('emp_name_2'),
+#                 'emp_id2': emp_id2,
+#             }
+#             request.session['group_id'] = machine_id
+#             return redirect('home', machine_id=machine_id)
+
+#         else:
+#             # Save allocation
+#             JobAllocation.objects.create(
+#                 machine_id=machine_id,
+#                 date=today,
+#                 emp_name_1=request.POST.get('emp_name_1', ''),
+#                 emp_id1=request.POST.get('emp_id1', ''),
+#                 emp_name_2=request.POST.get('emp_name_2', ''),
+#                 emp_id2=request.POST.get('emp_id2', '')
+#             )
+#             # ✅ THIS LINE makes it trigger auto move
+#             return redirect(f"{request.path}?auto_move=1")
+
+#     return render(request, 'machine_jobs.html', {
+#         'job': job,
+#         'machine_id': machine_id,
+#         'employees': employees
+#     })
+
+
+
 def machine_jobs(request, machine_id):
     today = date.today()
 
+    # Get unique employee IDs for the day
     unique_emp_ids = Punchdtls1.objects.using('main').filter(
         unitname='CUTTING',
         dt=today
     ).values('id').annotate(min_id1=Min('id1')).values_list('min_id1', flat=True)
 
+    # Fetch employee objects
     employees = Punchdtls1.objects.using('main').filter(id1__in=unique_emp_ids)
 
+    # Add photo URL to each employee
     for emp in employees:
         raw_path = emp.id.photo if emp.id and emp.id.photo else None
         if raw_path:
@@ -122,8 +196,10 @@ def machine_jobs(request, machine_id):
         else:
             emp.photo_url = ""
 
+    # Get the latest job allocation for this machine today
     job = JobAllocation.objects.filter(machine_id=machine_id, date=today).order_by('-id').first()
 
+    # Attach photo to the job if exists
     if job:
         for emp in employees:
             if emp.id.code == job.emp_id1:
@@ -131,42 +207,62 @@ def machine_jobs(request, machine_id):
             if emp.id.code == job.emp_id2:
                 job.emp_photo_2 = emp.photo_url
 
+    # --- POST handling ---
     if request.method == 'POST':
-        if 'move_user' in request.POST:
-            emp_id1 = request.POST.get('emp_id1')
-            emp_id2 = request.POST.get('emp_id2')
+        emp_id1 = request.POST.get('emp_id1', '')
+        emp_name_1 = request.POST.get('emp_name_1', '')
+        emp_id2 = request.POST.get('emp_id2', '')
+        emp_name_2 = request.POST.get('emp_name_2', '')
 
-            if not emp_id1 or not emp_id2:
-                messages.error(request, "Both employee IDs are required before moving.")
+        # 🔁 Move button clicked
+        if 'move_user' in request.POST:
+            if not emp_id1 and not emp_id2:
+                messages.error(request, "At least one employee ID is required before moving.")
                 return redirect('machine_jobs', machine_id=machine_id)
 
             request.session['emp_data'] = {
-                'emp_name_1': request.POST.get('emp_name_1'),
+                'emp_name_1': emp_name_1,
                 'emp_id1': emp_id1,
-                'emp_name_2': request.POST.get('emp_name_2'),
+                'emp_name_2': emp_name_2,
                 'emp_id2': emp_id2,
             }
             request.session['group_id'] = machine_id
             return redirect('home', machine_id=machine_id)
 
+        # 💾 Save Allocation
         else:
-            # Save allocation
+            if not emp_id1 and not emp_id2:
+                messages.error(request, "At least one employee must be selected.")
+                return redirect('machine_jobs', machine_id=machine_id)
+
+            # Save the job allocation
             JobAllocation.objects.create(
                 machine_id=machine_id,
                 date=today,
-                emp_name_1=request.POST.get('emp_name_1', ''),
-                emp_id1=request.POST.get('emp_id1', ''),
-                emp_name_2=request.POST.get('emp_name_2', ''),
-                emp_id2=request.POST.get('emp_id2', '')
+                emp_name_1=emp_name_1,
+                emp_id1=emp_id1,
+                emp_name_2=emp_name_2,
+                emp_id2=emp_id2
             )
-            # ✅ THIS LINE makes it trigger auto move
-            return redirect(f"{request.path}?auto_move=1")
 
+            # Save to session (like move_user) and redirect to home
+            request.session['emp_data'] = {
+                'emp_name_1': emp_name_1,
+                'emp_id1': emp_id1,
+                'emp_name_2': emp_name_2,
+                'emp_id2': emp_id2,
+            }
+            request.session['group_id'] = machine_id
+
+            return redirect('home', machine_id=machine_id)
+
+    # --- GET request ---
     return render(request, 'machine_jobs.html', {
         'job': job,
         'machine_id': machine_id,
         'employees': employees
     })
+
 
 def check_roll_exists(request):
     rollno = request.GET.get('rollno', '').strip()
@@ -202,6 +298,7 @@ def validate_user(request):
         return JsonResponse({'valid': True, 'emp_name': emp_name})
     else:
         return JsonResponse({'valid': False})
+
 
 # def fetch_roll_details(request):
 #     roll_no = request.GET.get('rollno')
@@ -301,6 +398,7 @@ def validate_user(request):
 #         'full_image_url': full_image_url,
 #         'all_mistakes': all_mistakes
 #     })
+
 
 
 
@@ -642,90 +740,6 @@ def manifest(request):
     return JsonResponse(data)
 
 
-# def submit_mistake(request):
-#     all = mastermistakes.objects.all()
-   
-#     if request.method == 'POST':
-#         data = mastermistakes(
-#             ty=request.POST.get('ty'),
-#             dt=timezone.now(),
-#             mist1_eng=request.POST.get('mist1_eng'),
-#             mist2_eng=request.POST.get('mist2_eng'),
-#             mist3_eng=request.POST.get('mist3_eng'),
-#             mist4_eng=request.POST.get('mist4_eng'),
-#             mist5_eng=request.POST.get('mist5_eng'),
-#             mist6_eng=request.POST.get('mist6_eng'),
-#             mist7_eng=request.POST.get('mist7_eng'),
-#             mist8_eng=request.POST.get('mist8_eng'),
-#             mist9_eng=request.POST.get('mist9_eng'),
-#             mist10_eng=request.POST.get('mist10_eng'),
-#             mist11_eng=request.POST.get('mist11_eng'),
-#             mist12_eng=request.POST.get('mist12_eng'),
-#             mist1_ta=request.POST.get('mist1_ta'),
-#             mist2_ta=request.POST.get('mist2_ta'),
-#             mist3_ta=request.POST.get('mist3_ta'),
-#             mist4_ta=request.POST.get('mist4_ta'),
-#             mist5_ta=request.POST.get('mist5_ta'),
-#             mist6_ta=request.POST.get('mist6_ta'),
-#             mist7_ta=request.POST.get('mist7_ta'),
-#             mist8_ta=request.POST.get('mist8_ta'),
-#             mist9_ta=request.POST.get('mist9_ta'),
-#             mist10_ta=request.POST.get('mist10_ta'),
-#             mist11_ta=request.POST.get('mist11_ta'),
-#             mist12_ta=request.POST.get('mist12_ta'),
-#             mist1_hin=request.POST.get('mist1_hin'),
-#             mist2_hin=request.POST.get('mist2_hin'),
-#             mist3_hin=request.POST.get('mist3_hin'),
-#             mist4_hin=request.POST.get('mist4_hin'),
-#             mist5_hin=request.POST.get('mist5_hin'),
-#             mist6_hin=request.POST.get('mist6_hin'),
-#             mist7_hin=request.POST.get('mist7_hin'),
-#             mist8_hin=request.POST.get('mist8_hin'),
-#             mist9_hin=request.POST.get('mist9_hin'),
-#             mist10_hin=request.POST.get('mist10_hin'),
-#             mist11_hin=request.POST.get('mist11_hin'),
-#             mist12_hin=request.POST.get('mist12_hin'),
-#             m1_choice=request.POST.get('m1_choice'),
-#             m2_choice=request.POST.get('m2_choice'),
-#             m3_choice=request.POST.get('m3_choice'),
-#             m4_choice=request.POST.get('m4_choice'),
-#             m5_choice=request.POST.get('m5_choice'),
-#             m6_choice=request.POST.get('m6_choice'),
-#             m7_choice=request.POST.get('m7_choice'),
-#             m8_choice=request.POST.get('m8_choice'),
-#             m9_choice=request.POST.get('m9_choice'),
-#             m10_choice=request.POST.get('m10_choice'),
-#             m11_choice=request.POST.get('m11_choice'),
-#             m12_choice=request.POST.get('m12_choice'),
-#             m1=request.POST.get('m1') or 0,
-#             m2=request.POST.get('m2') or 0,
-#             m3=request.POST.get('m3') or 0,
-#             m4=request.POST.get('m4') or 0,
-#             m5=request.POST.get('m5') or 0,
-#             m6=request.POST.get('m6') or 0,
-#             m7=request.POST.get('m7') or 0,
-#             m8=request.POST.get('m8') or 0,
-#             m9=request.POST.get('m9') or 0,
-#             m10=request.POST.get('m10') or 0,
-#             m11=request.POST.get('m11') or 0,
-#             m12=request.POST.get('m12') or 0,
-#             mist1_img=request.FILES.get('mist1_img'), # Handles uploaded file
-#             mist2_img=request.FILES.get('mist2_img'),  # Handles uploaded file
-#             mist3_img=request.FILES.get('mist3_img'),  # Handles uploaded file
-#             mist4_img=request.FILES.get('mist4_img'),  # Handles uploaded file
-#             mist5_img=request.FILES.get('mist5_img'),  # Handles uploaded file
-#             mist6_img=request.FILES.get('mist6_img'),  # Handles uploaded file
-#             mist7_img=request.FILES.get('mist7_img'),  # Handles uploaded file
-#             mist8_img=request.FILES.get('mist8_img'),  # Handles uploaded file
-#             mist9_img=request.FILES.get('mist9_img'),  # Handles uploaded file
-#             mist10_img=request.FILES.get('mist10_img'),  # Handles uploaded file
-#             mist11_img=request.FILES.get('mist11_img'),  # Handles uploaded file
-#             mist12_img=request.FILES.get('mist12_img')  # Handles uploaded file
-#         )
-#         data.save()
-#         return redirect('submit_mistake')  # Change to your success URL
-#     return render(request, 'mistake_form.html',{'all': all})
-
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -895,12 +909,17 @@ def save_final_data(request):
                 except ValueError:
                     timer_obj = None  # Could log or handle bad format here
 
+            roll_no=data.get('roll_no', '')
+            roll_entry = VueRl001.objects.using('demo').filter(rlno__iexact=roll_no).order_by('-dt').first()
+            color =roll_entry.name
+
             instance = master_final_mistake.objects.create(
                 roll_no=data.get('roll_no', ''),
                 job_no=data.get('job_no', ''),
                 machine_id=data.get('machine_id', ''),
                 dc_no=data.get('dc_no', ''),
                 lot_no=data.get('lot_no', ''),
+                color=color,
                 # field_id=data.get('field_id', ''),
                 types=data.get('types', ''), # Set if needed
                 timer=timer_obj,
@@ -985,33 +1004,67 @@ def save_final_data(request):
 
             print("Combined M1:", combined_m1)
 
-            Lotsticker.objects.using('demo').all().delete()
-            lotsticker_instance = Lotsticker.objects.using('demo').create(
-                lotno=data.get('lot_no', ''),
-                colour=data.get('color', ''),
-                rollno=data.get('roll_no', ''),
-                dcno=data.get('dc_no', ''),
-                fabric=data.get('fabric', ''),
-                wgt=data.get('weight', 0),
-                m1=combined_m1,
+            # Lotsticker.objects.using('demo').all().delete()
+            # lotsticker_instance = Lotsticker.objects.using('demo').create(
+            #     lotno=data.get('lot_no', ''),
+            #     colour=data.get('color', ''),
+            #     rollno=data.get('roll_no', ''),
+            #     dcno=data.get('dc_no', ''),
+            #     fabric=data.get('fabric', ''),
+            #     wgt=data.get('weight', 0),
+            #     m1=combined_m1,
  
-                # fdia=data.get('finish_dia', ''),
-                mtr=data.get('total_meters', 0),
-                jobno=data.get('job_no', ''),
-                dia=data.get('finish_dia', ''),
-                gsm=gsm_cleaned,
-                re=data.get('remarks', ''),
-                em=emp_name,
-                u=u_data,
-            )
+            #     # fdia=data.get('finish_dia', ''),
+            #     mtr=data.get('total_meters', 0),
+            #     jobno=data.get('job_no', ''),
+            #     dia=data.get('finish_dia', ''),
+            #     gsm=gsm_cleaned,
+            #     re=data.get('remarks', ''),
+            #     em=emp_name,
+            #     u=u_data,
+            # )
+
+            matched_image = mistake_image.objects.filter(
+                roll_no=data.get('roll_no', ''),
+                lot_no=data.get('lot_no', ''),
+                job_no=data.get('job_no', '')
+            ).first()
+
+            if matched_image and matched_image.image:
+                subject = "Mistake Alert - Roll Issue Detected"
+                body = f"""
+                A matching mistake entry has been recorded.
+
+                📦 Roll No: {matched_image.roll_no}
+                📦 Lot No: {matched_image.lot_no}
+                📦 Job No: {matched_image.job_no}
+                🎨 Color: {matched_image.color}
+                """
+
+                email = EmailMessage(
+                    subject=subject,
+                    body=body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=['tdhanasekaran202@gmail.com'],  # Replace with your recipient list
+                )
+
+                # Attach the image
+                if matched_image.image:
+                    image_path = matched_image.image.path  # Full path to the image
+                    email.attach_file(image_path)
+
+                try:
+                    email.send(fail_silently=False)
+                    print("✅ Email with image sent.")
+                except Exception as email_error:
+                    print("❌ Failed to send email:", email_error)
 
             return JsonResponse({
                 'status': 'success',
                 'id': instance.id,
-                'lotsticker_id': lotsticker_instance.sl,
+                # 'lotsticker_id': lotsticker_instance.sl,
                 'machine_id': data.get('machine_id', '')
             })
-            
             
             # return JsonResponse({'status': 'success', 'id': instance.id, 'machine_id': data.get('machine_id', '')})
 
@@ -1042,32 +1095,125 @@ def delete_roll(request):
 
 
 
+# def machine_report(request, machine_id):
+#     roll_no = request.GET.get('rollfilter', '').strip()
+#     datefilter = request.GET.get('datefilter')
+#     roll_status = request.GET.get('roll_status', 'all')  # 'all', 'good_roll', 'bad_roll'
+
+#     print("roll_status==",roll_status)
+#     machine_id = machine_id
+
+#     mistakes = master_final_mistake.objects.filter(machine_id=machine_id)
+
+#     if roll_no:
+#         mistakes = mistakes.filter(roll_no__icontains=roll_no)
+
+#     if datefilter:
+#         mistakes = mistakes.filter(date=datefilter)
+#     elif not roll_no:
+#         mistakes = mistakes.filter(date=date.today())
+
+#     # default_limits = mastermistakes.objects.first()
+    
+
+#     processed_mistakes = []
+#     for item in mistakes:
+#         is_bad = False
+#         remarks = (item.remarks or '').strip().lower()
+#         print("item_types:", item.types)
+#         limits = mastermistakes.objects.filter(ty__iexact=item.types).first() 
+
+#         if remarks:
+#             is_bad = True
+
+#         if not is_bad and limits:
+#             for i in range(1, 13):
+#                 value = getattr(item, f"m{i}")
+#                 limit = getattr(limits, f"m{i}")
+#                 value_clean = (value or '').strip().lower()
+
+#                 if "full roll" in value_clean:
+#                     is_bad = True
+#                     break
+
+#                 try:
+#                     if value and float(value) > float(limit):
+#                         is_bad = True
+#                         break
+#                 except (ValueError, TypeError):
+#                     continue  
+
+#         # item.status = "Bad Roll" if is_bad else "Good Roll"
+#         item.status = "Fail Roll" if is_bad else "Pass Roll"
+
+#         mistakes_list = []
+#         for i in range(1, 13):
+#             val = getattr(item, f"m{i}")
+#             if val and str(val).strip() not in ["", "0", "0.0"]:
+#                 eng_label = getattr(limits, f"mist{i}_eng", f"m{i}")
+#                 mistakes_list.append(f"{eng_label}-{val}")
+        
+#         item.mistakes_str = "\n".join(mistakes_list).strip()
+
+#         processed_mistakes.append(item)
+
+#     total_count = len(processed_mistakes)
+#     good_count = sum(1 for item in processed_mistakes if item.status == "Good Roll")
+#     bad_count = total_count - good_count
+
+#     if roll_status == "good_roll":
+#         processed_mistakes = [item for item in processed_mistakes if item.status == "Pass Roll"]
+#     elif roll_status == "bad_roll":
+#         processed_mistakes = [item for item in processed_mistakes if item.status == "Fail Roll"]
+
+#     return render(request, 'machine_report.html', {
+#         'mistakes': processed_mistakes,
+#         'rollfilter': roll_no,
+#         'datefilter': datefilter or '',
+#         'total_count': total_count,
+#         'good_count': good_count,
+#         'bad_count': bad_count,
+#         'roll_status': roll_status,
+#         'machine_id': machine_id
+#     })
+
 
 def machine_report(request, machine_id):
     roll_no = request.GET.get('rollfilter', '').strip()
     datefilter = request.GET.get('datefilter')
     roll_status = request.GET.get('roll_status', 'all')  # 'all', 'good_roll', 'bad_roll'
-    machine_id = machine_id
 
     mistakes = master_final_mistake.objects.filter(machine_id=machine_id)
 
+    for data in mistakes:
+        print("timer == ", data.timer)
+    
+
     if roll_no:
-        mistakes = mistakes.filter(roll_no__icontains=roll_no)
+        mistakes = mistakes.filter(
+            Q(roll_no__icontains=roll_no) |
+            Q(lot_no__icontains=roll_no) |
+            Q(job_no__icontains=roll_no) |
+            Q(color__icontains=roll_no)
+        )
 
     if datefilter:
         mistakes = mistakes.filter(date=datefilter)
     elif not roll_no:
         mistakes = mistakes.filter(date=date.today())
 
-    # default_limits = mastermistakes.objects.first()
-    
-
     processed_mistakes = []
     for item in mistakes:
+        item.timer_str = str(item.timer)
+        try:
+            item.timer_seconds = item.timer.hour * 3600 + item.timer.minute * 60 + item.timer.second
+            item.is_timer_exceeded = item.timer_seconds > 300  # 5 minutes = 300 seconds
+        except:
+            item.is_timer_exceeded = False
+
         is_bad = False
         remarks = (item.remarks or '').strip().lower()
-        print("item_types:", item.types)
-        limits = mastermistakes.objects.filter(ty__iexact=item.types).first() 
+        limits = mastermistakes.objects.filter(ty__iexact=item.types).first()
 
         if remarks:
             is_bad = True
@@ -1087,10 +1233,9 @@ def machine_report(request, machine_id):
                         is_bad = True
                         break
                 except (ValueError, TypeError):
-                    continue  
+                    continue
 
-        # item.status = "Bad Roll" if is_bad else "Good Roll"
-        item.status = "Bad Roll" if is_bad else "Good Roll"
+        item.status = "Fail Roll" if is_bad else "Pass Roll"
 
         mistakes_list = []
         for i in range(1, 13):
@@ -1098,21 +1243,18 @@ def machine_report(request, machine_id):
             if val and str(val).strip() not in ["", "0", "0.0"]:
                 eng_label = getattr(limits, f"mist{i}_eng", f"m{i}")
                 mistakes_list.append(f"{eng_label}-{val}")
-        
+
         item.mistakes_str = "\n".join(mistakes_list).strip()
-
-      
-
         processed_mistakes.append(item)
 
     total_count = len(processed_mistakes)
-    good_count = sum(1 for item in processed_mistakes if item.status == "Good Roll")
+    good_count = sum(1 for item in processed_mistakes if item.status == "Pass Roll")
     bad_count = total_count - good_count
 
     if roll_status == "good_roll":
-        processed_mistakes = [item for item in processed_mistakes if item.status == "Good Roll"]
+        processed_mistakes = [item for item in processed_mistakes if item.status == "Pass Roll"]
     elif roll_status == "bad_roll":
-        processed_mistakes = [item for item in processed_mistakes if item.status == "Bad Roll"]
+        processed_mistakes = [item for item in processed_mistakes if item.status == "Fail Roll"]
 
     return render(request, 'machine_report.html', {
         'mistakes': processed_mistakes,
@@ -1126,28 +1268,125 @@ def machine_report(request, machine_id):
     })
 
 
-def break_screen(request):
-    now = datetime.now().time()
-    bt = BreakTime.objects.filter(is_active=True).first()
 
-    # ✅ Store the original_url from GET into session
+# def break_screen(request):
+#     now = datetime.now().time()
+#     breaks = BreakTime.objects.filter(is_active=True)
+
+#     # ✅ Store the original URL if passed
+#     original_url = request.GET.get('original_url')
+#     if original_url:
+#         request.session['original_url'] = original_url
+
+#     for bt in breaks:
+#         if bt.start_time <= now <= bt.end_time:
+#             return render(request, 'break.html', {
+#                 'break_end_time': bt.end_time.strftime('%H:%M:%S')
+#             })
+
+#     # ✅ Break is over → redirect to original or fallback
+#     original = request.session.pop('original_url', None)
+#     if original:
+#         return redirect(original)
+#     return redirect('/roll/')  # fallback
+
+
+# # ✅ New: API to check break status in real-time via JS
+# def get_current_break(request):
+#     now = datetime.now().time()
+#     breaks = BreakTime.objects.filter(is_active=True)
+
+#     for bt in breaks:
+#         if bt.start_time <= now <= bt.end_time:
+#             return JsonResponse({
+#                 'in_break': True,
+#                 'start_time': bt.start_time.strftime('%H:%M:%S'),
+#                 'end_time': bt.end_time.strftime('%H:%M:%S')
+#             })
+
+#     return JsonResponse({
+#         'in_break': False
+#     })
+
+
+def break_times(request):
+    now = datetime.now().time()
+    breaks = BreakTime.objects.filter(is_active=True)
+
+    for bt in breaks:
+        if bt.start_time <= now <= bt.end_time:
+            return {
+                'break_start': bt.start_time.strftime('%H:%M:%S'),
+                'break_end': bt.end_time.strftime('%H:%M:%S'),
+                'in_break': True,
+            }
+
+    return {
+        'break_start': '00:00:00',
+        'break_end': '00:00:00',
+        'in_break': False,
+    }
+
+
+# def break_screen(request):
+#     now = datetime.now().time()
+#     breaks = BreakTime.objects.filter(is_active=True)
+
+#     original_url = request.GET.get('original_url')
+#     if original_url:
+#         request.session['original_url'] = original_url
+
+#     for bt in breaks:
+#         if bt.start_time <= now <= bt.end_time:
+#             # Convert to full datetime and get timestamp in milliseconds
+#             break_end_dt = datetime.combine(date.today(), bt.end_time)
+#             break_end_ts = int(break_end_dt.timestamp() * 1000)
+
+#             return render(request, 'break.html', {
+#                 'break_end_ts': break_end_ts
+#             })
+
+#     original = request.session.pop('original_url', None)
+#     if original:
+#         return redirect(original)
+
+#     return redirect('/roll/')  # fallback
+
+
+def break_screen(request):
+    now = datetime.now()
+    breaks = BreakTime.objects.filter(is_active=True)
+
     original_url = request.GET.get('original_url')
-    if original_url:
+    # Only set original_url in session if not already set
+    if original_url and not request.session.get('original_url'):
         request.session['original_url'] = original_url
 
-    if bt:
-        if now > bt.end_time:
-            original = request.session.pop('original_url', None)
-            if original:
-                print("Redirecting to saved original_url:", original)
-                return redirect(original)
-            else:
-                print("No original_url in session, redirecting to default.")
-                return redirect('/roll/')  # fallback
-        return render(request, 'break.html', {
-            'break_end_time': bt.end_time.strftime('%H:%M:%S')
-        })
+    for bt in breaks:
+        if bt.start_time <= now.time() <= bt.end_time:
+            break_end_dt = datetime.combine(now.date(), bt.end_time)
+            return render(request, 'break.html', {
+                'break_end_ts': int(break_end_dt.timestamp() * 1000),  # JS timestamp in ms
+                'server_now_ts': int(now.timestamp() * 1000),          # server current time ms
+            })
 
+    # Break is over, redirect to original URL or fallback
+    original = request.session.pop('original_url', None)
+    if original:
+        return redirect(original)
     return redirect('/roll/')
 
 
+def get_current_break(request):
+    now = datetime.now().time()
+    breaks = BreakTime.objects.filter(is_active=True)
+
+    for bt in breaks:
+        if bt.start_time <= now <= bt.end_time:
+            return JsonResponse({
+                'in_break': True,
+                'start_time': bt.start_time.strftime('%H:%M:%S'),
+                'end_time': bt.end_time.strftime('%H:%M:%S')
+            })
+
+    return JsonResponse({'in_break': False})

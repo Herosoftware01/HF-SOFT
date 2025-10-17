@@ -1,9 +1,11 @@
+
 {% extends 'mains.html' %}
 {% load static %}
 
 {% block content %}
-<div class="bg-[url('{% static 'images/blue.jpg' %}')] relative bg-cover bg-center min-h-screen text-white">
+<meta http-equiv="Cache-Control" content="no-store" />
 
+<div class="bg-[url('{% static 'images/blue.jpg' %}')] relative bg-cover bg-center min-h-screen text-white">
     <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-800/70 backdrop-blur-sm"></div>
 
     <div class="relative z-10 flex flex-col justify-center items-center min-h-screen text-center px-4">
@@ -16,18 +18,26 @@
     </div>
 </div>
 
-<!-- Countdown & Auto-Refresh Script -->
 <script>
-    const [h, m, s] = "{{ break_end_time }}".split(':').map(Number);
-    const breakEnd = new Date();
-    breakEnd.setHours(h, m, s);
+    // Pass server timestamps from Django
+    const breakEnd = {{ break_end_ts }};
+    const serverNow = {{ server_now_ts }};
+
+    // Calculate difference between client and server time
+    const clientNow = new Date().getTime();
+    const offset = clientNow - serverNow;
 
     function updateTimer() {
-        const now = new Date();
-        const timeLeft = breakEnd - now;
+        const now = new Date().getTime();
+        const correctedNow = now - offset;
+        const timeLeft = breakEnd - correctedNow;
 
         if (timeLeft <= 0) {
-            window.location.reload();  // 🔁 Auto-refresh to trigger break end
+            console.log("✅ Break ended. Redirecting...");
+
+            // Redirect to original URL stored in sessionStorage or fallback
+            const originalUrl = sessionStorage.getItem('original_url') || '/roll/';
+            window.location.href = originalUrl;
         } else {
             const mins = Math.floor((timeLeft / 1000 / 60) % 60);
             const secs = Math.floor((timeLeft / 1000) % 60);
