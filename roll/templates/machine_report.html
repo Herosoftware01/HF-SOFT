@@ -16,8 +16,8 @@
         <!-- Stats -->
         <div class="flex space-x-6 text-xl">
             <h3 class="text-yellow-600">Total: <span class="font-extrabold text-yellow-600"> {{ total_count }}</span></h3>
-            <h3 class="text-green-600">Good Roll: <span class="font-extrabold text-green-600"> {{ good_count }}</span></h3>
-            <h3 class="text-red-600">Bad Roll: <span class="font-extrabold text-red-600"> {{ bad_count }}</span></h3>
+            <h3 class="text-green-600">Pass Roll: <span class="font-extrabold text-green-600"> {{ good_count }}</span></h3>
+            <h3 class="text-red-600">Fail Roll: <span class="font-extrabold text-red-600"> {{ bad_count }}</span></h3>
         </div>
 
         <!-- Filter Form -->
@@ -30,7 +30,7 @@
             <input
                 type="text"
                 name="rollfilter"
-                placeholder="Search Roll No"
+                placeholder="Search"
                 value="{{ rollfilter }}"
                 class="px-2 py-1 border border-gray-300 rounded"
             >
@@ -53,24 +53,34 @@
                     <th class="border border-gray-300 px-4 py-2">Roll No</th>
                     <th class="border border-gray-300 px-4 py-2">DC No</th>
                     <th class="border border-gray-300 px-4 py-2">Job No</th>
+                    <th class="border border-gray-300 px-4 py-2">Lot No</th>
+                    <th class="border border-gray-300 px-4 py-2">Color</th>
                     <th class="border border-gray-300 px-4 py-2">Types</th>
                     <th class="border border-gray-300 px-4 py-2">F_Dia</th>
                     <th class="border border-gray-300 px-4 py-2">Act GSM</th>
                     <th class="border border-gray-300 px-4 py-2">Remarks</th>
+                    <th class="border border-gray-300 px-4 py-2">Time</th>
                     <th class="border border-gray-300 px-4 py-2">Mistakes</th>
                     <th class="border border-gray-300 px-4 py-2">Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for data in mistakes %}
-                <tr class="hover:bg-gray-50">
+                <!-- <tr class="hover:bg-gray-50"> -->
+                <tr class="hover:bg-gray-50 {% if data.is_timer_exceeded %}bg-red-100{% endif %}">
                     <td class="border border-gray-300 px-4 py-2">{{ data.roll_no }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.dc_no }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.job_no }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.lot_no }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ data.color }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.types }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.finish_dia }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.act_gsm }}</td>
                     <td class="border border-gray-300 px-4 py-2">{{ data.remarks }}</td>
+                    <!-- <td class="border border-gray-300 px-4 py-2">{{ data.timer_str }}</td> -->
+                    <td class="border border-gray-300 px-4 py-2 {% if data.is_timer_exceeded %}text-red-600 font-semibold{% endif %}">
+                        {{ data.timer_str }}
+                    </td>
                     <td class="border border-gray-300 px-4 py-2 whitespace-pre-line">
                         {{ data.mistakes_str }}
                     </td>
