@@ -6,17 +6,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-<<<<<<< HEAD
-
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1
-=======
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
-
-# from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1
 
->>>>>>> 4820adce2e19fb2e88e357aff232069084660e38
 import json
 import pandas as pd
 import numpy as np
@@ -541,10 +532,7 @@ def Ordsampst(request):
 
 def Ordsampst1(request):
     return render(request, "powerbi/ordsamst.html")
-<<<<<<< HEAD
-=======
 
->>>>>>> 4820adce2e19fb2e88e357aff232069084660e38
   # Make sure to import your model
 
 # def Ordsampst(request):
@@ -580,7 +568,4 @@ def Ordsampst1(request):
 #     Renders the HTML page that will display the AG Grid.
 #     """
 #     return render(request, "powerbi/ordsamst.html")
-<<<<<<< HEAD
-=======
 
->>>>>>> 4820adce2e19fb2e88e357aff232069084660e38
