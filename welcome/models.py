@@ -446,7 +446,6 @@ class AllotPen(models.Model):
 
 
 
-<<<<<<< HEAD
 
 class PrintNew(models.Model):
     jobno_joint = models.CharField(db_column='Jobno Joint', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS',primary_key=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
@@ -507,7 +506,6 @@ class PrintNew(models.Model):
         managed = False
         db_table = 'Print_New'
 
-=======
 class OrdSampleStatus(models.Model):
     print = models.CharField(db_column='Print', max_length=750)  # Field name made lowercase.
     emb = models.CharField(db_column='Emb', max_length=750)  # Field name made lowercase.
@@ -538,4 +536,3 @@ class OrdSampleStatus(models.Model):
     class Meta:
         managed = False
         db_table = 'Ord_Sample_status'
->>>>>>> 4ec96b8b9eac41f09864ff34f96b8d44e9830d2a
