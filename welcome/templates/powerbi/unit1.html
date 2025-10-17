@@ -20,15 +20,13 @@
     padding: 0 !important;
   }
 
-  /* Row selected */
   .ag-row-selected .ag-cell {
-    background-color: #bfdbfe !important; /* blue-200 */
+    background-color: #bfdbfe !important;
   }
 
-  /* Focused cell */
   .ag-cell-focus {
     outline: none !important;
-    background-color: #fbbf24 !important; /* yellow-400 */
+    background-color: #fbbf24 !important;
     color: black !important;
     font-weight: bold;
   }
@@ -59,6 +57,7 @@
 
 <div class="bg-gray-100 p-6 container mx-auto">
   <h1 class="text-2xl font-semibold mb-4">UNIT-1 Fabric Data Table</h1>
+  <!-- <p>Total Rows: {{ datas_json|length }}</p> -->
 
   <!-- Search input -->
   <input
@@ -68,11 +67,12 @@
     class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"
   />
 
-<div id="rowCount" class="py-2 text-gray-700 font-semibold text-end"></div>
-  <div class="overflow-x-auto w-full">
-      <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg min-w-[640px]"></div>
-    </div>
+  <!-- Row count -->
+  <div id="rowCount" class="py-2 text-gray-700 font-semibold text-end"></div>
 
+  <div class="overflow-x-auto w-full">
+    <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg min-w-[640px]"></div>
+  </div>
 
   <!-- AG Grid JS -->
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
@@ -84,7 +84,6 @@
       let currentGlobalFilter = '';
       let currentColumnFilters = {};
 
-      // Highlight matched text
       function highlightRenderer(params) {
         if (!params.value) return '';
         const cellValue = params.value.toString();
@@ -106,14 +105,12 @@
         });
       }
 
-      // Image renderer
       function imageCellRenderer(params) {
         if (!params.value) return '';
         return `<img src="${params.value}" alt="image"
                 style="width:50px;height:60px;object-fit:contain;border-radius:4px;" />`;
       }
 
-      // Column definitions
       const columnDefs = [
         { headerName: 'No', field: 'no', maxWidth: 80, checkboxSelection: true },
         { headerName: 'Order No', field: 'jobno', cellRenderer: highlightRenderer },
@@ -141,7 +138,6 @@
         { headerName: 'Pack', field: 'pack', cellRenderer: highlightRenderer },
       ];
 
-      // Grid options
       const gridOptions = {
         columnDefs,
         defaultColDef: {
@@ -161,8 +157,17 @@
       };
 
       new agGrid.Grid(gridDiv, gridOptions);
-    //  document.getElementById('rowCount').innerText = `Total Rows: ${rowData.length}`;
-      // Listen for filter changes
+
+      // Function to update visible row count
+      function updateRowCount() {
+        const count = gridOptions.api.getDisplayedRowCount();
+        document.getElementById('rowCount').innerText = `Visible Rows: ${count}`;
+      }
+
+      // Initial row count after data load
+      gridOptions.api.addEventListener('firstDataRendered', updateRowCount);
+
+      // Filter change event
       gridOptions.api.addEventListener('filterChanged', () => {
         currentColumnFilters = {};
         const filterModel = gridOptions.api.getFilterModel();
@@ -173,17 +178,19 @@
           }
         }
         gridOptions.api.refreshCells({ force: true });
+        updateRowCount();
       });
 
-      // Global search input
+      // Global quick filter
       const globalFilterInput = document.querySelector('#globalFilter');
       globalFilterInput.addEventListener('input', function (event) {
         currentGlobalFilter = event.target.value.toLowerCase();
         gridOptions.api.setQuickFilter(currentGlobalFilter);
         gridOptions.api.refreshCells({ force: true });
+        updateRowCount();
       });
 
-      // Auto resize on window resize
+      // Resize columns on window resize
       window.addEventListener('resize', () => {
         if (gridOptions.api) gridOptions.api.sizeColumnsToFit();
       });
