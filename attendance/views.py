@@ -277,7 +277,7 @@ def bill(request):
         module_datas = dropdown_data.values_list('module', flat=True).distinct().order_by('module')
     else:
         # If no employee selected, show all modules
-        module_datas = BillAge.objects.using('mssql').values_list('module', flat=True).distinct().order_by('module')
+        module_datas = BillAge.objects.using('demo1').values_list('module', flat=True).distinct().order_by('module')
     
     # Get employees for dropdown (based on current module filter if any)
     if module and module != "ALL":
@@ -285,7 +285,7 @@ def bill(request):
         employee_names = dropdown_data.values_list('employees', flat=True).distinct().order_by('employees')
     else:
         # If no module selected, show all employees
-        employee_names = BillAge.objects.using('mssql').values_list('employees', flat=True).distinct().order_by('employees')
+        employee_names = BillAge.objects.using('demo1').values_list('employees', flat=True).distinct().order_by('employees')
     
     # Filter out None/null values and create employee list
     employee_names_filtered = [name for name in employee_names if name is not None and name.strip()]

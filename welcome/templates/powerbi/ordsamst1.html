@@ -13,13 +13,12 @@
   />
 
   <style>
-
      .ag-theme-alpine .ag-cell[col-id="img_fpath"] {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 0 !important;
-  }
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 0 !important;
+    }
     /* Row selected */
     .ag-row-selected .ag-cell {
       background-color: #bfdbfe !important; /* Tailwind blue-200 */
@@ -91,15 +90,12 @@
         if (!params.value) return '';
 
         const cellValue = params.value.toString();
-
         const filterTexts = [];
 
         if (currentGlobalFilter) filterTexts.push(currentGlobalFilter);
-
         if (currentColumnFilters[params.colDef.field]) {
           filterTexts.push(currentColumnFilters[params.colDef.field]);
         }
-
         if (filterTexts.length === 0) {
           return cellValue;
         }
@@ -118,22 +114,34 @@
           lastIndex = index + match[0].length;
         }
         result += cellValue.substring(lastIndex);
-
         return result;
       }
 
+      // This function creates the <img> tag for the image column
       function imageCellRenderer(params) {
         if (!params.value) return '';
         return `<img src="${params.value}" alt="image" style="width: 50px; height: 60px; object-fit: contain;" />`;
       }
 
+      // *** CORRECTION: Added the 'image' column definition ***
       const columnDefs = [
+        {
+          headerName: 'Image',
+          field: 'image',
+          cellRenderer: imageCellRenderer, // Use the renderer function
+          width: 80,
+          minWidth: 80,
+          flex: 0,
+          filter: false, // Usually you don't filter or sort by image
+          floatingFilter: false,
+          sortable: false,
+        },
         {
           headerName: 'jobno',
           field: 'jobno',
           filter: 'agTextColumnFilter',
           checkboxSelection: true,
-          maxWidth: 80,
+          maxWidth: 120, // Increased width slightly for better readability
           flex: 0,
           cellRenderer: highlightRenderer
         },
@@ -146,7 +154,6 @@
           minWidth: 150,
           cellRenderer: highlightRenderer
         },
-    
         {
           headerName: 'buyer',
           field: 'buyer',
@@ -179,7 +186,7 @@
           field: 'date',
           filter: 'agTextColumnFilter',
           floatingFilter: true,
-          maxWidth: 100,
+          maxWidth: 120, // Increased width
           flex: 0,
           cellRenderer: highlightRenderer
         },
@@ -216,29 +223,28 @@
       new agGrid.Grid(gridDiv, gridOptions);
 
       try {
-        const response = await fetch('https://app.herofashion.com/Ordsampst/');
-        if (!response.ok) throw new Error('Network response was not ok');
+        // Ensure this URL is correct and accessible from the browser
+        const response = await fetch('http://app.herofashion.com/Ordsampst/');
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
 
         const data = await response.json();
         gridOptions.api.setRowData(data);
-
-        // Auto-size columns to fit grid width initially
         gridOptions.api.sizeColumnsToFit();
-
-        // Set column visibility for responsive
         updateColumnVisibility();
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        // Optionally, display an error message to the user in the grid
+        gridOptions.api.showNoRowsOverlay(); 
       }
 
       // Filter changed listener for highlighting text
       gridOptions.api.addEventListener('filterChanged', () => {
         currentColumnFilters = {};
         const filterModel = gridOptions.api.getFilterModel();
-
         for (const colId in filterModel) {
           if (!filterModel[colId]) continue;
-
           if (filterModel[colId].filter != null) {
             currentColumnFilters[colId] = filterModel[colId].filter.toString().toLowerCase();
           } else if (
@@ -257,7 +263,6 @@
       globalFilterInput.addEventListener('input', function (event) {
         currentGlobalFilter = event.target.value.toLowerCase();
         gridOptions.api.setQuickFilter(currentGlobalFilter);
-        gridOptions.api.refreshCells({ force: true });
       });
 
       // Responsive: auto resize columns on window resize
@@ -270,12 +275,10 @@
 
       // Responsive: hide some columns on small screens
       function updateColumnVisibility() {
-        const isSmallScreen = window.innerWidth < 640; // Tailwind 'sm' breakpoint
-
         if (!gridOptions.columnApi) return;
-
-        gridOptions.columnApi.setColumnVisible('process', !isSmallScreen);
-        gridOptions.columnApi.setColumnVisible('gsm', !isSmallScreen);
+        const isSmallScreen = window.innerWidth < 640; // Tailwind 'sm' breakpoint
+        // Example: You can hide columns here if needed
+        // gridOptions.columnApi.setColumnVisible('send_dt', !isSmallScreen);
       }
     });
   </script>

@@ -6,8 +6,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+<<<<<<< HEAD
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintRgbAlt,AllotPen,OrdSampleStatus
+=======
+# from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1
+>>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8
 import json
 import pandas as pd
 import numpy as np
@@ -478,7 +483,7 @@ def PrintRgb1(request):
     return render(request, "powerbi/Printing.html")
 
 def Allotpen(request):
-    queryset = AllotPen.objects.using('demo1').values()
+    queryset = AllotPen1.objects.using('demo1').values()
 
     for obj in queryset:
         raw_path = obj['mainimagepath'] if obj.get('mainimagepath') else None
@@ -515,7 +520,7 @@ def non_pandas(request):
 def non_pandas_1(request):
     return render(request, "powerbi/non_pandas_1.html")
 def Ordsampst(request):
-    queryset = OrdSampleStatus.objects.using('demo1').values()
+    queryset = OrdSampleStatus1.objects.using('demo1').values()
 
     for obj in queryset:
         raw_path = obj['image'] if obj.get('image') else None
@@ -532,3 +537,41 @@ def Ordsampst(request):
 
 def Ordsampst1(request):
     return render(request, "powerbi/ordsamst.html")
+<<<<<<< HEAD
+=======
+  # Make sure to import your model
+
+# def Ordsampst(request):
+#     """
+#     API endpoint to fetch and process sample status data.
+#     """
+#     # Fetch data as a list of dictionaries directly
+#     queryset = list(OrdSampleStatus1.objects.using('demo1').values())
+
+#     for obj in queryset:
+#         # Safely get the image path using .get()
+#         raw_path = obj.get('image')
+
+#         # Process the path only if it's a non-empty string
+#         if raw_path and isinstance(raw_path, str):
+#             try:
+#                 # Get the last part of the path after the backslash
+#                 filename = raw_path.split('\\')[-1]
+#                 obj['image'] = f"https://app.herofashion.com/all_image/{filename}"
+#             except IndexError:
+#                 # Handle cases with no backslash if necessary
+#                 obj['image'] = ""
+#         else:
+#             # Ensure the 'image' key exists and has a default value
+#             obj['image'] = ""
+
+#     # Return the processed list directly
+#     return JsonResponse(queryset, safe=False)
+
+
+# def Ordsampst1(request):
+#     """
+#     Renders the HTML page that will display the AG Grid.
+#     """
+#     return render(request, "powerbi/ordsamst.html")
+>>>>>>> d7b23c239195dd32c5673b88e5b41357420edba8

@@ -257,7 +257,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'herofashion3@gmail.com'
 EMAIL_HOST_PASSWORD = 'hvbs myjy ehwu kyjv'  # Use App Password
-# DEFAULT_FROM_EMAIL = 'tdhanasekaran202@gmail.com'
+DEFAULT_FROM_EMAIL = 'herofashion3@gmail.com'
 
 
 

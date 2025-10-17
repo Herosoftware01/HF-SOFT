@@ -78,16 +78,14 @@
     <div class="flex flex-wrap gap-x-6 gap-y-2 border-y-2 border-gray-300 p-4">
       <p class="text-sm md:text-base" ><strong class="text-blue-500">MACHINE ID:</strong> {{ group_id }}</p>
       <p class="text-sm md:text-base"><strong class="text-blue-500">ROLL NO:</strong> {{ roll_no }}</p>
-      <p class="text-sm md:text-base"><strong class="text-blue-500">Job No:</strong> {{ jobno }}</p>
-      <p class="text-sm md:text-base"><strong class="text-blue-500">Color:</strong> {{ tybe }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">JOB NO:</strong> {{ jobno }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">COLOR:</strong> {{ tybe }}</p>
       <p class="text-sm md:text-base"><strong class="text-blue-500">LOT NO:</strong> {{ lotno }}</p>
       <p class="text-sm md:text-base"><strong class="text-blue-500">DC NO:</strong> {{ dc }}</p>
-      <p class="text-sm md:text-base"><strong class="text-blue-500">Fabric:</strong> {{ fabric }}</p>
-      <p class="text-sm md:text-base"><strong class="text-blue-500">weight:</strong> {{ weight }}</p>
-      <p class="text-sm md:text-base"><strong class="text-blue-500">f_dia:</strong> {{ f_dia }}</p>
-      <!-- <p class="text-sm md:text-base"><strong class="text-blue-500">types:</strong> {{ types }}</p> -->
-      <!-- <p class="text-sm md:text-base"><strong class="text-blue-500">Emp_name:</strong> {{ emp_name }}</p> -->
-
+      <p class="text-sm md:text-base"><strong class="text-blue-500">FABRIC:</strong> {{ fabric }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">WEIGHT:</strong> {{ weight }}</p>
+      <p class="text-sm md:text-base"><strong class="text-blue-500">F_DIA:</strong> {{ f_dia }}</p>
+      
       {% if mtr %}
       <p class="text-sm md:text-base"><strong class="text-blue-500">MTR:</strong> {{ mtr }}</p>
       {% endif %}
@@ -178,10 +176,8 @@
      
 
         
-
-       
-          <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div class="overflow-x-auto rounded-lg">
+            <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg ">
                 <thead>
                     {% for mistake in all_mistakes %}
                     <tr class="bg-gray-200">
@@ -486,10 +482,42 @@
 
          <div class="flex flex-col md:flex-row flex-wrap gap-4 mb-6 p-4 bg-white rounded-lg shadow-md mt-4">
       <!-- Finish Dia -->
-      <div class="flex flex-col w-full md:w-[23%]">
+      <!-- <div class="flex flex-col w-full md:w-[23%]">
         <label for="finishDia" class="text-gray-700 font-medium mb-1">Finish Dia:</label>
         <input type="text" id="finishDia" class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full" />
-      </div>
+      </div> -->
+
+      <div class="flex flex-col w-full md:w-[23%]">
+  <label for="finishDia" class="text-gray-700 font-medium mb-1">Finish Dia:</label>
+  <input
+    type="number"
+    id="finishDia"
+    class="border border-gray-300 rounded-lg shadow px-3 py-2 w-full"
+    step="0.01"
+    placeholder="Enter Finish Dia"
+  />
+  <p id="error-msg" class="text-red-500 text-sm mt-1 hidden">Value must be within allowed range.</p>
+</div>
+
+<script>
+  // Example value of f_dia, replace with your actual dynamic value
+  const f_dia = 60.00;
+  const allowedDifference = 2; // ±2 allowed
+
+  const finishDiaInput = document.getElementById('finishDia');
+  const errorMsg = document.getElementById('error-msg');
+
+  finishDiaInput.addEventListener('input', () => {
+    const value = parseFloat(finishDiaInput.value);
+    if (finishDiaInput.value === '' || isNaN(value) || Math.abs(value - f_dia) > allowedDifference) {
+      errorMsg.classList.remove('hidden');
+      finishDiaInput.setCustomValidity(`Value must be within ±${allowedDifference} of ${f_dia}`);
+    } else {
+      errorMsg.classList.add('hidden');
+      finishDiaInput.setCustomValidity('');
+    }
+  });
+      </script>
 
       <!-- Total Mtrs -->
       <div class="flex flex-col w-full md:w-[23%]">
@@ -997,6 +1025,11 @@ stopBtn.addEventListener('click', async () => {
   if (finishDia === '' || totalMtrs === '') {
     // alert('Please fill both "Finish Dia" and "Total Mtrs" before submitting.');
     await showConfirmPopup("Please fill 'both Finish' Dia and 'Total Mtrs' before submitting.");
+    return;
+  }
+
+  if (Math.abs(finishDia - f_dia) > allowedDifference) {
+    await showConfirmPopup(`Finish Dia must be within ±${allowedDifference} of ${f_dia}. Please correct it.`);
     return;
   }
 

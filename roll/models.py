@@ -356,6 +356,7 @@ class master_final_mistake(models.Model):
     dc_no = models.CharField(max_length=50)
     lot_no = models.CharField(max_length=50)
     field_id = models.CharField(max_length=10)
+    color = models.CharField(max_length=100, null=True , blank=True)
     types = models.CharField(max_length=50 , null=True , blank=True)
     timer =models.TimeField(null=True , blank=True)
     m1 = models.CharField(max_length=50 , null=True , blank=True)

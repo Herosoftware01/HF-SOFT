@@ -1,13 +1,7 @@
 {% extends 'mains.html' %}
-
 {% load static %}
-
 {% block content %}
-
-
-
 <style>
-
   /* Match Select2 container height with Tailwind input (py-2) */
   .select2-container .select2-selection--single {
     height: 42px !important;  /* or match the exact height of your text input */
@@ -19,13 +13,11 @@
     border: 1px solid #c4b5fd; /* Tailwind indigo-300 */
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
-
   .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: 1.5;
     font-size: 1rem;
     color: #374151; /* text-gray-700 */
   }
-
   .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 100%;
     right: 10px;
@@ -36,16 +28,10 @@
     padding-left: 0;
   }
 
-
 </style>
-
-
-
 <div class="min-h-screen flex flex-col items-center justify-center 
              bg-[url('{% static 'images/blue.jpg' %}')] 
              bg-cover bg-center bg-no-repeat">
-
-
   <div id="customAlert" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
   <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
     <p id="customAlertMessage" class="text-gray-800 mb-4"></p>
@@ -63,12 +49,12 @@
   </div>
 
   <!-- Right Side -->
-  <div>
+  <!-- <div>
     <a href="{% url 'machine_report' machine_id %}"
        class="text-white bg-violet-700 hover:bg-violet-800 font-medium py-2 px-4 rounded transition">
       📄 Report
     </a>
-  </div>
+  </div> -->
 </div>
 
   <p id="scanned-result" class="mb-6 text-green-700 text-lg font-semibold italic"></p>
@@ -152,7 +138,14 @@
    <input type="hidden" name="auto_move" value="1" />
 
 
-    <div class="text-center mt-4">
+    <!-- <div class="text-center mt-4">
+      <button type="submit"
+              class="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-8 py-3 rounded-full shadow-lg text-lg font-semibold transition-all duration-300">
+        💾 Save Allocation
+      </button>
+    </div> -->
+
+    <div id="saveAllocationContainer" class="text-center mt-4 hidden">
       <button type="submit"
               class="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-8 py-3 rounded-full shadow-lg text-lg font-semibold transition-all duration-300">
         💾 Save Allocation
@@ -163,7 +156,7 @@
 
 
   {% if job %}
-  <div class="w-full max-w-4xl mt-12 bg-white shadow-lg rounded-xl p-6">
+  <div class="w-full max-w-4xl mt-12 bg-white shadow-lg rounded-xl p-6" id="moveUserContainer">
     <h3 class="text-2xl font-bold text-indigo-700 mb-4">📋 Current Allocation</h3>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm bg-gradient-to-br from-white via-indigo-50 to-blue-50 rounded-lg overflow-hidden">
@@ -203,65 +196,52 @@
 
 </div>
 
-  <script>
+<script>
+  function updateEmpName(selectId, nameInputId, photoElementId = null) {
+    const select = document.getElementById(selectId);
+    const selectedOption = select.options[select.selectedIndex];
+    const empName = selectedOption.getAttribute("data-name") || "";
+    const photoUrl = selectedOption.getAttribute("data-photo") || "";
 
+    const empId1 = document.getElementById("emp_id1").value;
+    const empId2 = document.getElementById("emp_id2").value;
 
-function updateEmpName(selectId, nameInputId, photoElementId = null) {
-  const select = document.getElementById(selectId);
-  const selectedOption = select.options[select.selectedIndex];
-  const empName = selectedOption.getAttribute("data-name") || "";
-  const photoUrl = selectedOption.getAttribute("data-photo") || "";
-
-  // Get values of both selects
-  const empId1 = document.getElementById("emp_id1").value;
-  const empId2 = document.getElementById("emp_id2").value;
-
-  // Check if same ID is selected in both
-  if (empId1 && empId2 && empId1 === empId2) {
-    showCustomAlert ("❌ Same Employee ID cannot be selected for both positions.");
-    select.value = "";  // Reset the selection
-    document.getElementById(nameInputId).value = "";
-    if (photoElementId) {
-      document.getElementById(photoElementId).src = "https://via.placeholder.com/100x100.png?text=No+Photo";
+    if (empId1 && empId2 && empId1 === empId2) {
+      showCustomAlert("❌ Same Employee ID cannot be selected for both positions.");
+      select.value = "";
+      document.getElementById(nameInputId).value = "";
+      if (photoElementId) {
+        document.getElementById(photoElementId).src = "https://via.placeholder.com/100x100.png?text=No+Photo";
+      }
+      return;
     }
-    return;
-  }
 
-  // Update name and photo if IDs are valid
-  document.getElementById(nameInputId).value = empName;
+    document.getElementById(nameInputId).value = empName;
 
-  if (photoElementId) {
-    const photoElem = document.getElementById(photoElementId);
-    if (photoElem) {
+    if (photoElementId) {
+      const photoElem = document.getElementById(photoElementId);
       photoElem.src = photoUrl || "https://via.placeholder.com/100x100.png?text=No+Photo";
     }
   }
-}
 
+  function showCustomAlert(message, callback = null) {
+    const modal = document.getElementById('customAlert');
+    const messageBox = document.getElementById('customAlertMessage');
+    const okBtn = document.getElementById('customAlertOk');
 
+    messageBox.textContent = message;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 
-function showCustomAlert(message, callback = null) {
-  const modal = document.getElementById('customAlert');
-  const messageBox = document.getElementById('customAlertMessage');
-  const okBtn = document.getElementById('customAlertOk');
+    okBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (callback) callback();
+    };
+  }
 
-  messageBox.textContent = message;
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-
-  okBtn.onclick = () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    if (callback) callback();
-  };
-}
-
-
-  </script>
-
-
-<script>
   $(document).ready(function () {
+    // ✅ Initialize Select2
     $('#emp_id1, #emp_id2').select2({
       placeholder: "Select or type ID",
       allowClear: true,
@@ -269,35 +249,18 @@ function showCustomAlert(message, callback = null) {
       selectOnClose: false
     });
 
-    // Make sure input focus happens after Select2 dropdown opens
-    function focusSearchField(attempt = 0) {
-      const input = document.querySelector('.select2-container--open .select2-search__field');
-      if (input) {
-        input.focus();
-      } else if (attempt < 10) {
-        setTimeout(() => focusSearchField(attempt + 1), 50); // Retry for 500ms
-      }
+    // ✅ Manually set selected values (required for prefilled data)
+    const preEmpId1 = "{{ job.emp_id1 }}";
+    const preEmpId2 = "{{ job.emp_id2 }}";
+
+    if (preEmpId1) {
+      $('#emp_id1').val(preEmpId1).trigger('change');
+    }
+    if (preEmpId2) {
+      $('#emp_id2').val(preEmpId2).trigger('change');
     }
 
-    // Trigger focus when select opens
-    $('#emp_id1, #emp_id2').on('select2:open', function () {
-      focusSearchField();
-    });
-  });
-
-
-
-</script>
-
-<script>
-  $(document).ready(function () {
-    $('#emp_id1, #emp_id2').select2({
-      placeholder: "Select or type ID",
-      allowClear: true,
-      width: '100%',
-      selectOnClose: false
-    });
-
+    // Autofocus on Select2 input
     function focusSearchField(attempt = 0) {
       const input = document.querySelector('.select2-container--open .select2-search__field');
       if (input) {
@@ -311,21 +274,81 @@ function showCustomAlert(message, callback = null) {
       focusSearchField();
     });
 
-    // ✅ Define `params` before using
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("auto_move") === "1") {
-      const empId1 = document.querySelector('input[name="emp_id1"]').value;
-      const empId2 = document.querySelector('input[name="emp_id2"]').value;
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto_move") === "1") {
+        setTimeout(() => {
+          const empId1 = $('#emp_id1').val() || "";
+          const empId2 = $('#emp_id2').val() || "";
 
-      if (empId1 && empId2) {
-        const moveBtn = document.querySelector('button[name="move_user"]');
-        if (moveBtn) moveBtn.click();
+          if (!empId1 && !empId2) {
+            showCustomAlert("❌ At least one employee ID is required before moving.");
+            return;
+          }
+
+          if (empId1 && empId2 && empId1 === empId2) {
+            showCustomAlert("❌ Same Employee ID cannot be selected for both positions.");
+            return;
+          }
+
+          // Update hidden fields in the form before submitting
+          const form = document.querySelector('form[action*="machine_jobs"]');
+          if (form) {
+            form.querySelector('input[name="emp_id1"]').value = empId1;
+            form.querySelector('input[name="emp_id2"]').value = empId2;
+
+            // Also update names if needed
+            const empName1 = $('#emp_id1 option:selected').data('name') || "";
+            const empName2 = $('#emp_id2 option:selected').data('name') || "";
+            form.querySelector('input[name="emp_name_1"]').value = empName1;
+            form.querySelector('input[name="emp_name_2"]').value = empName2;
+
+            form.querySelector('button[name="move_user"]').click();
+          }
+        }, 300);
+      }
+  });
+
+
+
+
+
+
+
+
+  $(document).ready(function () {
+    // Store original values on page load
+    const originalEmpId1 = $('#emp_id1').val() || "";
+    const originalEmpId2 = $('#emp_id2').val() || "";
+
+    function toggleButtons() {
+      const currentEmpId1 = $('#emp_id1').val() || "";
+      const currentEmpId2 = $('#emp_id2').val() || "";
+
+      // Check if either emp id changed
+      const changed = (currentEmpId1 !== originalEmpId1) || (currentEmpId2 !== originalEmpId2);
+
+      if (changed) {
+        // Show Save, hide Move
+        $('#saveAllocationContainer').removeClass('hidden');
+        $('#moveUserContainer').hide();
       } else {
-        showCustomAlert("❌ Both employee IDs are required before moving.");
+        // Show Move, hide Save
+        $('#saveAllocationContainer').addClass('hidden');
+        $('#moveUserContainer').show();
       }
     }
+
+    // On select change, run toggle
+    $('#emp_id1, #emp_id2').on('change', function() {
+      toggleButtons();
+    });
+
+    // Initial toggle check on page load
+    toggleButtons();
   });
 </script>
+
+
 
 
 {% endblock %}

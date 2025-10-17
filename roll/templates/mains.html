@@ -322,7 +322,7 @@
       <a href="/Ordsampst1/"
        class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100
        {% if '/Ordsampst1/' in request.path %} bg-sky-100 font-semibold {% endif %}">
-      sample data
+      Order Sample data
     </a>
   </div>
 </div>
@@ -901,41 +901,64 @@
 
 
 
-{% if '/roll/break/' not in request.path %}
+<!-- {% if '/roll/' in request.path and '/roll/break/' not in request.path %}
 <script>
-  const breakStart = "{{ break_start|default:'00:00:00' }}";
-  const breakEnd = "{{ break_end|default:'00:00:00' }}";
+function checkBreakRedirect() {
+    fetch('/roll/api/break-status/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.in_break) {
+                const isOnBreakPage = window.location.pathname.includes('/roll/break/');
+                const isInRollApp = window.location.pathname.startsWith('/roll/');
 
-  function parseTime(t) {
-    const now = new Date();
-    const [h, m, s] = t.split(':').map(Number);
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
-  }
+                if (isInRollApp && !isOnBreakPage) {
+                    const originalUrl = window.location.href;
+                    console.log("🚨 Break time active, redirecting to break screen...");
+                    window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Failed to check break status:", err);
+        });
+}
 
-  const breakStartTime = parseTime(breakStart);
-  const breakEndTime = parseTime(breakEnd);
+setInterval(checkBreakRedirect, 5000);
+checkBreakRedirect();
+</script>
+{% endif %} -->
 
-  function checkBreakRedirect() {
-    const now = new Date();
-    console.log("Checking break redirect at", now.toLocaleTimeString());
 
-    const isOnBreakPage = window.location.pathname.includes('/roll/break/');
+{% if '/roll/' in request.path and '/roll/break/' not in request.path %}
+<script>
+function checkBreakRedirect() {
+    fetch('/roll/api/break-status/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.in_break) {
+                const isOnBreakPage = window.location.pathname.includes('/roll/break/');
+                const isInRollApp = window.location.pathname.startsWith('/roll/');
 
-    if (now >= breakStartTime && now <= breakEndTime && !isOnBreakPage) {
-      console.log("Redirecting to break page");
-      const originalUrl = window.location.href;
-      // Redirect and pass original URL as query param
-      window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
-    }
+                if (isInRollApp && !isOnBreakPage) {
+                    const originalUrl = window.location.href;
 
-  }
+                    // Save original URL before redirecting
+                    sessionStorage.setItem('original_url', originalUrl);
 
-  setInterval(checkBreakRedirect, 5000);
-  checkBreakRedirect();
+                    // Redirect to break screen with original_url param
+                    window.location.href = '/roll/break/?original_url=' + encodeURIComponent(originalUrl);
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Failed to check break status", err);
+        });
+}
+
+setInterval(checkBreakRedirect, 5000);
+checkBreakRedirect();
 </script>
 {% endif %}
-
-
 
 </body>
 </html>
