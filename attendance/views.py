@@ -1,7 +1,7 @@
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse 
-from .models import AttUnt
+from .models import AttUnt,BillAge
 from django.db.models import Sum
 from datetime import datetime, timedelta
 from .models import BillAge
@@ -11,6 +11,8 @@ from django.utils import timezone
 from .models import VueOverall1
 from django.conf import settings
 import os
+
+
 
 def get_friday_thursday_range(reference_date=None):
     """Calculate Friday to Thursday range for attendance dashboard"""
@@ -216,17 +218,6 @@ def report(request):
     })
 
 
-
-
-
-
-from django.shortcuts import render
-from django.http import HttpResponse
-from .models import BillAge
-from datetime import datetime, date
-from django.db.models import Q
-from django.utils import timezone
-
 def bill(request):
     # Get all BillAge objects from the mssql database
     datas = BillAge.objects.using('demo1').all()
@@ -407,3 +398,75 @@ def bill(request):
         'selected_aging_range': aging_range,
         'selected_min_aging': min_aging,
     })
+
+
+def resign_report(request):
+    unit_filter = request.GET.get('unit', 'ALL')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    resign = ResignDtls.objects.using('test').all()
+
+    if unit_filter and unit_filter != 'ALL':
+        resign = resign.filter(dept=unit_filter)
+
+    # Compute current month bounds
+    today = timezone.now().date()
+    first_day_of_month = today.replace(day=1)
+
+    # Default to this month if no dates provided
+    if not from_date and not to_date:
+        resign = resign.filter(resigndt__date__range=(first_day_of_month, today))
+        effective_from = first_day_of_month
+        effective_to = today
+    else:
+        if from_date and to_date:
+            resign = resign.filter(resigndt__date__range=(from_date, to_date))
+            effective_from = from_date
+            effective_to = to_date
+        elif from_date:
+            resign = resign.filter(resigndt__date__gte=from_date)
+            effective_from = from_date
+            effective_to = None
+        else:  # only to_date
+            resign = resign.filter(resigndt__date__lte=to_date)
+            effective_from = None
+            effective_to = to_date
+
+    resign = resign.order_by('-resigndt')
+
+    for order in resign:
+        if getattr(order, 'photo', None):
+            filename = os.path.basename(order.photo)
+            if settings.DEBUG:
+                order.photo = f"http://10.1.21.13:7100/images/{filename}"
+        else:
+            order.photo = None
+
+    total_resignations = resign.count()
+
+    avg_days = 0
+    if total_resignations > 0:
+        total_days = sum([r.days_worked for r in resign if getattr(r, 'days_worked', None)])
+        avg_days = int(total_days / total_resignations) if total_days > 0 else 0
+
+    # This month count (based on calendar month regardless of filters)
+    this_month_count = ResignDtls.objects.using('default') \
+        .filter(resigndt__date__gte=first_day_of_month, resigndt__date__lte=today) \
+        .count()
+
+    departments = ResignDtls.objects.using('default') \
+        .values_list('dept', flat=True).distinct().order_by('dept')
+
+    context = {
+        'resign': resign,
+        'departments': departments,
+        'unit': unit_filter,
+        'from_date': effective_from if not from_date and not to_date else from_date,
+        'to_date': effective_to if not from_date and not to_date else to_date,
+        'total_resignations': total_resignations,
+        'avg_days': avg_days,
+        'this_month_count': this_month_count,
+    }
+
+    return render(request, 'resign.html', context)
