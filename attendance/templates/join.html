@@ -1,0 +1,365 @@
+{% extends 'mains.html' %}
+
+{% load static %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+    .dashboard-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .header-bg { background: linear-gradient(135deg, #f6f9fc 0%, #e9ecef 100%); }
+    .summary-card { transition: all 0.3s ease; }
+    .summary-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    @media (max-width: 768px) {
+      .mobile-table-row { display: block; background: white; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; }
+      .mobile-table-row td { display: block; text-align: left !important; padding: 4px 0; border: none; }
+      .mobile-table-row td:before { content: attr(data-label) ": "; font-weight: bold; color: #374151; }
+      .desktop-table { display: none; }
+      .mobile-table { display: block; }
+    }
+    @media (min-width: 769px) {
+      .mobile-table { display: none; }
+      .desktop-table { display: table; }
+    }
+    .loading-state { opacity: 0.6; pointer-events: none; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @media print {
+      .dashboard-header, .summary-card, .footer-summary, .no-print { display: none !important; }
+      body { margin: 0; padding: 20px; }
+      .container { max-width: none; margin: 0; padding: 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      th, td { border: 1px solid #333; padding: 6px; text-align: left; }
+      th { background-color: #f0f0f0 !important; font-weight: bold; }
+    }
+
+    /* Spinner: Newton's Cradle (overlay + animation) */
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.65);
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+    .loader-overlay.active { display: flex; }
+
+    .newtons-cradle {
+      --uib-size: 56px;
+      --uib-speed: 1.2s;
+      --uib-color: #474554;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--uib-size);
+      height: var(--uib-size);
+    }
+    .newtons-cradle__dot {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      width: 25%;
+      transform-origin: center top;
+    }
+    .newtons-cradle__dot::after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 25%;
+      border-radius: 50%;
+      background-color: var(--uib-color);
+    }
+    .newtons-cradle__dot:first-child {
+      animation: swing var(--uib-speed) linear infinite;
+    }
+    .newtons-cradle__dot:last-child {
+      animation: swing2 var(--uib-speed) linear infinite;
+    }
+    @keyframes swing {
+      0% { transform: rotate(0deg); animation-timing-function: ease-out; }
+      25% { transform: rotate(70deg); animation-timing-function: ease-in; }
+      50% { transform: rotate(0deg); animation-timing-function: linear; }
+    }
+    @keyframes swing2 {
+      0% { transform: rotate(0deg); animation-timing-function: linear; }
+      50% { transform: rotate(0deg); animation-timing-function: ease-out; }
+      75% { transform: rotate(-70deg); animation-timing-function: ease-in; }
+    }
+  </style>
+    <!-- Header -->
+  <div class="dashboard-header shadow-lg no-print">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md">
+            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+              <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3h2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 10-4.9 0H8.5zM12 9a1 1 0 100-2 1 1 0 000 2zm-2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <h1 class="text-white text-xl sm:text-2xl font-bold">JOINING DASHBOARD</h1>
+        </div>
+
+        <!-- Mobile Filter Toggle -->
+        <button id="filterToggle" class="lg:hidden bg-white/20 text-white px-4 py-2 rounded-lg backdrop-blur-sm" onclick="toggleFilters()" aria-label="Toggle filters">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+          </svg>
+          Filters
+        </button>
+
+        <!-- Filters -->
+        <form id="filterForm" method="get" class="flex-col lg:flex-row items-center gap-3 w-full lg:w-auto hidden lg:flex" role="search" aria-label="Dashboard filters">
+          <!-- Unit -->
+          <div class="flex items-center gap-2">
+            <label for="unitSelect" class="text-white font-semibold text-sm whitespace-nowrap">UNIT:</label>
+            <select id="unitSelect" name="unit" class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px] bg-white" aria-label="Select unit filter">
+              <option value="ALL" {% if unit == 'ALL' %}selected{% endif %}>ALL UNIT</option>
+              {% for dept in departments %}
+                <option value="{{ dept }}" {% if unit == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- From Date -->
+          <div class="flex items-center gap-2">
+            <label for="fromDate" class="text-white font-semibold text-sm whitespace-nowrap">From:</label>
+            <input type="date" id="fromDate" name="start" value="{{ start|default:'' }}" class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" aria-label="Start date filter" />
+          </div>
+
+          <!-- To Date -->
+          <div class="flex items-center gap-2">
+            <label for="toDate" class="text-white font-semibold text-sm whitespace-nowrap">To:</label>
+            <input type="date" id="toDate" name="end" value="{{ end|default:'' }}" class="px-3 py-3 rounded-lg border-2 border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" aria-label="End date filter" />
+          </div>
+
+          <!-- Quick Buttons -->
+          <div class="flex gap-2">
+            <button type="button" onclick="setDateRange(1)" class="px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]" aria-label="Filter last 1 month">1 M</button>
+            <button type="button" onclick="setDateRange(3)" class="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]" aria-label="Filter last 3 months">3 M</button>
+            <button type="button" onclick="setToday()" class="px-4 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]" aria-label="Filter today only">Today</button>
+            <button type="button" onclick="clearFilters()" class="px-4 py-3 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px]" aria-label="Clear all filters">Clear</button>
+            <a href="{% url 'home' %}" class="inline-block px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105 min-h-[44px] text-center">Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in no-print">
+      <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-2xl font-bold text-red-600">{{ total_joins }}</h3>
+            <p class="text-sm text-gray-600">Total Joining</p>
+          </div>
+          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-card bg-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-2xl font-bold text-green-600">{{ unit }}</h3>
+            <p class="text-sm text-gray-600">Selected Unit</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Header -->
+    <div class="px-4 lg:px-6 py-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-lg mb-6">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4 text-center">Joining List - {{ unit }}</h2>
+      </div>
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="bg-white rounded-xl shadow-lg hidden lg:block">
+      <div class="p-4 sm:p-6">
+        <div class="overflow-y-auto h-[500px]">
+          <table id="resignationTable" class="w-full table-fixed border-collapse rounded-2xl border-separate border-spacing-0">
+            <thead class="sticky top-0">
+              <tr>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">SL NO</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">ID</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">IMAGE</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 bg-[#CBDCEB]">NAME</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden lg:table-cell bg-[#DCDCDC]">DESIGNATION</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden md:table-cell bg-[#FADADD]">DEPARTMENT</th>
+                <th rowspan="2" class="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-gray-700 text-center border border-gray-400 hidden md:table-cell bg-[#BDE3C3]">JOINING DATE</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              {% for employee in rows %}
+              <tr class="hover:bg-gray-50 transition-colors" data-row-id="{{ employee.slno }}">
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium">{{ forloop.counter }}</td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium text-blue-600">{{ employee.code }}</td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400">
+                  {% if employee.photo %}
+                    <img src="{{ employee.photo }}" alt="{{ employee.name }}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full mx-auto object-cover shadow-md" />
+                  {% else %}
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto flex items-center justify-center shadow-md">
+                      <span class="text-xs text-white font-semibold">{{ employee.name|slice:":2"|upper }}</span>
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 font-medium">{{ employee.name|default:"-" }}</td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden lg:table-cell">{{ employee.category|default:"-" }}</td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden md:table-cell">{{ employee.dept|default:"-" }}</td>
+                <td class="px-2 sm:px-3 py-1 text-xs sm:text-sm text-center border border-gray-400 hidden md:table-cell">
+                  {% if employee.joindt %}
+                    {{ employee.joindt|date:"d-m-Y" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="10" class="px-6 py-8 text-center text-gray-500">No join records found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="mobile-table">
+          <div class="space-y-3 sm:space-y-4">
+            {% for employee in rows %}
+            <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center space-x-3 sm:space-x-4 mb-3">
+                {% if employee.photo %}
+                  <img src="{{ employee.photo }}" alt="{{ employee.name }}" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-md flex-shrink-0" />
+                {% else %}
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                    <span class="text-xs sm:text-sm text-white font-semibold">{{ employee.name|slice:":2"|upper }}</span>
+                  </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{ employee.name|default:"-" }}</h3>
+                  <p class="text-xs sm:text-sm text-blue-600 font-medium">{{ employee.code }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs sm:text-sm">
+                <div class="flex flex-col xs:flex-row xs:items-center">
+                  <span class="text-gray-600 font-medium">Designation:</span>
+                  <span class="text-gray-900 xs:ml-1 truncate">{{ employee.category|default:"-" }}</span>
+                </div>
+                <div class="flex flex-col xs:flex-row xs:items-center">
+                  <span class="text-gray-600 font-medium">Join Date:</span>
+                  <span class="text-gray-900 xs:ml-1">
+                    {% if employee.joindt %}
+                      {{ employee.joindt|date:"d-m-Y" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="flex flex-col xs:flex-row xs:items-center">
+                  <span class="text-gray-600 font-medium">Department:</span>
+                  <span class="text-gray-900 xs:ml-1">{{ employee.dept|default:"-" }}</span>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+              No join records found
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Loader Overlay -->
+  <div id="loaderOverlay" class="loader-overlay">
+    <div class="newtons-cradle" style="--uib-size:64px;--uib-color:#6b21a8;">
+      <div class="newtons-cradle__dot"></div>
+      <div class="newtons-cradle__dot"></div>
+      <div class="newtons-cradle__dot"></div>
+      <div class="newtons-cradle__dot"></div>
+    </div>
+  </div>
+
+  <!-- JS helpers -->
+  <script>
+    function toggleFilters() {
+      const form = document.getElementById('filterForm');
+      form.classList.toggle('hidden');
+      form.classList.toggle('flex');
+    }
+
+    // Loader helpers
+    const showLoader = () => document.getElementById('loaderOverlay')?.classList.add('active');
+    const hideLoader = () => document.getElementById('loaderOverlay')?.classList.remove('active');
+
+    function setDateRange(months) {
+      const to = new Date();
+      const from = new Date();
+      from.setMonth(from.getMonth() - months);
+      const fmt = (d) => d.toISOString().slice(0, 10);
+      document.getElementById('fromDate').value = fmt(from);
+      document.getElementById('toDate').value = fmt(to);
+      showLoader();
+      document.getElementById('filterForm').submit();
+    }
+
+    function setToday() {
+      const s = new Date().toISOString().slice(0,10);
+      document.getElementById('fromDate').value = s;
+      document.getElementById('toDate').value = s;
+      showLoader();
+      document.getElementById('filterForm').submit();
+    }
+
+    function clearFilters() {
+      document.getElementById('unitSelect').value = 'ALL';
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+      showLoader();
+      document.getElementById('filterForm').submit();
+    }
+
+    // Auto-submit on filter changes with loader
+    window.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('filterForm');
+      const unit = document.getElementById('unitSelect');
+      const from = document.getElementById('fromDate');
+      const to = document.getElementById('toDate');
+
+      [unit, from, to].forEach(el => {
+        if (el) el.addEventListener('change', () => { showLoader(); form.submit(); });
+      });
+    });
+
+    // Hide loader on restore from bfcache or on full render
+    window.addEventListener('pageshow', () => hideLoader());
+  </script>
+
+{% endblock %}
