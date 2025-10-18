@@ -240,7 +240,7 @@ class FabFabricStatus(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'Fab_Fabric_Status'
+        db_table = 'Fab_Fabric_Status1'
         
         
 class FabYarn(models.Model):
@@ -641,3 +641,14 @@ class OrdSampleStatus1(models.Model):
 
 
 
+class TBuyer(models.Model):
+    buyerid = models.IntegerField(db_column='BuyerID', primary_key=True)  # Field name made lowercase.
+    buyername = models.CharField(db_column='BuyerName', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    orderno = models.CharField(db_column='OrderNo', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    date = models.DateField(db_column='Date', blank=True, null=True)  # Field name made lowercase.
+    guid = models.CharField(db_column='Guid', max_length=36, blank=True, null=True)  # Field name made lowercase.
+    refresh = models.CharField(db_column='Refresh', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 't_buyer'

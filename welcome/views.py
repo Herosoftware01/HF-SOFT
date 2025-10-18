@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer
 
 import json
 import pandas as pd
@@ -533,39 +533,14 @@ def Ordsampst(request):
 def Ordsampst1(request):
     return render(request, "powerbi/ordsamst.html")
 
-  # Make sure to import your model
 
-# def Ordsampst(request):
-#     """
-#     API endpoint to fetch and process sample status data.
-#     """
-#     # Fetch data as a list of dictionaries directly
-#     queryset = list(OrdSampleStatus1.objects.using('demo1').values())
-
-#     for obj in queryset:
-#         # Safely get the image path using .get()
-#         raw_path = obj.get('image')
-
-#         # Process the path only if it's a non-empty string
-#         if raw_path and isinstance(raw_path, str):
-#             try:
-#                 # Get the last part of the path after the backslash
-#                 filename = raw_path.split('\\')[-1]
-#                 obj['image'] = f"https://app.herofashion.com/all_image/{filename}"
-#             except IndexError:
-#                 # Handle cases with no backslash if necessary
-#                 obj['image'] = ""
-#         else:
-#             # Ensure the 'image' key exists and has a default value
-#             obj['image'] = ""
-
-#     # Return the processed list directly
-#     return JsonResponse(queryset, safe=False)
+def web_socket(request):
+    queryset = TBuyer.objects.using('testing').values()
+    data = list(queryset)
+    return JsonResponse(data, safe=False)
 
 
-# def Ordsampst1(request):
-#     """
-#     Renders the HTML page that will display the AG Grid.
-#     """
-#     return render(request, "powerbi/ordsamst.html")
+def web_socket1(request):
+    return render(request, "powerbi/webs.html")
+
 

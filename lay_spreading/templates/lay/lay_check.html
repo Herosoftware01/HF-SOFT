@@ -51,12 +51,12 @@
     <div class="w-full lg:flex-1">
       <div class="p-0">
        {% for datas in datas %}
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-3 sm:gap-x-5 gap-y-2 text-[12px] sm:text-[14px] lg:text-[15px] font-[open sans] mt-4 lg:mt-[35px]">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-3 sm:gap-x-5 gap-y-2 text-[12px] sm:text-[14px] lg:text-[15px] font-[open sans] mt-4 lg:mt-[35px]">
           <div class="font-bold text-black">JOB NO :</div>
           <div class="text-black" id="job_no">{{ datas.jobno }}</div>
           <div class="font-bold text-black">PLAN NO :</div>
           <div class="text-black" id="plan_no">{{ datas.planno}}</div>
-          <div class="font-bold text-black col-span-2 sm:col-span-1">LAY LENGTH MTR :</div>
+          <div class="font-bold text-black col-span-2 sm:col-span-1">LAY LENGTH :</div>
           <div class="text-black hidden sm:block">{{ datas.lay_lenmtr}}</div>
           
           <div class="font-bold text-black">MARKER NO :</div>
@@ -91,7 +91,7 @@
     
    <!-- Checklist -->
     <div class="w-full max-w-[414px] flex flex-col items-center gap-4">
-      <h3 class="text-[18px] font-bold mb-2 mt-6">CHECK LIST</h3>
+      <!-- <h3 class="text-[18px] font-bold mb-2 mt-6">CHECK LIST</h3> -->
       <div class="border-2 border-black bg-white rounded-lg shadow-lg p-4 flex justify-around items-center w-full font-bold">
         <div class="flex flex-col items-center">
             <div class="flex items-center gap-2 mt-4">
@@ -152,6 +152,10 @@
       <button type="submit" class="hidden">Submit</button> <!-- Hidden for soft keyboard compatibility -->
     </form>
 
+    <p class="flex justify-end font-orbitron font-semibold text-md mb-2">
+    Roll count -  <span id="count_data">0</span> / <span id="plan_details_count">{{ plan_details_count }}</span>
+  </p>
+
     <!-- Table -->
     <table class="w-full text-center text-[18px] sm:text-[22px]">
       <thead>
@@ -183,7 +187,7 @@
 
 <div id="rollTable" class="mt-4 overflow-x-auto px-4">
   <p class="flex justify-end font-orbitron font-semibold text-md mb-2">
-    Roll count - <span id="plan_details_count">{{ plan_details_count }}</span> / <span id="count_data">0</span>
+    Roll count -  <span id="count_data">0</span> / <span id="plan_details_count">{{ plan_details_count }}</span>
   </p>
 
   <div class="overflow-y-auto max-h-[250px] border border-gray-300">
@@ -196,7 +200,7 @@
           <th class="border px-2 py-2">PLAN PLY</th>
           <th class="border px-2 py-2">PLAN OBWGT</th>
           <th class="border px-2 py-2">REQD WGT</th>
-          <th class="border px-2 py-2">scl_wgt</th>
+          <th class="border px-2 py-2">DC WEIGHT</th>
           <th class="border px-2 py-2">ACTUAL DIA</th>
           <th class="border px-2 py-2">ACTUAL PLY</th>
           <th class="border px-2 py-2">ACTUAL OBWGT</th>
@@ -472,7 +476,8 @@ function renderTableRows(datas) {
     const rlno = item.rlno || item.roll_no || "";
     const fdia = item.fdia || item.f_dia || "";
     const ply = item.ply || item.plan_ply || "";
-    const planwgt = item.planwgt || item.plan_obwgt || "";
+    // const planwgt = item.planwgt || item.plan_obwgt || "";
+     const planwgt = item.estply || item.plan_obwgt || "";
     const rejwgt = item.rejwgt || item.req_wgt || "";
     const scl_wgt = item.scl_wgt || "";
     const actual_dia = item.actual_dia || "";

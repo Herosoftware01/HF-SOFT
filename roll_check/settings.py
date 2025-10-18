@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'welcome',
     'attendance',
     'lay_spreading',
+    'channels',
 ]
 
 
@@ -109,6 +110,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'roll_check.wsgi.application'
+
+ASGI_APPLICATION = 'roll_check.asgi.application' 
 
 
 
@@ -169,6 +172,26 @@ DATABASES = {
                 'trusted_connection': "yes"
             }
     },
+    'testing': {
+            'ENGINE': 'mssql',
+            'NAME': 'demo',
+            'USER': 'sa',
+            'PASSWORD': 'Fashion@01',
+            'HOST': '10.1.21.11',
+            'PORT': '1433',
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+                'trusted_connection': "yes"
+            }
+    },
+}
+
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis for production
+    }
 }
 
 LOGIN_URL = '/login/'
