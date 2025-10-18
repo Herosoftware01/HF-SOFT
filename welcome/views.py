@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer,OrdUdf
 from .forms import OrdUdfForm
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer,Overall
+
 import json
 import pandas as pd
 import numpy as np
@@ -574,3 +576,11 @@ def ordudf_delete(request, pk):
         record.delete()
         return JsonResponse({'status': 'deleted'})
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+def over_web(request):
+    ov = Overall.objects.using('demo1').values()
+    data = list(ov)
+    return JsonResponse(data, safe=False)
+
+
+def over_web1(request):
+    return render(request, "powerbi/over.html")

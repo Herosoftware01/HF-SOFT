@@ -470,3 +470,66 @@ def resign_report(request):
     }
 
     return render(request, 'regin.html', context)
+
+
+def join_data(request):
+    # Read GET params: ?unit=Stitching&start=2025-10-01&end=2025-10-15
+    unit = request.GET.get('unit') or 'ALL'
+    start_str = request.GET.get('start') or ''
+    end_str = request.GET.get('end') or ''
+
+    # 🗓️ Default to current month when no dates provided
+    today = date.today()
+    if not start_str and not end_str:
+        first_day = today.replace(day=1)
+        start_str = first_day.isoformat()
+        end_str = today.isoformat()
+
+    # Base queryset
+    qs = VueEmpjoin.objects.using('main').all()
+
+    # Unit filter (ignore when ALL)
+    if unit and unit != 'ALL':
+        qs = qs.filter(dept=unit)
+
+    # Inclusive date-only filters for DateTimeField joindt
+    if start_str and end_str:
+        qs = qs.filter(joindt__date__range=[start_str, end_str])
+    elif start_str:
+        qs = qs.filter(joindt__date__gte=start_str)
+    elif end_str:
+        qs = qs.filter(joindt__date__lte=end_str)
+
+    # Optional photo URL normalization in DEBUG
+    rows = []
+    for rec in qs:
+        if getattr(rec, 'photo', None):
+            filename = os.path.basename(rec.photo)
+            if getattr(settings, 'DEBUG', False):
+                rec.photo = f"http://10.1.21.13:7100/images/{filename}"
+        else:
+            rec.photo = None
+        rows.append(rec)
+
+    total_joins = qs.count()
+
+    # Distinct departments for select
+    departments = (
+        VueEmpjoin.objects.using('default')
+        .values_list('dept', flat=True)
+        .distinct()
+        .order_by('dept')
+    )
+
+    context = {
+        'rows': rows,
+        'unit': unit,
+        'start': start_str,
+        'end': end_str,
+        'total_joins': total_joins,
+        'departments': departments,
+    }
+
+    return render(request, 'join.html', context)
+
+

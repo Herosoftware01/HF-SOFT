@@ -68,3 +68,17 @@ class ResignDtls(models.Model):
     class Meta:
         managed = False
         db_table = 'vue_resign_Dtls'
+
+
+class VueEmpjoin(models.Model):
+    id = models.BigIntegerField(db_column='ID',primary_key=True)  # Field name made lowercase.
+    code = models.IntegerField()
+    name = models.CharField(max_length=100, blank=True, null=True)
+    photo = models.CharField(max_length=400, blank=True, null=True)
+    category = models.CharField(db_column='Category', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    joindt = models.DateTimeField(db_column='JoinDt', blank=True, null=True)  # Field name made lowercase.
+    dept = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'vue_empjoin'

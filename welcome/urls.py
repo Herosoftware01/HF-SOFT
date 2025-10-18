@@ -64,6 +64,9 @@ urlpatterns = [
     path('ore_udf_html/', views.ore_udf_html, name='ore_udf_html'),
     path('ordudf_update/<int:pk>/', views.ordudf_update, name='ordudf_update'),
     path('ordudf_delete/<int:pk>/', views.ordudf_delete, name='ordudf_delete'),
+    path('over_web/', views.over_web, name='over_web'),
+    path('over_web1/', views.over_web1, name='over_web1'),
+
     
 ]
 
