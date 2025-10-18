@@ -543,4 +543,7 @@ def web_socket(request):
 def web_socket1(request):
     return render(request, "powerbi/webs.html")
 
+def live_data(request):
+    return render(request, "powerbi/live_data.html")
+
 

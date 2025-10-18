@@ -74,7 +74,7 @@ INSTALLED_APPS = [
     'welcome',
     'attendance',
     'lay_spreading',
-    'channels',
+    # 'channels',
 ]
 
 
@@ -111,7 +111,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'roll_check.wsgi.application'
 
-ASGI_APPLICATION = 'roll_check.asgi.application' 
+# ASGI_APPLICATION = 'roll_check.asgi.application' 
 
 
 
@@ -188,11 +188,11 @@ DATABASES = {
 
 
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis for production
-    }
-}
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis for production
+#     }
+# }
 
 LOGIN_URL = '/login/'
 # LOGIN_REDIRECT_URL = 'group-login/'

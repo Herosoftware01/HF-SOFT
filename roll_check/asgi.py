@@ -7,13 +7,13 @@ For more information on this file, see
 https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
-# import os
+import os
 
-# from django.core.asgi import get_asgi_application
+from django.core.asgi import get_asgi_application
 
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'roll_check.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'roll_check.settings')
 
-# application = get_asgi_application()
+application = get_asgi_application()
 
 
 
@@ -40,24 +40,5 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 # })
 
 
-import os
-import django
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'roll_check.settings')
-django.setup()  # ✅ MUST come before importing Django-dependent code
-
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
-import welcome.routing  # ✅ safe to import after django.setup()
-
-application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter(
-            welcome.routing.websocket_urlpatterns
-        )
-    ),
-})
 
 
