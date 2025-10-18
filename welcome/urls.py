@@ -60,7 +60,10 @@ urlpatterns = [
     path('Ordsampst1/', views.Ordsampst1, name='Ordsampst1'),
     path('web_socket/', views.web_socket, name='web_socket'),
     path('web_socket1/', views.web_socket1, name='web_socket1'),
-
+    path('ore_udf1/', views.ore_udf1, name='ore_udf1'),
+    path('ore_udf_html/', views.ore_udf_html, name='ore_udf_html'),
+    path('ordudf_update/<int:pk>/', views.ordudf_update, name='ordudf_update'),
+    path('ordudf_delete/<int:pk>/', views.ordudf_delete, name='ordudf_delete'),
     
 ]
 

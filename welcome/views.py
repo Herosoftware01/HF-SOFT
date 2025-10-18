@@ -1,13 +1,12 @@
-# welcome/views.py
-from django.shortcuts import render, redirect
+
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer
-
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer,OrdUdf
+from .forms import OrdUdfForm
 import json
 import pandas as pd
 import numpy as np
@@ -540,10 +539,38 @@ def web_socket(request):
     return JsonResponse(data, safe=False)
 
 
+
 def web_socket1(request):
     return render(request, "powerbi/webs.html")
 
 def live_data(request):
     return render(request, "powerbi/live_data.html")
 
+def ore_udf_html(request):
+    return render(request, "powerbi/ore_udf.html")
 
+def ore_udf1(request):
+    queryset = OrdUdf.objects.using('demo1').values()
+    data = list(queryset)
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def ordudf_update(request, pk):
+    if request.method == 'POST':
+        record = get_object_or_404(OrdUdf.objects.using('demo1'), pk=pk)
+        form = OrdUdfForm(request.POST, instance=record)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+@csrf_exempt
+def ordudf_delete(request, pk):
+    if request.method == 'DELETE':
+        record = get_object_or_404(OrdUdf.objects.using('demo1'), pk=pk)
+        record.delete()
+        return JsonResponse({'status': 'deleted'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)

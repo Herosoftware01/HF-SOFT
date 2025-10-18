@@ -652,3 +652,18 @@ class TBuyer(models.Model):
     class Meta:
         managed = False
         db_table = 't_buyer'
+
+
+
+class OrdUdf(models.Model):
+    orderno = models.CharField(db_column='OrderNo', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS')  # Field name made lowercase.
+    styledesc = models.CharField(db_column='StyleDesc', max_length=2000, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    itemid = models.IntegerField(db_column='ItemID')  # Field name made lowercase.
+    value = models.CharField(db_column='Value', max_length=750, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'ord_udf1'
+
+
