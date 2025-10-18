@@ -60,6 +60,8 @@ urlpatterns = [
     path('Ordsampst1/', views.Ordsampst1, name='Ordsampst1'),
     path('web_socket/', views.web_socket, name='web_socket'),
     path('web_socket1/', views.web_socket1, name='web_socket1'),
+    path('over_web/', views.over_web, name='over_web'),
+    path('over_web1/', views.over_web1, name='over_web1'),
 
     
 ]

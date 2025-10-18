@@ -532,3 +532,4 @@ def join_data(request):
 
     return render(request, 'join.html', context)
 
+

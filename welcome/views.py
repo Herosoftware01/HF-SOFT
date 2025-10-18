@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer
+from .models import UserPermission,VueOverall1,OrdOrderOms,EmpAttendanceFact,OrdMaterialplanPen,FabKnitprgvsrecd,OrdStk,FabFabricStatus,GeneralDeliveryReport,FabYarn,FabKnitprgvsrecd,YarnPovspi,PrintNew,AllotPen1,OrdSampleStatus1,TBuyer,Overall
 
 import json
 import pandas as pd
@@ -547,3 +547,11 @@ def live_data(request):
     return render(request, "powerbi/live_data.html")
 
 
+def over_web(request):
+    ov = Overall.objects.using('demo1').values()
+    data = list(ov)
+    return JsonResponse(data, safe=False)
+
+
+def over_web1(request):
+    return render(request, "powerbi/over.html")

@@ -1,0 +1,174 @@
+{% extends 'mains.html' %}
+{% load static %}
+{% block content %}
+
+<!-- AG Grid CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" />
+
+<style>
+  .ag-theme-alpine .ag-cell {
+    display: flex !important;
+    align-items: center !important;
+    padding: 4px !important;
+  }
+
+  /* Highlight cell when focused */
+  .ag-cell-focus {
+    outline: none !important;
+    background-color: #fbbf24 !important; /* yellow-400 */
+    color: black !important;
+    font-weight: bold;
+  }
+
+  /* Highlight matched text */
+  .search-highlight {
+    background-color: #facc15; /* yellow-400 */
+    color: black;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  #myGrid {
+    height: 700px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  #myGrid::-webkit-scrollbar {
+    height: 8px;
+  }
+  #myGrid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+</style>
+
+<div class="bg-gray-100 p-6 container mx-auto">
+  <h1 class="text-2xl font-semibold mb-4 text-end">Overall Table</h1>
+
+  <!-- Global filter input -->
+  <input
+    type="text"
+    id="globalFilter"
+    placeholder="Search all columns..."
+    class="mb-4 p-2 border border-gray-300 rounded w-full max-w-md"
+  />
+
+  <div id="rowCount" class="py-2 text-gray-700 font-semibold text-end"></div>
+
+  <div class="overflow-auto">
+    <div id="myGrid" class="ag-theme-alpine shadow-lg rounded-lg"></div>
+  </div>
+</div>
+
+<!-- AG Grid JS -->
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.2/dist/ag-grid-community.min.noStyle.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const existingDataMap = new Map();
+  const gridDiv = document.querySelector('#myGrid');
+
+  // === Utility: Highlight matching text ===
+  const highlightMatch = (value, filterText) => {
+    if (!filterText) return value;
+    const regex = new RegExp(`(${filterText})`, 'gi');
+    return String(value ?? '').replace(regex, '<span class="search-highlight">$1</span>');
+  };
+
+  const highlightRenderer = (params) => {
+    const globalText = document.getElementById('globalFilter')?.value?.toLowerCase() || '';
+    const colFilterModel = params.api.getFilterModel()[params.colDef.field];
+    let matchText = '';
+
+    if (colFilterModel && colFilterModel.filter) {
+      matchText = colFilterModel.filter.toLowerCase();
+    } else if (globalText) {
+      matchText = globalText;
+    }
+
+    return matchText ? highlightMatch(params.value, matchText) : params.value;
+  };
+
+  // === Column Definitions ===
+  const columnDefs = [
+    { headerName: 'Job No', field: 'jobno', cellRenderer: highlightRenderer, filter: 'agTextColumnFilter', floatingFilter: true },
+    { headerName: 'Merchandiser', field: 'o_merch', cellRenderer: highlightRenderer, filter: 'agTextColumnFilter', floatingFilter: true },
+    { headerName: 'Unit', field: 'unit', cellRenderer: highlightRenderer, filter: 'agTextColumnFilter', floatingFilter: true },
+    { headerName: 'Top/Bottom', field: 'topbottom_des', cellRenderer: highlightRenderer, filter: 'agTextColumnFilter', floatingFilter: true },
+    { headerName: 'Order Qty', field: 'o_ordqty', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'BC', field: 'bc', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'Sew', field: 'sew', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'TC', field: 'tc', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'FC', field: 'fc', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'IR', field: 'ir', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+    { headerName: 'PAC', field: 'pac', cellRenderer: highlightRenderer, filter: 'agNumberColumnFilter', floatingFilter: true },
+  ];
+
+  const gridOptions = {
+    columnDefs,
+    defaultColDef: {
+      sortable: true,
+      filter: true,
+      floatingFilter: true,
+      resizable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    rowSelection: 'multiple',
+    animateRows: true,
+    getRowId: (params) => params.data.jobno,
+    rowData: [],
+    onFilterChanged: () => gridOptions.api.refreshCells({ force: true }),
+  };
+
+  new agGrid.Grid(gridDiv, gridOptions);
+
+  // === Fetch and Update Data ===
+  async function fetchData() {
+    try {
+      const response = await fetch('/over_web/');
+      const newData = await response.json();
+
+      const inserts = [];
+      const updates = [];
+
+      for (const row of newData) {
+        const oldRow = existingDataMap.get(row.jobno);
+        const newString = JSON.stringify(row);
+
+        if (!oldRow) {
+          inserts.push(row);
+        } else if (JSON.stringify(oldRow) !== newString) {
+          updates.push(row);
+        }
+
+        existingDataMap.set(row.jobno, row);
+      }
+
+      if (inserts.length || updates.length) {
+        gridOptions.api.applyTransaction({ add: inserts, update: updates });
+        gridOptions.api.refreshCells({ force: true });
+      }
+
+      document.getElementById('rowCount').textContent = `Total Rows: ${existingDataMap.size}`;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+
+  // === Global Filter ===
+  document.getElementById('globalFilter').addEventListener('input', (e) => {
+    gridOptions.api.setQuickFilter(e.target.value);
+    gridOptions.api.refreshCells({ force: true });
+  });
+
+  fetchData();
+  setInterval(fetchData, 5000);
+});
+</script>
+
+{% endblock %}

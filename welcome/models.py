@@ -652,3 +652,25 @@ class TBuyer(models.Model):
     class Meta:
         managed = False
         db_table = 't_buyer'
+
+
+class Overall(models.Model):
+    o_ordqty = models.IntegerField(blank=True, null=True)
+    o_buyer = models.CharField(db_column='o_Buyer', max_length=40, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    stylename = models.CharField(db_column='StyleName', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS')  # Field name made lowercase.
+    o_merch = models.CharField(max_length=35, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    filnam = models.CharField(max_length=82, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    unit = models.CharField(max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS')
+    jobno = models.CharField(max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS',primary_key=True)
+    topbottom_des = models.CharField(db_column='TopBottom_des', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    clr = models.CharField(max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)
+    bc = models.IntegerField(blank=True, null=True)
+    sew = models.IntegerField(blank=True, null=True)
+    tc = models.IntegerField(blank=True, null=True)
+    fc = models.IntegerField(blank=True, null=True)
+    ir = models.IntegerField(blank=True, null=True)
+    pac = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'vue_overall1'
